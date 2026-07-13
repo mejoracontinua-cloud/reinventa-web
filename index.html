@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SEO BÁSICO
+     Actualizar "canonical" con el dominio definitivo cuando esté listo.
+═══════════════════════════════════════════════════════════════ -->
+<title>REINVENTA by Mary Méndez — Consultoría estratégica de imagen</title>
+<meta name="description" content="Firma de mentoría y consultoría estratégica en evolución personal, identidad y presencia profesional a través de la gestión de la imagen." />
+<meta name="robots" content="index, follow" />
+<!-- PENDIENTE: reemplazar con el dominio definitivo -->
+<!-- <link rel="canonical" href="https://TU-DOMINIO.com/" /> -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     OPEN GRAPH (Facebook, LinkedIn, WhatsApp)
+     PENDIENTE: og:url con dominio definitivo, og:image con foto editorial.
+═══════════════════════════════════════════════════════════════ -->
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="es_MX" />
+<meta property="og:site_name" content="REINVENTA by Mary Méndez" />
+<meta property="og:title" content="REINVENTA by Mary Méndez — Consultoría estratégica de imagen" />
+<meta property="og:description" content="Construye una presencia que refleje quién eres, lo que has logrado y el lugar al que quieres llegar." />
+<!-- PENDIENTE: og:url → reemplazar con dominio definitivo -->
+<!-- <meta property="og:url" content="https://TU-DOMINIO.com/" /> -->
+<!-- PENDIENTE: og:image → reemplazar con URL de imagen editorial real (1200×630 px recomendado) -->
+<!-- <meta property="og:image" content="https://TU-DOMINIO.com/assets/images/og-cover.jpg" /> -->
+<!-- <meta property="og:image:width" content="1200" /> -->
+<!-- <meta property="og:image:height" content="630" /> -->
+<!-- <meta property="og:image:alt" content="REINVENTA by Mary Méndez — Consultoría estratégica de imagen" /> -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TWITTER / X CARD
+═══════════════════════════════════════════════════════════════ -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="REINVENTA by Mary Méndez — Consultoría estratégica de imagen" />
+<meta name="twitter:description" content="Construye una presencia que refleje quién eres, lo que has logrado y el lugar al que quieres llegar." />
+<!-- PENDIENTE: twitter:image → misma imagen que og:image -->
+<!-- <meta name="twitter:image" content="https://TU-DOMINIO.com/assets/images/og-cover.jpg" /> -->
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FAVICON
+     Usar SVG como principal (soportado en Chrome, Firefox, Edge y Safari ≥17).
+     El PNG es respaldo para Safari y iOS.
+═══════════════════════════════════════════════════════════════ -->
+<link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg" />
+<link rel="icon" type="image/png" sizes="512x512" href="assets/icons/favicon-512.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png" />
+<meta name="theme-color" content="#2A0F25" />
+</head>
+<body>
+<style>
+  :root{
+    --plum:#2A0F25;
+    --plum-deep:#190711;
+    --cream:#EFE9E2;
+    --gold:#C6A56A;
+    --navy:#0D3457;
+    --mauve:#8F7383;
+    --ink:#221019;
+    --ink-soft:#4a3a44;
+    --font-display:'Big Caslon','Didot',Georgia,'Times New Roman',serif;
+    --font-body:'Gill Sans','Gill Sans MT','Segoe UI',Calibri,sans-serif;
+    --container: 1280px;
+    --edge: clamp(1.5rem, 5vw, 4.5rem);
+    --sect-pad: clamp(4rem, 8vw, 6.5rem);
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important;}
+  }
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  img,svg{max-width:100%;display:block;}
+  a{color:inherit;text-decoration:none;}
+  .container{max-width:var(--container);margin:0 auto;padding-left:var(--edge);padding-right:var(--edge);}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .skip-link{position:absolute;left:-999px;top:0;background:var(--gold);color:var(--ink);padding:.9rem 1.4rem;z-index:999;font-family:var(--font-body);font-weight:600;}
+  .skip-link:focus{left:1rem;top:1rem;}
+
+  ::selection{background:var(--gold);color:var(--ink);}
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:3px;
+  }
+
+  .eyebrow{
+    font-family:var(--font-body);
+    font-size:.78rem;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    gap:.7em;
+  }
+  .eyebrow::before{content:"";width:2.2em;height:1px;background:currentColor;opacity:.55;display:inline-block;}
+  .on-cream .eyebrow{color:var(--mauve);}
+  .on-plum .eyebrow{color:var(--gold);}
+
+  h1,h2,h3{font-family:var(--font-display);font-weight:400;line-height:1.08;margin:0;text-wrap:balance;}
+  h2{font-size:clamp(2rem,4vw,3.2rem);letter-spacing:-0.01em;}
+  h3{font-size:1.3rem;}
+  p{line-height:1.7;font-size:1.02rem;margin:0;}
+  .lede{font-size:clamp(1.02rem,1.3vw,1.18rem);line-height:1.75;}
+  .on-cream p{color:var(--ink-soft);}
+  .on-plum p{color:rgba(239,233,226,.86);}
+
+  .btn{
+    font-family:var(--font-body);
+    font-size:.92rem;
+    font-weight:600;
+    letter-spacing:.04em;
+    padding:1rem 2rem;
+    border-radius:2px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:.6em;
+    cursor:pointer;
+    border:1px solid transparent;
+    transition:transform .35s cubic-bezier(.22,1,.36,1), background-color .35s ease, color .35s ease, border-color .35s ease, opacity .3s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn:disabled{cursor:default;transform:none;opacity:.7;}
+  .btn-primary{background:var(--gold);color:var(--ink);}
+  .btn-primary:hover:not(:disabled){background:#d8bb85;}
+  .btn-outline-plum{border-color:rgba(239,233,226,.5);color:var(--cream);background:transparent;}
+  .btn-outline-plum:hover{border-color:var(--cream);background:rgba(239,233,226,.08);}
+  .btn-outline-cream{border-color:rgba(34,16,25,.28);color:var(--ink);background:transparent;}
+  .btn-outline-cream:hover{border-color:var(--ink);}
+
+  section{position:relative;padding:var(--sect-pad) 0;overflow:hidden;scroll-margin-top:84px;}
+  .on-plum{background:var(--plum);color:var(--cream);}
+  .on-cream{background:var(--cream);color:var(--ink);}
+
+  .arc{position:absolute;border-radius:50%;pointer-events:none;border-style:solid;}
+
+  .logo-mark{display:inline-flex;align-items:center;}
+
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    background:rgba(26,9,20,.92);
+    backdrop-filter:saturate(140%) blur(10px);
+    border-bottom:1px solid rgba(198,165,106,.18);
+  }
+  .nav-row{display:flex;align-items:center;justify-content:space-between;padding:1rem var(--edge);}
+  .nav-links{display:flex;align-items:center;gap:2.4rem;list-style:none;margin:0;padding:0;}
+  .nav-links a{font-size:.86rem;letter-spacing:.05em;color:rgba(239,233,226,.86);transition:color .25s ease;position:relative;}
+  .nav-links a:not(.btn):after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:1px;background:var(--gold);transition:width .3s ease;}
+  .nav-links a:not(.btn):hover{color:var(--cream);}
+  .nav-links a:not(.btn):hover:after{width:100%;}
+  .nav-cta{padding:.7rem 1.5rem;font-size:.82rem;}
+  .hamburger{display:none;background:none;border:none;color:var(--cream);cursor:pointer;padding:.4rem;}
+  .hamburger svg{width:26px;height:26px;}
+
+  .mobile-menu{
+    position:fixed;inset:0;background:var(--plum-deep);z-index:200;
+    display:flex;flex-direction:column;justify-content:center;padding:2.5rem var(--edge);
+    transform:translateY(-100%);transition:transform .5s cubic-bezier(.22,1,.36,1);
+  }
+  .mobile-menu.open{transform:translateY(0);}
+  .mobile-menu-top{position:absolute;top:1.05rem;left:var(--edge);right:var(--edge);display:flex;justify-content:space-between;align-items:center;}
+  .mobile-menu ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1.3rem;}
+  .mobile-menu a{font-family:var(--font-display);font-size:2.1rem;color:var(--cream);}
+  .mobile-menu .btn{margin-top:2rem;align-self:flex-start;}
+
+  .hero{padding-top:calc(var(--sect-pad) + 4.5rem);min-height:100svh;display:flex;align-items:center;}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(2.5rem,6vw,5rem);align-items:center;width:100%;}
+  .hero h1{font-size:clamp(2.5rem,5.6vw,5rem);color:var(--cream);}
+  .hero-copy .eyebrow{margin-bottom:1.4rem;}
+  .hero-copy h1{margin-bottom:1.6rem;}
+  .hero-copy p{max-width:38ch;margin-bottom:2.4rem;}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:1.1rem;margin-bottom:2.6rem;}
+  .hero-descriptor{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.9);}
+
+  .frame{position:relative;aspect-ratio:3/4;border:1px solid rgba(198,165,106,.55);padding:14px;}
+  .frame-inner{width:100%;height:100%;background:linear-gradient(155deg,#3a1830,var(--plum-deep));display:flex;align-items:flex-end;position:relative;overflow:hidden;}
+  .frame-inner .tag{padding:1.6rem;width:100%;background:linear-gradient(0deg,rgba(0,0,0,.55),transparent);}
+  .frame-inner .tag .small{display:block;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem;}
+  .frame-inner .tag .big{font-family:var(--font-display);font-size:1.1rem;color:var(--cream);font-style:italic;}
+  .frame-inner .center-mark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.5;}
+  .frame-inner .center-mark svg{width:42%;fill:var(--gold);}
+
+  .mary-wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(2.5rem,6vw,5rem);align-items:center;}
+  .mary-frame{aspect-ratio:4/5;border:1px solid rgba(34,16,25,.25);padding:12px;}
+  .mary-frame-inner{width:100%;height:100%;background:linear-gradient(160deg,#e4dcd0,#d8cdbd);display:flex;align-items:center;justify-content:center;}
+  .mary-frame-inner .small{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mauve);text-align:center;padding:0 1.5rem;}
+  .mary-copy h2{margin-bottom:1.2rem;}
+  .mary-quote{font-family:var(--font-display);font-style:italic;font-size:clamp(1.2rem,1.9vw,1.5rem);margin:1.4rem 0;color:var(--navy);}
+
+  .method-block{margin-top:clamp(3rem,6vw,4.5rem);padding-top:clamp(2.5rem,5vw,3.5rem);border-top:1px solid rgba(34,16,25,.14);}
+  .method-block h3{font-size:clamp(1.5rem,2.6vw,2rem);margin-bottom:2rem;}
+  .method-mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.8rem;}
+  .method-mini{padding-left:1.1rem;border-left:2px solid var(--gold);}
+  .method-mini .num{display:block;font-family:var(--font-display);font-style:italic;color:var(--gold);font-size:.95rem;margin-bottom:.5rem;}
+  .method-mini h4{font-family:var(--font-body);font-weight:600;font-size:1rem;letter-spacing:.02em;margin:0 0 .45rem;}
+  .method-mini p{font-size:.9rem;line-height:1.6;}
+
+  .services-head{max-width:56ch;margin-bottom:3rem;}
+  .services-head h2{margin-bottom:.9rem;}
+  .service-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin-bottom:3rem;}
+  .service-card{border:1px solid rgba(34,16,25,.16);padding:2rem 1.7rem;transition:border-color .35s ease, transform .35s ease, background-color .35s ease;background:var(--cream);}
+  .service-card:hover{border-color:var(--gold);transform:translateY(-4px);background:#f6f1e9;}
+  .service-card h3{font-size:1.18rem;margin-bottom:.7rem;}
+  .service-card p{font-size:.92rem;line-height:1.6;}
+  .services-cta{text-align:center;}
+
+  .workshop-wrap{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2.5rem,6vw,5rem);align-items:center;}
+  .workshop-info{list-style:none;margin:1.8rem 0 2.2rem;padding:0;display:grid;gap:.75rem;}
+  .workshop-info li{display:flex;gap:.9rem;font-size:.98rem;color:rgba(239,233,226,.9);}
+  .workshop-info li .ico{color:var(--gold);flex-shrink:0;}
+  .workshop-visual{aspect-ratio:4/5;border:1px solid rgba(198,165,106,.5);padding:12px;}
+  .workshop-visual-inner{width:100%;height:100%;background:radial-gradient(circle at 30% 20%, rgba(198,165,106,.16), transparent 60%), linear-gradient(200deg,#3a1830,var(--plum-deep));display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;}
+  .workshop-visual-inner .small{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);}
+
+  .form-section-head{max-width:56ch;margin:0 auto 3rem;text-align:center;}
+  .form-section-head .eyebrow{justify-content:center;}
+  .form-wrap{max-width:760px;margin:0 auto;border:1px solid rgba(34,16,25,.16);padding:clamp(1.8rem,4vw,3.2rem);background:#f8f4ee;position:relative;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem 2rem;}
+  .field{display:flex;flex-direction:column;gap:.45rem;}
+  .field.full{grid-column:1 / -1;}
+  .field label{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;}
+  .field label .req{color:var(--mauve);margin-left:.15em;}
+  .field input[type="text"],.field input[type="email"],.field input[type="tel"],.field textarea,.field select{
+    font-family:var(--font-body);font-size:1rem;color:var(--ink);background:transparent;
+    border:none;border-bottom:1px solid rgba(34,16,25,.3);padding:.6rem .1rem;width:100%;
+    transition:border-color .3s ease;appearance:none;-webkit-appearance:none;border-radius:0;
+  }
+  .field textarea{resize:vertical;min-height:76px;font-family:var(--font-body);}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold);outline:none;}
+  .select-wrap{position:relative;}
+  .select-wrap::after{content:"";position:absolute;right:.3rem;top:50%;width:7px;height:7px;border-right:1px solid var(--ink-soft);border-bottom:1px solid var(--ink-soft);transform:translateY(-65%) rotate(45deg);pointer-events:none;}
+  .field-error{font-size:.78rem;color:#8a3b3b;min-height:1em;}
+  .field.invalid input,.field.invalid select,.field.invalid textarea{border-bottom-color:#a34545;}
+
+  .radio-pills{display:flex;gap:.7rem;flex-wrap:wrap;}
+  .radio-pill{position:relative;}
+  .radio-pill input{position:absolute;opacity:0;width:1px;height:1px;}
+  .radio-pill label{display:inline-flex;padding:.55rem 1.1rem;border:1px solid rgba(34,16,25,.28);font-size:.88rem;cursor:pointer;transition:border-color .25s ease, background-color .25s ease;}
+  .radio-pill input:checked + label{border-color:var(--gold);background:rgba(198,165,106,.16);}
+  .radio-pill input:focus-visible + label{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .consent-field{display:flex;align-items:flex-start;gap:.7rem;grid-column:1/-1;}
+  .consent-field input{margin-top:.3rem;width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;}
+  .consent-field label{font-size:.85rem;color:var(--ink-soft);line-height:1.5;}
+
+  .form-submit-row{grid-column:1/-1;display:flex;flex-direction:column;align-items:flex-start;gap:.9rem;margin-top:.4rem;}
+  .form-note{font-size:.78rem;color:var(--mauve);}
+  .honeypot{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;}
+
+  .spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(34,16,25,.3);border-top-color:var(--ink);animation:spin .7s linear infinite;display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){.spinner{animation:none;}}
+
+  .form-success{text-align:center;padding:2rem 1rem;}
+  .form-success .check{width:52px;height:52px;border-radius:50%;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;margin:0 auto 1.4rem;font-family:var(--font-display);font-size:1.4rem;color:var(--gold);}
+  .form-success p{max-width:44ch;margin:0 auto;}
+  .form-success h3{margin-bottom:1rem;}
+
+  footer{background:var(--plum-deep);color:rgba(239,233,226,.75);padding:3.5rem 0 2rem;}
+  .footer-inner{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.1rem;}
+  .footer-claim{font-family:var(--font-display);font-style:italic;color:var(--cream);font-size:1.1rem;}
+  .footer-links{display:flex;gap:1.8rem;flex-wrap:wrap;justify-content:center;font-size:.86rem;}
+  .footer-links a{color:rgba(239,233,226,.78);}
+  .footer-links a:hover{color:var(--cream);}
+  .footer-bottom{font-size:.76rem;color:rgba(239,233,226,.45);margin-top:.8rem;}
+
+  .toast{
+    position:fixed;left:50%;bottom:2rem;transform:translate(-50%,20px);
+    background:var(--ink);color:var(--cream);padding:.95rem 1.5rem;font-size:.85rem;
+    border-left:3px solid var(--gold);z-index:400;transition:transform .45s cubic-bezier(.22,1,.36,1), opacity .45s ease, visibility .45s;
+    display:flex;align-items:center;gap:.8rem;max-width:90vw;
+    opacity:0;visibility:hidden;pointer-events:none;
+  }
+  .toast.show{transform:translate(-50%,0);opacity:1;visibility:visible;}
+  .toast b{color:var(--gold);font-weight:600;}
+
+  .reveal{opacity:1;transform:none;}
+  .reveal-ready .reveal{opacity:0;transform:translateY(22px);transition:opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1);}
+  .reveal-ready .reveal.in{opacity:1;transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){.reveal-ready .reveal{opacity:1;transform:none;}}
+
+  @media (max-width: 1024px){
+    .nav-links{display:none;}
+    .hamburger{display:inline-flex;}
+    .hero-grid,.mary-wrap,.workshop-wrap{grid-template-columns:1fr;}
+    .frame,.workshop-visual{max-width:420px;margin:0 auto;}
+    .mary-frame{max-width:340px;margin:0 auto;}
+    .method-mini-grid{grid-template-columns:1fr 1fr;row-gap:1.8rem;}
+    .service-cards{grid-template-columns:1fr 1fr;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width: 640px){
+    .service-cards{grid-template-columns:1fr;}
+    .method-mini-grid{grid-template-columns:1fr;}
+    .hero{min-height:auto;padding-bottom:4rem;}
+    .hero-actions .btn{width:100%;}
+    .form-wrap{padding:1.6rem 1.2rem;}
+  }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo-lockup" viewBox="0 0 693.94 172.95">
+    <path fill="#c6a56b" d="M101.24,24.77c.11-1.65.14-3.31.14-4.99s-.08-3.34-.19-4.99H15.63v9.98h75.59c-1.27,20.65-10.34,39.21-24.28,52.8,2.68,2,5.26,4.14,7.73,6.43,15.38-15.34,25.31-36.15,26.56-59.23Z"/>
+    <path fill="#c6a56b" d="M15.63,100.36v10.01c16.79-.91,32.37-6.43,45.52-15.28-2.68-2.33-5.52-4.46-8.51-6.41-10.91,6.68-23.52,10.85-37.02,11.68Z"/>
+    <path fill="#c6a56b" d="M101.38,153.18c0,1.68-.08,3.34-.19,4.99H15.63v-9.98h75.59c-2.49-40.56-35.04-73.11-75.59-75.59v-10.01c46.07,2.51,83.1,39.54,85.61,85.61h0c.11,1.65.14,3.31.14,4.99Z"/>
+    <path fill="#c6a56b" d="M107.38,24.77c-.11-1.65-.14-3.31-.14-4.99s.08-3.34.19-4.99h85.56v9.98h-75.59c1.27,20.65,10.34,39.21,24.28,52.8-2.68,2-5.26,4.14-7.73,6.43-15.38-15.34-25.31-36.15-26.56-59.23Z"/>
+    <path fill="#c6a56b" d="M192.99,100.36v10.01c-16.79-.91-32.37-6.43-45.52-15.28,2.68-2.33,5.52-4.46,8.51-6.41,10.91,6.68,23.52,10.85,37.02,11.68Z"/>
+    <path fill="#c6a56b" d="M107.24,153.18c0,1.68.08,3.34.19,4.99h85.56v-9.98h-75.59c2.49-40.56,35.04-73.11,75.59-75.59v-10.01c-46.07,2.51-83.1,39.54-85.61,85.61h0c-.11,1.65-.14,3.31-.14,4.99Z"/>
+    <path fill="#c6a56b" d="M251.89,81.33c-5.2-13.25-5.92-19.97-16.68-19.97h-5.74v22.47c0,7.88.81,10.08,3.59,10.95v1.25h-14.53v-1.25c2.69-.87,3.59-3.07,3.59-10.95v-42.83c0-7.87-.9-10.08-3.59-10.95v-1.25h17.67c18.2,0,23.58,6.43,23.58,14.98,0,9.03-6.1,15.84-17.75,17.29,11.03,1.54,12.73,7.39,17.04,19.21,4.3,11.52,6.1,14.69,9.15,14.69.54,0,.99,0,1.43-.1v1.15c-1.35.48-3.68.67-5.47.67-6.9,0-8.34-5.38-12.29-15.36ZM252.16,45.99c0-8.55-5.2-15.75-18.47-15.75l-4.21.19v29.48h7.53c10.31,0,15.15-5.76,15.15-13.92Z"/>
+    <path fill="#c6a56b" d="M273.42,96.02v-1.25c2.69-.87,3.59-3.07,3.59-10.95v-42.83c0-7.87-.9-10.08-3.59-10.95v-1.25h41.7l.99,12.48-.99.29c-3.14-8.45-8.43-11.33-17.58-11.33h-13.18v29.1h11.48c10.22,0,12.82-2.21,13.9-6.53h1.08v14.5h-1.08c-1.08-4.32-3.68-6.53-13.9-6.53h-11.48v29.48c0,2.79,1.43,4.32,4.04,4.32h11.66c8.61,0,14.08-2.59,17.31-11.52l.99.19-.72,12.77h-44.21Z"/>
+    <path fill="#c6a56b" d="M326.24,94.77c2.69-.87,3.59-3.07,3.59-10.95v-42.83c0-7.87-.9-10.08-3.59-10.95v-1.25h14.53v1.25c-2.78.86-3.59,3.07-3.59,10.95v42.83c0,7.88.81,10.08,3.59,10.95v1.25h-14.53v-1.25Z"/>
+    <path fill="#c6a56b" d="M355.02,37.92v42.06c0,10.95,2.15,13.64,6.19,14.79v1.25h-11.21v-1.25c2.69-.87,3.59-3.07,3.59-10.95v-42.83c0-7.87-1.08-10.08-4.66-10.95v-1.25h8.79l39.19,54.35v-38.32c0-10.95-2.15-13.64-6.19-14.79v-1.25h11.3v1.25c-2.78.86-3.59,3.07-3.59,10.95v55.79h-1.17l-42.24-58.87Z"/>
+    <path fill="#c6a56b" d="M405.24,30.05v-1.25h13.99v1.25c-2.69.86-2.06,2.78.63,10.08l17.31,47.53,17.04-47.44c2.24-6.34,1.88-9.51-1.17-10.18v-1.25h10.04v1.25c-2.42.86-4.66,2.78-7.26,10.08l-20.35,56.37h-2.51l-20.98-56.37c-2.69-7.3-4.84-9.22-6.73-10.08Z"/>
+    <path fill="#c6a56b" d="M467.21,96.02v-1.25c2.69-.87,3.59-3.07,3.59-10.95v-42.83c0-7.87-.9-10.08-3.59-10.95v-1.25h41.7l.99,12.48-.99.29c-3.14-8.45-8.43-11.33-17.58-11.33h-13.18v29.1h11.48c10.22,0,12.82-2.21,13.9-6.53h1.08v14.5h-1.08c-1.08-4.32-3.68-6.53-13.9-6.53h-11.48v29.48c0,2.79,1.44,4.32,4.04,4.32h11.66c8.61,0,14.08-2.59,17.31-11.52l.99.19-.72,12.77h-44.21Z"/>
+    <path fill="#c6a56b" d="M525.14,37.92v42.06c0,10.95,2.15,13.64,6.19,14.79v1.25h-11.21v-1.25c2.69-.87,3.59-3.07,3.59-10.95v-42.83c0-7.87-1.08-10.08-4.66-10.95v-1.25h8.79l39.19,54.35v-38.32c0-10.95-2.15-13.64-6.19-14.79v-1.25h11.3v1.25c-2.78.86-3.59,3.07-3.59,10.95v55.79h-1.17l-42.24-58.87Z"/>
+    <path fill="#c6a56b" d="M593.56,94.77c2.78-.87,3.59-3.07,3.59-10.95V30.34h-4.39c-8.07,0-11.57,2.3-14.62,9.22l-.99-.19.54-10.56h46.18l.54,10.56-.99.19c-3.05-6.92-6.55-9.22-14.62-9.22h-4.22v53.49c0,7.88.81,10.08,3.59,10.95v1.25h-14.62v-1.25Z"/>
+    <path fill="#c6a56b" d="M618.5,94.77c2.51-.87,4.75-2.79,7.53-10.08l17.67-46.86c.63-1.73.54-2.98-.18-4.51l-.81-2.02,6.73-3.26,22.06,56.75c2.78,7.2,4.93,9.12,6.81,9.99v1.25h-13.9v-1.25c2.78-.87,2.06-2.79-.81-9.99l-5.47-14.12h-25.29l-5.29,14.02c-2.33,6.24-2.06,9.41,1.08,10.08v1.25h-10.13v-1.25ZM657.59,69.23l-12.28-31.59-11.93,31.59h24.21Z"/>
+    <path fill="#c6a56b" d="M340.57,150.9h-6.35v-20.08h4.91c1.55,0,2.76.22,3.62.67.87.45,1.53,1.06,1.99,1.84s.68,1.68.68,2.71c0,1.97-.95,3.39-2.86,4.24,1.37.28,2.46.88,3.27,1.81.81.93,1.21,2.04,1.21,3.33,0,1.03-.25,1.94-.74,2.75s-1.21,1.46-2.17,1.97c-.95.51-2.15.76-3.58.76ZM339.22,133.38h-2.31v6.04h1.79c1.43,0,2.45-.29,3.05-.88s.91-1.34.91-2.27c0-1.93-1.15-2.89-3.44-2.89ZM339.42,141.98h-2.51v6.37h2.64c1.47,0,2.46-.12,2.99-.37.52-.25.94-.63,1.26-1.14.32-.52.48-1.07.48-1.67s-.17-1.17-.5-1.68c-.34-.51-.81-.89-1.43-1.14-.62-.25-1.59-.37-2.93-.37Z"/>
+    <path fill="#c6a56b" d="M360.98,130.82h3.26l-6.93,9.46v10.62h-2.75v-10.62l-6.93-9.46h3.24l5.02,6.92,5.09-6.92Z"/>
+    <path fill="#c6a56b" d="M388.85,130.82h2.51v20.08h-2.7v-15.62l-5.77,7.76h-.5l-5.83-7.76v15.62h-2.68v-20.08h2.54l6.23,8.25,6.19-8.25Z"/>
+    <path fill="#c6a56b" d="M401.39,130.71h1.89l8.41,20.2h-2.75l-2.5-5.95h-8l-2.34,5.95h-2.76l8.05-20.2ZM405.33,142.39l-3.03-7.27-2.81,7.27h5.83Z"/>
+    <path fill="#c6a56b" d="M413.82,150.9v-20.08h4.7c1.9,0,3.4.5,4.52,1.51s1.67,2.37,1.67,4.08c0,1.17-.27,2.18-.82,3.03-.55.85-1.33,1.49-2.35,1.91.6.42,1.19,1,1.76,1.72.57.73,1.38,2,2.42,3.81.65,1.14,1.18,2,1.57,2.57l.99,1.44h-3.19l-.82-1.32s-.08-.13-.16-.25l-.52-.79-.83-1.47-.9-1.57c-.55-.82-1.06-1.48-1.52-1.97-.46-.49-.88-.84-1.25-1.06s-1-.32-1.87-.32h-.7v8.74h-2.68ZM417.31,133.27h-.81v6.34h1.02c1.36,0,2.29-.12,2.8-.37.51-.25.9-.62,1.18-1.13.28-.5.42-1.08.42-1.72s-.16-1.2-.47-1.72-.75-.87-1.32-1.09c-.57-.21-1.51-.32-2.83-.32Z"/>
+    <path fill="#c6a56b" d="M438.86,130.82h3.26l-6.93,9.46v10.62h-2.75v-10.62l-6.93-9.46h3.24l5.02,6.92,5.09-6.92Z"/>
+    <path fill="#c6a56b" d="M466.74,130.82h2.51v20.08h-2.7v-15.62l-5.77,7.76h-.5l-5.83-7.76v15.62h-2.68v-20.08h2.54l6.23,8.25,6.19-8.25Z"/>
+    <path fill="#c6a56b" d="M473.29,130.82h10.63v2.56h-7.95v6.12h7.68v2.57h-7.68v6.24h8.2v2.56h-10.89v-20.05Z"/>
+    <path fill="#c6a56b" d="M501.93,130.82h2.55v20.08h-2.31l-12.54-15.47v15.47h-2.52v-20.08h2.17l12.65,15.6v-15.6Z"/>
+    <path fill="#c6a56b" d="M508.52,150.87v-20.05h6.32c2.55,0,4.57.41,6.05,1.23s2.67,2.03,3.54,3.62c.88,1.59,1.32,3.33,1.32,5.2,0,1.34-.24,2.63-.73,3.85s-1.17,2.3-2.07,3.23c-.91.96-1.97,1.68-3.18,2.17-.71.3-1.36.5-1.95.6-.59.1-1.72.15-3.38.15h-5.93ZM514.56,133.38h-3.35v14.93h3.44c1.34,0,2.38-.1,3.13-.29s1.36-.45,1.86-.75c.49-.3.95-.67,1.36-1.11,1.32-1.44,1.99-3.25,1.99-5.45s-.68-3.91-2.04-5.28c-.5-.51-1.08-.92-1.72-1.25-.65-.33-1.26-.54-1.85-.65-.58-.11-1.52-.16-2.81-.16Z"/>
+    <path fill="#c6a56b" d="M529.11,130.82h10.63v2.56h-7.95v6.12h7.68v2.57h-7.68v6.24h8.2v2.56h-10.89v-20.05Z"/>
+    <path fill="#c6a56b" d="M541.89,130.8h16.16l-11.98,17.55h11.98v2.56h-16.92l12-17.55h-11.23v-2.56Z"/>
+  </symbol>
+  <symbol id="mark-only" viewBox="0 0 209.06 172.44">
+    <path d="M101.46,24.51c.11-1.65.14-3.31.14-4.99s-.08-3.34-.19-4.99H15.85v9.98h75.59c-1.27,20.65-10.34,39.21-24.28,52.8,2.68,2,5.26,4.14,7.73,6.43,15.38-15.34,25.31-36.15,26.56-59.23Z"/>
+    <path d="M15.85,100.1v10.01c16.79-.91,32.37-6.43,45.52-15.28-2.68-2.33-5.52-4.46-8.51-6.41-10.91,6.68-23.52,10.85-37.02,11.68Z"/>
+    <path d="M101.6,152.92c0,1.68-.08,3.34-.19,4.99H15.85v-9.98h75.59c-2.49-40.56-35.04-73.11-75.59-75.59v-10.01c46.07,2.51,83.1,39.54,85.61,85.61h0c.11,1.65.14,3.31.14,4.99Z"/>
+    <path d="M107.6,24.51c-.11-1.65-.14-3.31-.14-4.99s.08-3.34.19-4.99h85.56v9.98h-75.59c1.27,20.65,10.34,39.21,24.28,52.8-2.68,2-5.26,4.14-7.73,6.43-15.38-15.34-25.31-36.15-26.56-59.23Z"/>
+    <path d="M193.21,100.1v10.01c-16.79-.91-32.37-6.43-45.52-15.28,2.68-2.33,5.52-4.46,8.51-6.41,10.91,6.68,23.52,10.85,37.02,11.68Z"/>
+    <path d="M107.46,152.92c0,1.68.08,3.34.19,4.99h85.56v-9.98h-75.59c2.49-40.56,35.04-73.11,75.59-75.59v-10.01c-46.07,2.51-83.1,39.54-85.61,85.61h0c-.11,1.65-.14,3.31-.14,4.99Z"/>
+  </symbol>
+</svg>
+
+<a href="#main" class="skip-link">Saltar al contenido principal</a>
+
+<header>
+  <nav class="nav-row" aria-label="Navegación principal">
+    <a href="#top" class="logo-mark" aria-label="REINVENTA by Mary Méndez, inicio">
+      <svg viewBox="0 0 693.94 172.95" style="height:26px;width:auto" role="img" aria-label="REINVENTA by Mary Méndez"><use href="#logo-lockup"></use></svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#mary" data-scroll="mary">Conoce a Mary</a></li>
+      <li><a href="#servicios" data-scroll="servicios">Servicios</a></li>
+      <li><a href="#talleres" data-scroll="talleres">Talleres y Masterclasses</a></li>
+      <li><a href="#comenzar" data-scroll="menu" class="btn btn-primary nav-cta">Comenzar</a></li>
+    </ul>
+    <button class="hamburger" id="menuOpen" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobileMenu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+    </button>
+  </nav>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-top">
+    <span class="logo-mark"><svg viewBox="0 0 693.94 172.95" style="height:22px" role="img" aria-label="REINVENTA by Mary Méndez"><use href="#logo-lockup"></use></svg></span>
+    <button class="hamburger" id="menuClose" aria-label="Cerrar menú" style="display:inline-flex;color:var(--gold)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+    </button>
+  </div>
+  <ul>
+    <li><a href="#mary" data-scroll="mary">Conoce a Mary</a></li>
+    <li><a href="#servicios" data-scroll="servicios">Servicios</a></li>
+    <li><a href="#talleres" data-scroll="talleres">Talleres y Masterclasses</a></li>
+  </ul>
+  <a href="#comenzar" data-scroll="menu" class="btn btn-primary">Comenzar</a>
+</div>
+
+<main id="main">
+
+<section class="hero on-plum" id="top">
+  <div class="arc" style="width:640px;height:640px;border-color:var(--gold);border-width:34px;top:-320px;right:-220px;opacity:.35;"></div>
+  <div class="arc" style="width:420px;height:420px;border-color:var(--mauve);border-width:24px;top:-90px;right:120px;opacity:.3;"></div>
+  <div class="container hero-grid">
+    <div class="hero-copy reveal">
+      <span class="eyebrow">Consultoría estratégica de imagen</span>
+      <h1>Tu imagen habla<br>antes que tú.</h1>
+      <p class="lede">Construye una presencia que refleje quién eres, lo que has logrado y el lugar al que quieres llegar.</p>
+      <div class="hero-actions">
+        <a href="#comenzar" data-scroll="hero" class="btn btn-primary">Comenzar mi transformación</a>
+        <a href="#mary" class="btn btn-outline-plum">Conocer a Mary</a>
+      </div>
+      <p class="hero-descriptor">Imagen personal · Presencia profesional · Estilo con propósito</p>
+    </div>
+    <div class="hero-visual reveal">
+      <div class="frame">
+        <div class="frame-inner" role="img" aria-label="Espacio reservado para retrato editorial de Mary Méndez, fotografía pendiente de entrega">
+          <span class="center-mark"><svg viewBox="0 0 209.06 172.44"><use href="#mark-only"></use></svg></span>
+          <div class="tag">
+            <span class="small">[Fotografía pendiente]</span>
+            <span class="big">Retrato editorial de Mary Méndez</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="on-cream" id="mary">
+  <div class="container">
+    <div class="mary-wrap reveal">
+      <div class="mary-frame">
+        <div class="mary-frame-inner">
+          <span class="small" role="img" aria-label="Espacio reservado para retrato de Mary Méndez, fotografía pendiente de entrega">[Fotografía pendiente]<br>Retrato de Mary Méndez</span>
+        </div>
+      </div>
+      <div class="mary-copy">
+        <span class="eyebrow">La mente detrás de REINVENTA</span>
+        <h2 style="margin-top:1.2rem;">Mary no comienza por tu ropa.<br>Comienza por tu historia.</h2>
+        <p style="margin-top:1.2rem;">Mary Méndez es consultora de imagen y creadora de REINVENTA. Su enfoque va más allá de las tendencias: analiza tu historia, estilo de vida, objetivos y la manera en que deseas ser percibida para construir una imagen auténtica, funcional y estratégica.</p>
+        <p class="mary-quote">"Tu imagen no debe disfrazarte. Debe ayudarte a ocupar tu lugar."</p>
+      </div>
+    </div>
+
+    <div class="method-block reveal">
+      <h3>De la identidad a la presencia.</h3>
+      <div class="method-mini-grid">
+        <div class="method-mini">
+          <span class="num">01</span>
+          <h4>Revelar</h4>
+          <p>Comprendemos quién eres, tu historia y la etapa que estás construyendo.</p>
+        </div>
+        <div class="method-mini">
+          <span class="num">02</span>
+          <h4>Interpretar</h4>
+          <p>Analizamos tu estilo de vida, cuerpo, rostro y contexto.</p>
+        </div>
+        <div class="method-mini">
+          <span class="num">03</span>
+          <h4>Editar</h4>
+          <p>Definimos qué permanece, qué evoluciona y qué ya no te representa.</p>
+        </div>
+        <div class="method-mini">
+          <span class="num">04</span>
+          <h4>Proyectar</h4>
+          <p>Traducimos tu identidad en decisiones de imagen claras y coherentes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="on-cream" id="servicios" style="background:#f6f1e9;">
+  <div class="container">
+    <div class="services-head reveal">
+      <span class="eyebrow">Experiencias de consultoría</span>
+      <h2 style="margin-top:1rem;">Servicios diseñados desde tu historia</h2>
+      <p class="lede" style="margin-top:.9rem;">Elige el punto de partida que mejor acompaña la etapa que estás viviendo.</p>
+    </div>
+    <div class="service-cards reveal">
+      <div class="service-card">
+        <h3>Consultoría de Imagen Personal</h3>
+        <p>Un proceso integral para alinear tu imagen con tu identidad y la etapa que estás viviendo.</p>
+      </div>
+      <div class="service-card">
+        <h3>Presencia Profesional y Ejecutiva</h3>
+        <p>Construye una presencia que comunique liderazgo, seguridad y autoridad.</p>
+      </div>
+      <div class="service-card">
+        <h3>Edición Estratégica de Guardarropa</h3>
+        <p>Organiza y redefine tu guardarropa para que cada prenda tenga una función y un propósito.</p>
+      </div>
+      <div class="service-card">
+        <h3>Personal Shopping</h3>
+        <p>Acompañamiento experto para comprar piezas alineadas con tu estilo, necesidades y objetivos.</p>
+      </div>
+      <div class="service-card">
+        <h3>Talleres y Masterclasses</h3>
+        <p>Experiencias grupales para aprender y transformar tu imagen de forma práctica.</p>
+      </div>
+      <div class="service-card">
+        <h3>Empresas y Organizaciones</h3>
+        <p>Talleres, conferencias y experiencias para fortalecer la presencia e imagen de equipos profesionales.</p>
+      </div>
+    </div>
+    <div class="services-cta reveal">
+      <a href="#comenzar" data-scroll="servicios" class="btn btn-primary">Me interesa</a>
+    </div>
+  </div>
+</section>
+
+<section class="on-plum" id="talleres">
+  <div class="arc" style="width:520px;height:520px;border-color:var(--gold);border-width:1px;bottom:-260px;left:-160px;opacity:.4;"></div>
+  <div class="container workshop-wrap">
+    <div class="reveal">
+      <span class="eyebrow">Ahora en REINVENTA</span>
+      <h2 style="margin-top:1.2rem;">Taller de Imagen Personal</h2>
+      <ul class="workshop-info">
+        <li><span class="ico">—</span>Sábado 15 de agosto</li>
+        <li><span class="ico">—</span>10:00 a 12:00 horas</li>
+        <li><span class="ico">—</span>The University Club of Mexico</li>
+        <li><span class="ico">—</span>Ciudad de México</li>
+        <li><span class="ico">—</span>Cupo limitado</li>
+      </ul>
+      <a href="#" data-route="/taller-imagen-personal" class="btn btn-primary">Ver detalles y reservar mi lugar</a>
+    </div>
+    <div class="reveal">
+      <div class="workshop-visual">
+        <div class="workshop-visual-inner" role="img" aria-label="Espacio reservado para fotografía del taller de imagen personal, pendiente de entrega">
+          <span class="small">[Fotografía pendiente]<br>Taller de Imagen Personal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="on-cream" id="comenzar">
+  <div class="container">
+    <div class="form-section-head reveal">
+      <span class="eyebrow">El primer paso</span>
+      <h2 style="margin-top:1rem;">Cuéntanos qué estás buscando</h2>
+      <p class="lede" style="margin-top:.9rem;">Comparte un poco sobre ti para que Mary pueda recomendarte el mejor punto de partida.</p>
+    </div>
+
+    <div class="form-wrap reveal">
+      <form id="leadForm" novalidate>
+        <div class="form-grid">
+
+          <div class="field">
+            <label for="f-nombre">Nombre completo<span class="req">*</span></label>
+            <input type="text" id="f-nombre" name="nombre" autocomplete="name" required />
+            <span class="field-error" data-error-for="f-nombre"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-correo">Correo electrónico<span class="req">*</span></label>
+            <input type="email" id="f-correo" name="correo" autocomplete="email" required />
+            <span class="field-error" data-error-for="f-correo"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-whatsapp">WhatsApp<span class="req">*</span></label>
+            <input type="tel" id="f-whatsapp" name="whatsapp" autocomplete="tel" required />
+            <span class="field-error" data-error-for="f-whatsapp"></span>
+          </div>
+
+          <div class="field">
+            <label for="f-servicio">¿Qué servicio te interesa?<span class="req">*</span></label>
+            <div class="select-wrap">
+              <select id="f-servicio" name="servicio" required>
+                <option value="" disabled selected>Selecciona una opción</option>
+                <option>Consultoría de Imagen Personal</option>
+                <option>Presencia Profesional y Ejecutiva</option>
+                <option>Edición Estratégica de Guardarropa</option>
+                <option>Personal Shopping</option>
+                <option>Talleres y Masterclasses</option>
+                <option>Empresas y Organizaciones</option>
+                <option>Aún no estoy segura</option>
+              </select>
+            </div>
+            <span class="field-error" data-error-for="f-servicio"></span>
+          </div>
+
+          <div class="field full">
+            <label for="f-transformar">¿Qué te gustaría transformar o resolver?</label>
+            <textarea id="f-transformar" name="transformar" rows="3"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="f-cuando">¿Cuándo te gustaría comenzar?<span class="req">*</span></label>
+            <div class="select-wrap">
+              <select id="f-cuando" name="cuando" required>
+                <option value="" disabled selected>Selecciona una opción</option>
+                <option>Lo antes posible</option>
+                <option>Durante el próximo mes</option>
+                <option>En los próximos tres meses</option>
+                <option>Solo estoy explorando</option>
+              </select>
+            </div>
+            <span class="field-error" data-error-for="f-cuando"></span>
+          </div>
+
+          <div class="field">
+            <label>¿Cómo prefieres que Mary te contacte?<span class="req">*</span></label>
+            <div class="radio-pills">
+              <div class="radio-pill">
+                <input type="radio" id="f-contacto-wa" name="contacto" value="WhatsApp" required />
+                <label for="f-contacto-wa">WhatsApp</label>
+              </div>
+              <div class="radio-pill">
+                <input type="radio" id="f-contacto-email" name="contacto" value="Correo electrónico" />
+                <label for="f-contacto-email">Correo electrónico</label>
+              </div>
+            </div>
+            <span class="field-error" data-error-for="f-contacto"></span>
+          </div>
+
+          <div class="honeypot" aria-hidden="true">
+            <label for="f-empresa-web">No llenar este campo</label>
+            <input type="text" id="f-empresa-web" name="empresa_web" tabindex="-1" autocomplete="off" />
+          </div>
+          <input type="hidden" name="origen" id="f-origen" value="directo" />
+
+          <div class="consent-field">
+            <input type="checkbox" id="f-consent" name="consent" required />
+            <label for="f-consent">Acepto que REINVENTA utilice mis datos para contactarme sobre sus servicios.<span class="req">*</span></label>
+          </div>
+
+          <div class="form-submit-row">
+            <button type="submit" class="btn btn-primary" id="formSubmitBtn">Enviar mi solicitud</button>
+            <span class="form-note" id="formGeneralError" role="alert"></span>
+          </div>
+        </div>
+      </form>
+
+      <div class="form-success" id="formSuccess" hidden>
+        <div class="check">✓</div>
+        <h3>Gracias por compartir tu historia.</h3>
+        <p>Mary revisará tu información y se pondrá en contacto contigo para recomendarte el mejor punto de partida.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <svg viewBox="0 0 693.94 172.95" style="height:26px" role="img" aria-label="REINVENTA by Mary Méndez"><use href="#logo-lockup"></use></svg>
+    <p class="footer-claim">Tu historia a través de tu imagen.</p>
+    <div class="footer-links">
+      <a href="#" data-route="Instagram (pendiente de confirmar usuario)">Instagram</a>
+      <a href="#" data-route="[correo de contacto pendiente]">Escríbenos</a>
+      <a href="#" data-route="/aviso-de-privacidad">Aviso de privacidad</a>
+    </div>
+    <div class="footer-bottom">© 2026 REINVENTA by Mary Méndez. Todos los derechos reservados.</div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  var menuOpen = document.getElementById('menuOpen');
+  var menuClose = document.getElementById('menuClose');
+  var mobileMenu = document.getElementById('mobileMenu');
+  function openMenu(){ mobileMenu.classList.add('open'); menuOpen.setAttribute('aria-expanded','true'); mobileMenu.querySelector('a').focus(); }
+  function closeMenu(){ mobileMenu.classList.remove('open'); menuOpen.setAttribute('aria-expanded','false'); menuOpen.focus(); }
+  menuOpen.addEventListener('click', openMenu);
+  menuClose.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && mobileMenu.classList.contains('open')) closeMenu(); });
+  mobileMenu.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeMenu); });
+
+  var toast = document.getElementById('toast');
+  var toastTimer;
+  function showToast(msg){
+    toast.innerHTML = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 3600);
+  }
+  document.querySelectorAll('[data-route]').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.preventDefault();
+      var route = el.getAttribute('data-route');
+      showToast('Ruta preparada — <b>' + route + '</b> (página interna en desarrollo)');
+    });
+  });
+
+  var origenField = document.getElementById('f-origen');
+  document.querySelectorAll('[data-scroll]').forEach(function(el){
+    el.addEventListener('click', function(){
+      origenField.value = el.getAttribute('data-scroll');
+    });
+  });
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('reveal-ready');
+    var revealEls = document.querySelectorAll('.reveal');
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.01, rootMargin: '0px 0px -10% 0px' });
+    revealEls.forEach(function(el){ io.observe(el); });
+    setTimeout(function(){
+      revealEls.forEach(function(el){ el.classList.add('in'); });
+    }, 2500);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     FORMULARIO DE CAPTACIÓN → GOOGLE SHEETS
+     PENDIENTE: pega aquí la URL del Google Apps Script Web App
+     (termina en /exec). Instrucciones en google-sheets-integration.gs.
+
+     Mientras FORM_ENDPOINT esté vacío, el formulario muestra un aviso
+     visible de que la integración está pendiente y NO simula éxito.
+  ═══════════════════════════════════════════════════════════════ */
+  var FORM_ENDPOINT = '';
+
+  var form = document.getElementById('leadForm');
+  var successPanel = document.getElementById('formSuccess');
+  var submitBtn = document.getElementById('formSubmitBtn');
+  var generalError = document.getElementById('formGeneralError');
+
+  function setFieldError(input, message){
+    var field = input.closest('.field');
+    var errorEl = form.querySelector('[data-error-for="' + input.id + '"]');
+    if (field) field.classList.toggle('invalid', !!message);
+    if (errorEl) errorEl.textContent = message || '';
+  }
+
+  function validateForm(){
+    var valid = true;
+    var nombre = form.querySelector('#f-nombre');
+    var correo = form.querySelector('#f-correo');
+    var whatsapp = form.querySelector('#f-whatsapp');
+    var servicio = form.querySelector('#f-servicio');
+    var cuando = form.querySelector('#f-cuando');
+    var contacto = form.querySelector('input[name="contacto"]:checked');
+
+    if (!nombre.value.trim() || nombre.value.trim().length < 2) {
+      setFieldError(nombre, 'Escribe tu nombre completo.'); valid = false;
+    } else { setFieldError(nombre, ''); }
+
+    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(correo.value.trim())) {
+      setFieldError(correo, 'Escribe un correo válido.'); valid = false;
+    } else { setFieldError(correo, ''); }
+
+    var phonePattern = /^[0-9+()\s-]{8,}$/;
+    if (!phonePattern.test(whatsapp.value.trim())) {
+      setFieldError(whatsapp, 'Escribe un número de WhatsApp válido.'); valid = false;
+    } else { setFieldError(whatsapp, ''); }
+
+    if (!servicio.value) {
+      setFieldError(servicio, 'Selecciona un servicio.'); valid = false;
+    } else { setFieldError(servicio, ''); }
+
+    if (!cuando.value) {
+      setFieldError(cuando, 'Selecciona una opción.'); valid = false;
+    } else { setFieldError(cuando, ''); }
+
+    var contactoError = form.querySelector('[data-error-for="f-contacto"]');
+    if (!contacto) {
+      contactoError.textContent = 'Selecciona una forma de contacto.'; valid = false;
+    } else { contactoError.textContent = ''; }
+
+    var consent = form.querySelector('#f-consent');
+    if (!consent.checked) {
+      generalError.textContent = 'Debes aceptar el uso de tus datos para continuar.'; valid = false;
+    } else if (valid) {
+      generalError.textContent = '';
+    }
+
+    return valid;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    var honeypot = form.querySelector('#f-empresa-web');
+    if (honeypot.value.trim() !== '') {
+      form.reset();
+      successPanel.hidden = false;
+      form.hidden = true;
+      return;
+    }
+
+    if (!validateForm()) {
+      generalError.textContent = generalError.textContent || 'Revisa los campos marcados antes de continuar.';
+      return;
+    }
+
+    var payload = {
+      nombre: form.nombre.value.trim(),
+      correo: form.correo.value.trim(),
+      whatsapp: form.whatsapp.value.trim(),
+      servicio: form.servicio.value,
+      transformar: form.transformar.value.trim(),
+      cuando: form.cuando.value,
+      contacto: form.contacto.value,
+      origen: form.origen.value,
+      fecha: new Date().toISOString()
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span> Enviando…';
+    generalError.textContent = '';
+
+    function onSuccess(){
+      form.hidden = true;
+      successPanel.hidden = false;
+      successPanel.focus && successPanel.setAttribute('tabindex','-1');
+      successPanel.focus();
+    }
+
+    function onFailure(){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enviar mi solicitud';
+      generalError.textContent = 'No se pudo enviar tu solicitud. Intenta de nuevo en unos segundos.';
+    }
+
+    if (FORM_ENDPOINT) {
+      /* Google Apps Script Web Apps no devuelven cabeceras CORS legibles
+         desde fetch, así que se envía en modo no-cors con text/plain
+         (evita el preflight que Apps Script no sabe responder). El
+         cuerpo sigue siendo JSON válido: doPost() lo parsea igual.
+         Con no-cors la respuesta es opaca (no se puede leer res.ok),
+         así que una promesa resuelta sin error de red se trata como éxito. */
+      fetch(FORM_ENDPOINT, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      }).then(onSuccess).catch(onFailure);
+    } else {
+      /* FORM_ENDPOINT no configurado: NO simular éxito.
+         Mostrar aviso visible para no confundir a usuarios reales. */
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enviar mi solicitud';
+      generalError.textContent = 'El formulario aún no está conectado. Por favor escríbenos directamente mientras habilitamos este servicio.';
+      console.warn('[REINVENTA] FORM_ENDPOINT no configurado — datos capturados pero NO enviados:', payload);
+    }
+  });
+</script>
+
+</body>
+</html>

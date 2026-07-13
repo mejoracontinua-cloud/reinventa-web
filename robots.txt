@@ -1,0 +1,8 @@
+# robots.txt — REINVENTA by Mary Méndez
+# https://www.robotstxt.org/
+
+User-agent: *
+Allow: /
+
+# PENDIENTE: actualizar la URL del sitemap con el dominio definitivo
+# Sitemap: https://TU-DOMINIO.com/sitemap.xml

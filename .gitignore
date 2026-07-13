@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Variables de entorno (nunca subir al repositorio)
+.env
+.env.local
+.env.production
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
