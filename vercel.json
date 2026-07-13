@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/taller-imagen-personal", "destination": "/taller-imagen-personal.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
