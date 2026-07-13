@@ -5,4 +5,4 @@ User-agent: *
 Allow: /
 
 # Dominio temporal Vercel. Actualizar cuando llegue dominio definitivo.
-Sitemap: https://reinventa-web-eta.vercel.app/sitemap.xml
+Sitemap: https://reinventabymarymendez.vercel.app/sitemap.xml
