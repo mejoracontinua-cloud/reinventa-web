@@ -685,9 +685,9 @@
     <p class="footer-claim">Tu historia a través de tu imagen.</p>
     <div class="footer-links">
       <a href="index.html">Sitio principal</a>
-      <a href="#" data-route="Instagram (pendiente de confirmar usuario)">Instagram</a>
+      <a href="https://instagram.com/reinventa_bymarymendez" target="_blank" rel="noopener noreferrer">Instagram</a>
       <a href="mailto:marymendez.mk@gmail.com">marymendez.mk@gmail.com</a>
-      <a href="#" data-route="/aviso-de-privacidad">Aviso de privacidad</a>
+      <a href="/aviso-de-privacidad">Aviso de privacidad</a>
     </div>
     <div class="footer-bottom">© 2026 REINVENTA by Mary Méndez. Todos los derechos reservados.</div>
   </div>
@@ -862,6 +862,25 @@
         <label for="m-busca">¿Qué estás buscando?</label>
         <textarea id="m-busca" name="busca" rows="2"></textarea>
       </div>
+      <div class="modal-field" style="margin-bottom:.7rem;">
+        <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;text-transform:none;letter-spacing:0;color:#221019;font-weight:400;cursor:pointer;line-height:1.5;">
+          <input type="checkbox" id="m-privacidad" required style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
+          He leído y acepto el <a href="/aviso-de-privacidad" target="_blank" style="color:#C6A56A;">Aviso de Privacidad</a> y autorizo el tratamiento de mis datos para atender mi solicitud.<span class="modal-req">*</span>
+        </label>
+        <span class="modal-error" id="err-privacidad"></span>
+      </div>
+      <div class="modal-field" style="margin-bottom:.7rem;">
+        <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;text-transform:none;letter-spacing:0;color:#4a3a44;font-weight:400;cursor:pointer;line-height:1.5;">
+          <input type="checkbox" id="m-marketing" style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
+          Quiero recibir información sobre próximos talleres, servicios y experiencias de REINVENTA.
+        </label>
+      </div>
+      <div class="modal-field" style="margin-bottom:1.2rem;">
+        <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;text-transform:none;letter-spacing:0;color:#4a3a44;font-weight:400;cursor:pointer;line-height:1.5;">
+          <input type="checkbox" id="m-imagen" style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
+          Autorizo el uso de fotografías o videos en los que aparezca para la difusión de REINVENTA en su sitio web, redes sociales y materiales promocionales.
+        </label>
+      </div>
       <div class="modal-actions">
         <button type="submit" class="btn btn-primary" id="modalSubmit" style="flex:1;">Continuar al pago</button>
       </div>
@@ -889,7 +908,7 @@
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modal.hidden) closeModal(); });
 
   function setErr(id, msg){ document.getElementById(id).textContent = msg || ''; }
-  function clearErrors(){ setErr('err-nombre',''); setErr('err-correo',''); setErr('err-whatsapp',''); setErr('err-contacto',''); }
+  function clearErrors(){ setErr('err-nombre',''); setErr('err-correo',''); setErr('err-whatsapp',''); setErr('err-contacto',''); setErr('err-privacidad',''); }
 
   function validate(){
     var ok = true;
@@ -901,6 +920,7 @@
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)){ setErr('err-correo','Escribe un correo válido.'); ok=false; } else setErr('err-correo','');
     if(!/^[0-9+()\s\-]{8,}$/.test(wa)){ setErr('err-whatsapp','Escribe un número de WhatsApp válido.'); ok=false; } else setErr('err-whatsapp','');
     if(!contacto){ setErr('err-contacto','Elige una opción.'); ok=false; } else setErr('err-contacto','');
+    if(!document.getElementById('m-privacidad').checked){ setErr('err-privacidad','Debes aceptar el aviso de privacidad para continuar.'); ok=false; } else setErr('err-privacidad','');
     return ok;
   }
 
@@ -917,6 +937,8 @@
       transformar: document.getElementById('m-busca').value.trim(),
       cuando: 'Reserva taller 15 agosto',
       contacto: (document.querySelector('input[name="contacto"]:checked') || {}).value || '',
+      marketing: document.getElementById('m-marketing').checked ? 'Sí' : 'No',
+      autoriza_imagen: document.getElementById('m-imagen').checked ? 'Sí' : 'No',
       origen: 'landing-taller',
       fecha: new Date().toISOString()
     };
