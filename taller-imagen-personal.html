@@ -225,7 +225,7 @@
   .price-card.featured .p-amount{color:var(--cream);}
   .price-card .p-amount .cur{font-size:.9rem;font-family:var(--font-body);letter-spacing:.05em;margin-left:.3rem;}
   .price-card .btn{margin-top:1.6rem;width:100%;}
-  .price-card .tier-caption{display:block;margin-top:1.6rem;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mauve);}
+  .price-card .tier-caption{display:block;margin-top:1.4rem;font-family:'Big Caslon','Didot',Georgia,serif;font-style:italic;font-size:1rem;color:var(--mauve);}
   .price-card.featured .tier-caption{color:rgba(239,233,226,.65);}
   .price-card .tier-soon{margin-top:.9rem;font-size:.8rem;color:var(--mauve);}
   .price-card.featured .tier-soon{color:rgba(239,233,226,.75);}
@@ -802,7 +802,8 @@
       card.classList.remove('featured');
       btn.hidden = true;
       caption.hidden = false;
-      caption.textContent = idx < activeIndex ? 'Cupo agotado' : 'Próximamente';
+      var proximoTexto = tier === 'preventa' ? 'Próximamente · 22 jul' : 'Próximamente · 10 ago';
+      caption.textContent = idx < activeIndex ? 'Cupo agotado' : proximoTexto;
     }
   });
 </script>
