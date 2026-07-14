@@ -607,7 +607,7 @@
         <span class="p-tag">Preventa</span>
         <p class="p-sub">Lugares limitados</p>
         <div class="p-amount">$1,500<span class="cur">MXN</span></div>
-        <button class="btn btn-primary tier-btn" data-tier-label="Reservar en preventa">Reservar en preventa</button>
+        <button class="btn btn-primary tier-btn" data-tier-label="Reservar en preventa" hidden>Reservar en preventa</button>
         <span class="tier-caption"></span>
         <p class="tier-soon" hidden>El enlace de pago estará disponible muy pronto.</p>
       </div>
@@ -615,7 +615,7 @@
         <span class="p-tag">Precio final</span>
         <p class="p-sub">Últimos lugares</p>
         <div class="p-amount">$1,700<span class="cur">MXN</span></div>
-        <button class="btn btn-primary tier-btn" data-tier-label="Reservar mi lugar">Reservar mi lugar</button>
+        <button class="btn btn-primary tier-btn" data-tier-label="Reservar mi lugar" hidden>Reservar mi lugar</button>
         <span class="tier-caption"></span>
         <p class="tier-soon" hidden>El enlace de pago estará disponible muy pronto.</p>
       </div>
@@ -872,10 +872,9 @@
       <div class="modal-field" style="margin-bottom:.7rem;">
 
         <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;text-transform:none;letter-spacing:0;color:#4a3a44;font-weight:400;cursor:pointer;line-height:1.5;">
-          <input type="checkbox" id="m-marketing" required style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
-          Quiero recibir información sobre próximos talleres, servicios y experiencias de REINVENTA.<span class="modal-req">*</span>
+          <input type="checkbox" id="m-marketing" style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
+          Quiero recibir información sobre próximos talleres, servicios y experiencias de REINVENTA.
         </label>
-        <span class="modal-error" id="err-marketing"></span>
       </div>
       <div class="modal-field" style="margin-bottom:1.2rem;">
         <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;text-transform:none;letter-spacing:0;color:#4a3a44;font-weight:400;cursor:pointer;line-height:1.5;">
@@ -924,7 +923,6 @@
     if(!/^[0-9+()\s\-]{8,}$/.test(wa)){ setErr('err-whatsapp','Escribe un número de WhatsApp válido.'); ok=false; } else setErr('err-whatsapp','');
     if(!contacto){ setErr('err-contacto','Elige una opción.'); ok=false; } else setErr('err-contacto','');
     if(!document.getElementById('m-privacidad').checked){ setErr('err-privacidad','Debes aceptar el aviso de privacidad para continuar.'); ok=false; } else setErr('err-privacidad','');
-    if(!document.getElementById('m-marketing').checked){ setErr('err-marketing','Este campo es obligatorio.'); ok=false; } else setErr('err-marketing','');
     if(!document.getElementById('m-imagen').checked){ setErr('err-imagen','Este campo es obligatorio.'); ok=false; } else setErr('err-imagen','');
     return ok;
   }

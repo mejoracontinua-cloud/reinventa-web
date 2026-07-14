@@ -18,6 +18,8 @@
  *   J  Pagó ✓
  *   K  Stripe Payment ID
  *   L  Origen
+ *   M  Acepta marketing
+ *   N  Autoriza uso de imagen
  *
  * INSTRUCCIONES DE DESPLIEGUE:
  *   1. Pega este código en Apps Script (Extensiones > Apps Script).
@@ -63,25 +65,29 @@ function handleFormSubmit(data) {
 
   if (existingRow) {
     // Actualizar datos del popup si ya existe (vino antes de Stripe)
-    sheet.getRange(existingRow, 2).setValue(data.nombre    || sheet.getRange(existingRow, 2).getValue());
-    sheet.getRange(existingRow, 4).setValue(data.whatsapp  || sheet.getRange(existingRow, 4).getValue());
-    sheet.getRange(existingRow, 5).setValue(data.contacto  || sheet.getRange(existingRow, 5).getValue());
+    sheet.getRange(existingRow, 2).setValue(data.nombre      || sheet.getRange(existingRow, 2).getValue());
+    sheet.getRange(existingRow, 4).setValue(data.whatsapp    || sheet.getRange(existingRow, 4).getValue());
+    sheet.getRange(existingRow, 5).setValue(data.contacto    || sheet.getRange(existingRow, 5).getValue());
     sheet.getRange(existingRow, 6).setValue(data.transformar || sheet.getRange(existingRow, 6).getValue());
     sheet.getRange(existingRow, 12).setValue('landing + stripe');
+    sheet.getRange(existingRow, 13).setValue(data.marketing       || '');
+    sheet.getRange(existingRow, 14).setValue(data.autoriza_imagen || '');
   } else {
     sheet.appendRow([
-      new Date(),        // A Fecha registro
-      data.nombre     || '',
-      correo,            // C Correo
-      data.whatsapp   || '',
-      data.contacto   || '',
-      data.transformar|| '',
-      data.servicio   || '',  // G Fase (ej. "Early Bird")
-      '',                // H Monto
-      '',                // I Fecha pago
-      '',                // J Pagó
-      '',                // K Stripe ID
-      data.origen     || 'landing'
+      new Date(),               // A Fecha registro
+      data.nombre     || '',    // B Nombre
+      correo,                   // C Correo
+      data.whatsapp   || '',    // D WhatsApp
+      data.contacto   || '',    // E Contacto preferido
+      data.transformar|| '',    // F ¿Qué busca?
+      data.servicio   || '',    // G Fase
+      '',                       // H Monto
+      '',                       // I Fecha pago
+      '',                       // J Pagó
+      '',                       // K Stripe ID
+      data.origen     || 'landing', // L Origen
+      data.marketing       || '',   // M Acepta marketing
+      data.autoriza_imagen || ''    // N Autoriza imagen
     ]);
   }
 
