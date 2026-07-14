@@ -796,7 +796,7 @@
       card.classList.remove('featured');
       btn.hidden = true;
       caption.hidden = false;
-      caption.textContent = idx < activeIndex ? 'Cupo agotado' : 'Próxima etapa';
+      caption.textContent = idx < activeIndex ? 'Cupo agotado' : 'Próximamente';
     }
   });
 </script>
@@ -806,9 +806,9 @@
      POPUP DATOS PREVIO A STRIPE
 ═══════════════════════════════════════════════════════════════ -->
 <style>
-  .modal-overlay{position:fixed;inset:0;background:rgba(26,9,20,.72);z-index:500;display:flex;align-items:center;justify-content:center;padding:1.2rem;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(26,9,20,.72);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:1.2rem;overflow-y:auto;}
   .modal-overlay[hidden]{display:none;}
-  .modal-box{background:#EFE9E2;max-width:480px;width:100%;padding:clamp(1.6rem,4vw,2.8rem);position:relative;}
+  .modal-box{background:#EFE9E2;max-width:480px;width:100%;padding:clamp(1.6rem,4vw,2.8rem);position:relative;margin:auto;}
   .modal-box h3{font-family:'Big Caslon','Didot',Georgia,serif;font-weight:400;font-size:1.55rem;margin:0 0 .4rem;color:#221019;}
   .modal-box .modal-sub{font-size:.92rem;color:#4a3a44;margin:0 0 1.6rem;line-height:1.6;}
   .modal-close{position:absolute;top:.9rem;right:1rem;background:none;border:none;cursor:pointer;font-size:1.3rem;color:#8F7383;line-height:1;}
@@ -870,16 +870,19 @@
         <span class="modal-error" id="err-privacidad"></span>
       </div>
       <div class="modal-field" style="margin-bottom:.7rem;">
+
         <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;text-transform:none;letter-spacing:0;color:#4a3a44;font-weight:400;cursor:pointer;line-height:1.5;">
-          <input type="checkbox" id="m-marketing" style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
-          Quiero recibir información sobre próximos talleres, servicios y experiencias de REINVENTA.
+          <input type="checkbox" id="m-marketing" required style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
+          Quiero recibir información sobre próximos talleres, servicios y experiencias de REINVENTA.<span class="modal-req">*</span>
         </label>
+        <span class="modal-error" id="err-marketing"></span>
       </div>
       <div class="modal-field" style="margin-bottom:1.2rem;">
         <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;text-transform:none;letter-spacing:0;color:#4a3a44;font-weight:400;cursor:pointer;line-height:1.5;">
-          <input type="checkbox" id="m-imagen" style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
-          Autorizo el uso de fotografías o videos en los que aparezca para la difusión de REINVENTA en su sitio web, redes sociales y materiales promocionales.
+          <input type="checkbox" id="m-imagen" required style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
+          Autorizo el uso de fotografías o videos en los que aparezca para la difusión de REINVENTA en su sitio web, redes sociales y materiales promocionales.<span class="modal-req">*</span>
         </label>
+        <span class="modal-error" id="err-imagen"></span>
       </div>
       <div class="modal-actions">
         <button type="submit" class="btn btn-primary" id="modalSubmit" style="flex:1;">Continuar al pago</button>
@@ -907,8 +910,8 @@
   modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modal.hidden) closeModal(); });
 
-  function setErr(id, msg){ document.getElementById(id).textContent = msg || ''; }
-  function clearErrors(){ setErr('err-nombre',''); setErr('err-correo',''); setErr('err-whatsapp',''); setErr('err-contacto',''); setErr('err-privacidad',''); }
+  function setErr(id, msg){ var el=document.getElementById(id); if(el) el.textContent = msg || ''; }
+  function clearErrors(){ setErr('err-nombre',''); setErr('err-correo',''); setErr('err-whatsapp',''); setErr('err-contacto',''); setErr('err-privacidad',''); setErr('err-marketing',''); setErr('err-imagen',''); }
 
   function validate(){
     var ok = true;
@@ -921,6 +924,8 @@
     if(!/^[0-9+()\s\-]{8,}$/.test(wa)){ setErr('err-whatsapp','Escribe un número de WhatsApp válido.'); ok=false; } else setErr('err-whatsapp','');
     if(!contacto){ setErr('err-contacto','Elige una opción.'); ok=false; } else setErr('err-contacto','');
     if(!document.getElementById('m-privacidad').checked){ setErr('err-privacidad','Debes aceptar el aviso de privacidad para continuar.'); ok=false; } else setErr('err-privacidad','');
+    if(!document.getElementById('m-marketing').checked){ setErr('err-marketing','Este campo es obligatorio.'); ok=false; } else setErr('err-marketing','');
+    if(!document.getElementById('m-imagen').checked){ setErr('err-imagen','Este campo es obligatorio.'); ok=false; } else setErr('err-imagen','');
     return ok;
   }
 
