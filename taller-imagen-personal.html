@@ -608,7 +608,7 @@
         <p class="p-sub">Lugares limitados</p>
         <div class="p-amount">$1,500<span class="cur">MXN</span></div>
         <button class="btn btn-primary tier-btn" data-tier-label="Reservar en preventa" hidden>Reservar en preventa</button>
-        <span class="tier-caption">Próximamente · 22 jul</span>
+        <span class="tier-caption">Próximamente</span>
         <p class="tier-soon" hidden>El enlace de pago estará disponible muy pronto.</p>
       </div>
       <div class="price-card" data-tier="precio_final">
@@ -802,7 +802,7 @@
       card.classList.remove('featured');
       btn.hidden = true;
       caption.hidden = false;
-      var proximoTexto = tier === 'preventa' ? 'Próximamente · 22 jul' : 'Próximamente · 10 ago';
+      var proximoTexto = tier === 'preventa' ? 'Próximamente' : 'Próximamente · 10 ago';
       caption.textContent = idx < activeIndex ? 'Cupo agotado' : proximoTexto;
     }
   });
