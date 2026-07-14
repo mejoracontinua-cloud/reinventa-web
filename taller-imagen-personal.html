@@ -265,10 +265,64 @@
   .toast.show{transform:translate(-50%,0);opacity:1;visibility:visible;}
   .toast b{color:var(--gold);font-weight:600;}
 
+  /* ── Animaciones de entrada ─────────────────────────────────── */
   .reveal{opacity:1;transform:none;}
-  .reveal-ready .reveal{opacity:0;transform:translateY(20px);transition:opacity .85s cubic-bezier(.22,1,.36,1), transform .85s cubic-bezier(.22,1,.36,1);}
+  .reveal-ready .reveal{
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
   .reveal-ready .reveal.in{opacity:1;transform:translateY(0);}
-  @media (prefers-reduced-motion: reduce){.reveal-ready .reveal{opacity:1;transform:none;}}
+
+  /* Variante escala — para fotos y cards */
+  .reveal-ready .reveal-scale{opacity:0;transform:scale(.97) translateY(16px);transition:opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1);transition-delay:var(--reveal-delay,0ms);}
+  .reveal-ready .reveal-scale.in{opacity:1;transform:scale(1) translateY(0);}
+
+  /* Variante desde izquierda */
+  .reveal-ready .reveal-left{opacity:0;transform:translateX(-24px);transition:opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1);transition-delay:var(--reveal-delay,0ms);}
+  .reveal-ready .reveal-left.in{opacity:1;transform:translateX(0);}
+
+  /* Líneas ornamentales */
+  @keyframes orn-grow { from{width:0;opacity:0} to{opacity:.6} }
+  .reveal-ready .orn-anim .line{width:0;opacity:0;}
+  .reveal-ready .orn-anim.in .line{animation:orn-grow .8s cubic-bezier(.22,1,.36,1) forwards;animation-delay:.3s;}
+  .reveal-ready .orn-anim.in .line:last-child{animation-delay:.45s;}
+
+  /* Badge rotación lenta */
+  @keyframes badge-spin { to{transform:rotate(360deg)} }
+  .badge-seal-ring{animation:badge-spin 18s linear infinite;transform-origin:center;}
+
+  /* Hero orquestado */
+  .reveal-ready .hero-copy .hero-label   { opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1); transition-delay:.1s; }
+  .reveal-ready .hero-copy h1            { opacity:0; transform:translateY(22px); transition:opacity .9s ease, transform .9s cubic-bezier(.22,1,.36,1); transition-delay:.25s; }
+  .reveal-ready .hero-copy .hero-divider { opacity:0; transition:opacity .6s ease; transition-delay:.5s; }
+  .reveal-ready .hero-copy .hero-quote   { opacity:0; transform:translateY(14px); transition:opacity .8s ease, transform .8s cubic-bezier(.22,1,.36,1); transition-delay:.6s; }
+  .reveal-ready .hero-copy .lede        { opacity:0; transform:translateY(12px); transition:opacity .8s ease, transform .8s cubic-bezier(.22,1,.36,1); transition-delay:.75s; }
+  .reveal-ready .hero-copy .hero-actions { opacity:0; transform:translateY(10px); transition:opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1); transition-delay:.9s; }
+  .reveal-ready .hero-copy .info-card   { opacity:0; transform:translateY(10px); transition:opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1); transition-delay:1.05s; }
+
+  .reveal-ready .hero-copy.in .hero-label,
+  .reveal-ready .hero-copy.in h1,
+  .reveal-ready .hero-copy.in .hero-divider,
+  .reveal-ready .hero-copy.in .hero-quote,
+  .reveal-ready .hero-copy.in .lede,
+  .reveal-ready .hero-copy.in .hero-actions,
+  .reveal-ready .hero-copy.in .info-card { opacity:1; transform:translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal-ready .reveal,
+    .reveal-ready .reveal-scale,
+    .reveal-ready .reveal-left,
+    .reveal-ready .hero-copy .hero-label,
+    .reveal-ready .hero-copy h1,
+    .reveal-ready .hero-copy .hero-divider,
+    .reveal-ready .hero-copy .hero-quote,
+    .reveal-ready .hero-copy .lede,
+    .reveal-ready .hero-copy .hero-actions,
+    .reveal-ready .hero-copy .info-card { opacity:1;transform:none;animation:none; }
+    .badge-seal-ring { animation:none; }
+  }
 
   @media (max-width: 1024px){
     .nav-links{display:none;}
@@ -728,14 +782,45 @@
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!reduceMotion && 'IntersectionObserver' in window) {
     document.documentElement.classList.add('reveal-ready');
-    var revealEls = document.querySelectorAll('.reveal');
+
+    /* Stagger: asignar --reveal-delay a hijos de grids y listas */
+    var STAGGER_MS = 90;
+    var staggerSelectors = [
+      '.learn-grid .learn-card',
+      '.price-grid .price-card',
+      '.timeline .timeline-step',
+      '.para-ti-list .para-ti-item',
+      '.exp-photos .exp-photo',
+      '.info-card .info-item'
+    ];
+    staggerSelectors.forEach(function(sel){
+      document.querySelectorAll(sel).forEach(function(el, i){
+        el.style.setProperty('--reveal-delay', (i * STAGGER_MS) + 'ms');
+        el.classList.add('reveal');
+      });
+    });
+
+    /* Fotos y cards → reveal-scale */
+    document.querySelectorAll('.hero-photo, .mensaje-photo, .llevaras-photo, .mary-frame, .ubi-map, .exp-photo-inner').forEach(function(el){
+      el.classList.add('reveal-scale');
+    });
+
+    /* Ornamentos → orn-anim */
+    document.querySelectorAll('.orn').forEach(function(el){
+      el.classList.add('orn-anim');
+    });
+
+    /* Observar todos los elementos animables */
+    var allReveal = document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .orn-anim');
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
       });
-    }, { threshold: 0.01, rootMargin: '0px 0px -10% 0px' });
-    revealEls.forEach(function(el){ io.observe(el); });
-    setTimeout(function(){ revealEls.forEach(function(el){ el.classList.add('in'); }); }, 2500);
+    }, { threshold: 0.04, rootMargin: '0px 0px -6% 0px' });
+    allReveal.forEach(function(el){ io.observe(el); });
+
+    /* Fallback: activar todo lo que no se haya visto tras 3s */
+    setTimeout(function(){ allReveal.forEach(function(el){ el.classList.add('in'); }); }, 3000);
   }
 
   /* ---------------------------------------------------------------
