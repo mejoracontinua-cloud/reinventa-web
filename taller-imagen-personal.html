@@ -833,6 +833,18 @@
         <span class="modal-error" id="err-whatsapp"></span>
       </div>
       <div class="modal-field">
+        <label>¿Cómo prefieres que Mary te contacte?<span class="modal-req">*</span></label>
+        <div style="display:flex;gap:1.6rem;margin-top:.4rem;">
+          <label style="display:flex;align-items:center;gap:.45rem;font-size:.95rem;text-transform:none;letter-spacing:0;color:#221019;font-weight:400;cursor:pointer;">
+            <input type="radio" name="contacto" value="WhatsApp" required style="accent-color:#C6A56A;width:1rem;height:1rem;" /> WhatsApp
+          </label>
+          <label style="display:flex;align-items:center;gap:.45rem;font-size:.95rem;text-transform:none;letter-spacing:0;color:#221019;font-weight:400;cursor:pointer;">
+            <input type="radio" name="contacto" value="Correo electrónico" style="accent-color:#C6A56A;width:1rem;height:1rem;" /> Correo electrónico
+          </label>
+        </div>
+        <span class="modal-error" id="err-contacto"></span>
+      </div>
+      <div class="modal-field">
         <label for="m-busca">¿Qué estás buscando?</label>
         <textarea id="m-busca" name="busca" rows="2"></textarea>
       </div>
@@ -863,16 +875,18 @@
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modal.hidden) closeModal(); });
 
   function setErr(id, msg){ document.getElementById(id).textContent = msg || ''; }
-  function clearErrors(){ setErr('err-nombre',''); setErr('err-correo',''); setErr('err-whatsapp',''); }
+  function clearErrors(){ setErr('err-nombre',''); setErr('err-correo',''); setErr('err-whatsapp',''); setErr('err-contacto',''); }
 
   function validate(){
     var ok = true;
     var nombre = document.getElementById('m-nombre').value.trim();
     var correo = document.getElementById('m-correo').value.trim();
     var wa = document.getElementById('m-whatsapp').value.trim();
+    var contacto = document.querySelector('input[name="contacto"]:checked');
     if(nombre.length < 2){ setErr('err-nombre','Escribe tu nombre completo.'); ok=false; } else setErr('err-nombre','');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)){ setErr('err-correo','Escribe un correo válido.'); ok=false; } else setErr('err-correo','');
     if(!/^[0-9+()\s\-]{8,}$/.test(wa)){ setErr('err-whatsapp','Escribe un número de WhatsApp válido.'); ok=false; } else setErr('err-whatsapp','');
+    if(!contacto){ setErr('err-contacto','Elige una opción.'); ok=false; } else setErr('err-contacto','');
     return ok;
   }
 
@@ -888,7 +902,7 @@
       servicio: 'Taller de imagen y liderazgo — Early Bird',
       transformar: document.getElementById('m-busca').value.trim(),
       cuando: 'Reserva taller 15 agosto',
-      contacto: '',
+      contacto: (document.querySelector('input[name="contacto"]:checked') || {}).value || '',
       origen: 'landing-taller',
       fecha: new Date().toISOString()
     };
