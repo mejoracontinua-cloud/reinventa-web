@@ -735,53 +735,58 @@
   }
 
   /* ---------------------------------------------------------------
-     ENLACES DE PAGO (STRIPE) Y ETAPA ACTIVA
-     Sustituye cada STRIPE_*_LINK por el Payment Link real cuando
-     esté listo. Solo la tarjeta cuyo tier coincide con ACTIVE_TIER
-     muestra botón dorado — las demás muestran una leyenda discreta.
-
-     Para pasar de Early Bird a Preventa cuando se agoten los 10
-     lugares, cambia únicamente esta línea:
-       var ACTIVE_TIER = 'preventa';
+     FASES DE VENTA — cambian automáticamente por fecha (hora CDMX)
+     Early Bird : hasta el 21 jul 2026
+     Preventa   : 22 jul – 9 ago 2026
+     Últimos    : 10 ago – 14 ago 2026
+     Cerrado    : después del 14 ago 2026
   --------------------------------------------------------------- */
-  var ACTIVE_TIER = 'early_bird';
-  var TIER_ORDER = ['early_bird', 'preventa', 'precio_final'];
-
-  var STRIPE_EARLY_BIRD_LINK = '';
-  var STRIPE_PREVENTA_LINK = '';
-  var STRIPE_PRECIO_FINAL_LINK = '';
-  var STRIPE_PAYMENT_LINK_HERE = '';
-
   var STRIPE_LINKS = {
-    early_bird: STRIPE_EARLY_BIRD_LINK,
-    preventa: STRIPE_PREVENTA_LINK,
-    precio_final: STRIPE_PRECIO_FINAL_LINK
+    early_bird:   'https://buy.stripe.com/aFa6oG2Mi3ED2505w76Ri00',
+    preventa:     'https://buy.stripe.com/7sY8wO86C4IHcJE1fR6Ri01',
+    precio_final: 'https://buy.stripe.com/14A8wO86C3ED7pk8Ij6Ri02'
   };
 
+  /* Fecha actual en zona CDMX (UTC-6) */
+  var now = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Mexico_City'}));
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  var D_PREVENTA    = new Date(2026,  6, 22); /* 22 jul */
+  var D_FINAL       = new Date(2026,  7, 10); /* 10 ago */
+  var D_CIERRE      = new Date(2026,  7, 15); /* 15 ago — después del taller */
+
+  var ACTIVE_TIER;
+  if      (today < D_PREVENTA) ACTIVE_TIER = 'early_bird';
+  else if (today < D_FINAL)    ACTIVE_TIER = 'preventa';
+  else if (today < D_CIERRE)   ACTIVE_TIER = 'precio_final';
+  else                          ACTIVE_TIER = 'cerrado';
+
+  var TIER_ORDER = ['early_bird', 'preventa', 'precio_final'];
   var activeIndex = TIER_ORDER.indexOf(ACTIVE_TIER);
+
   document.querySelectorAll('.price-card').forEach(function(card){
     var tier = card.getAttribute('data-tier');
     var idx = TIER_ORDER.indexOf(tier);
     var btn = card.querySelector('.tier-btn');
     var caption = card.querySelector('.tier-caption');
 
+    if (ACTIVE_TIER === 'cerrado') {
+      btn.hidden = true;
+      caption.hidden = false;
+      caption.textContent = 'Venta cerrada';
+      return;
+    }
+
     if (idx === activeIndex) {
       card.classList.add('featured');
       btn.hidden = false;
       caption.hidden = true;
-      btn.addEventListener('click', function(){
-        var link = STRIPE_LINKS[tier] || STRIPE_PAYMENT_LINK_HERE;
-        if (link) {
-          window.location.href = link;
-          return;
-        }
-        card.querySelector('.tier-soon').hidden = false;
-      });
+      btn.addEventListener('click', openModal);
     } else {
       card.classList.remove('featured');
       btn.hidden = true;
       caption.hidden = false;
-      caption.textContent = idx < activeIndex ? 'Cupo agotado' : (idx === TIER_ORDER.length - 1 ? 'Etapa final' : 'Próxima etapa');
+      caption.textContent = idx < activeIndex ? 'Cupo agotado' : 'Próxima etapa';
     }
   });
 </script>
@@ -857,7 +862,7 @@
 
 <script>
 (function(){
-  var STRIPE_URL = 'https://buy.stripe.com/aFa6oG2Mi3ED2505w76Ri00';
+  var STRIPE_URL = STRIPE_LINKS[ACTIVE_TIER] || '';
   var SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzw2YuhsQXtnwF8btABlqeolGykBs6KPkLXFP4RUG0FU34sBX2Kli3CBSnu2AxfJXtqBQ/exec';
 
   var modal = document.getElementById('leadModal');
