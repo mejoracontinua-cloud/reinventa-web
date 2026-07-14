@@ -21,7 +21,7 @@ const MONTOS_TALLER      = [MONTO_EARLY_BIRD, MONTO_PREVENTA, MONTO_PRECIO_FINAL
 const LIMITE_EARLY_BIRD = 10;
 const LIMITE_TOTAL      = 40;
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     const key = process.env.STRIPE_SECRET_KEY;
     if (!key) throw new Error('Sin clave de Stripe');

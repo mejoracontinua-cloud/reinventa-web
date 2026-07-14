@@ -7,7 +7,7 @@
 const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzw2YuhsQXtnwF8btABlqeolGykBs6KPkLXFP4RUG0FU34sBX2Kli3CBSnu2AxfJXtqBQ/exec';
 const MONTOS_TALLER = [130000, 150000, 170000];
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return res.status(500).json({ error: 'Sin clave de Stripe' });
 
