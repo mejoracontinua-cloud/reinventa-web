@@ -760,9 +760,15 @@
   var D_CIERRE      = new Date(2026,  7, 15); /* 15 ago — después del taller */
 
   /* Mostrar aviso si vinieron de /reservar con cupo agotado */
-  if (new URLSearchParams(window.location.search).get('cupo') === 'agotado') {
+  var _params = new URLSearchParams(window.location.search);
+  if (_params.get('cupo') === 'agotado') {
     var msg = document.getElementById('cupo-agotado-msg');
     if (msg) msg.hidden = false;
+  }
+
+  /* Abrir popup automáticamente si vienen de /reservar */
+  if (_params.get('reservar') === '1') {
+    openModal();
   }
 
   var ACTIVE_TIER;
