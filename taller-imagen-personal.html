@@ -621,6 +621,10 @@
       </div>
     </div>
     <p class="inversion-note reveal">Los precios cambian según disponibilidad y etapa de venta.</p>
+    <div id="cupo-agotado-msg" hidden style="text-align:center;margin-top:1.4rem;padding:1.2rem 2rem;background:rgba(198,165,106,.12);border:1px solid rgba(198,165,106,.4);">
+      <p style="font-family:'Big Caslon','Didot',Georgia,serif;font-size:1.15rem;color:var(--plum);margin:0 0 .4rem;">Los lugares se han agotado.</p>
+      <p style="font-size:.88rem;color:var(--mauve);margin:0;">Escríbenos a <a href="mailto:marymendez.mk@gmail.com" style="color:var(--gold);">marymendez.mk@gmail.com</a> para quedar en lista de espera.</p>
+    </div>
   </div>
 </section>
 
@@ -754,6 +758,12 @@
   var D_PREVENTA    = new Date(2026,  6, 22); /* 22 jul */
   var D_FINAL       = new Date(2026,  7, 10); /* 10 ago */
   var D_CIERRE      = new Date(2026,  7, 15); /* 15 ago — después del taller */
+
+  /* Mostrar aviso si vinieron de /reservar con cupo agotado */
+  if (new URLSearchParams(window.location.search).get('cupo') === 'agotado') {
+    var msg = document.getElementById('cupo-agotado-msg');
+    if (msg) msg.hidden = false;
+  }
 
   var ACTIVE_TIER;
   if      (today < D_PREVENTA) ACTIVE_TIER = 'early_bird';

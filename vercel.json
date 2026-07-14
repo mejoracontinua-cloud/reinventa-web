@@ -1,6 +1,7 @@
 {
   "rewrites": [
-    { "source": "/taller-imagen-personal", "destination": "/taller-imagen-personal.html" }
+    { "source": "/taller-imagen-personal", "destination": "/taller-imagen-personal.html" },
+    { "source": "/reservar", "destination": "/api/reservar" }
   ],
   "headers": [
     {
