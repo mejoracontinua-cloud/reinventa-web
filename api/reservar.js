@@ -52,8 +52,13 @@ module.exports = async function handler(req, res) {
     /* ── Decidir fase ────────────────────────────────────── */
     const earlyBirdAgotado = earlyBirdCount >= LIMITE_EARLY_BIRD;
 
-    /* Siempre pasa por la landing con popup abierto */
-    return res.redirect(302, '/taller-imagen-personal?reservar=1');
+    /* Determinar fase y redirigir a página de reserva con el parámetro */
+    var fase;
+    if (!earlyBirdAgotado && hoy < D_PREVENTA) fase = 'early_bird';
+    else if (hoy < D_FINAL)                    fase = 'preventa';
+    else                                        fase = 'precio_final';
+
+    return res.redirect(302, '/reservar.html?fase=' + fase);
 
   } catch (err) {
     /* Si algo falla, manda a la landing para no dejar a nadie varada */
