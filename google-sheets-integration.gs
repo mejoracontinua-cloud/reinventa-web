@@ -130,6 +130,11 @@ function handleStripeWebhook(event) {
   else if (monto == '1500.00') fase = 'Preventa';
   else if (monto == '1700.00') fase = 'Últimos lugares';
 
+  /* ── Correo de confirmación — se envía primero para garantizar entrega ── */
+  if (correo) {
+    enviarCorreoConfirmacion(nombre, correo, fase);
+  }
+
   var sheet = getSheet();
   var existingRow = findRowByEmail(sheet, correo);
 
@@ -181,22 +186,9 @@ function handleStripeWebhook(event) {
     ]);
   }
 
-  /* ── Revisar hitos después de cada pago ─────────────────────── */
+  /* ── Revisar hito sold out ───────────────────────────────────── */
   var sheet2 = getSheet();
-  var totalPagos     = contarPagosSheet(sheet2);
-  var totalEarlyBird = contarFaseSheet(sheet2, 'Early Bird');
-
-  // Notificar Early Bird agotado SOLO cuando este pago es exactamente el #10 de EB
-  // y no se ha enviado antes (evita duplicados por reintentos de Stripe)
-  var hoy = new Date();
-  var D_PREVENTA = new Date(2026, 6, 22);
-  if (fase === 'Early Bird' && totalEarlyBird === LIMITE_EARLY_BIRD && hoy < D_PREVENTA) {
-    var props = PropertiesService.getScriptProperties();
-    if (!props.getProperty('eb_agotado_enviado')) {
-      notificarEarlyBirdAgotado(totalPagos);
-      props.setProperty('eb_agotado_enviado', 'true');
-    }
-  }
+  var totalPagos = contarPagosSheet(sheet2);
   if (totalPagos === LIMITE_TOTAL) {
     var props2 = PropertiesService.getScriptProperties();
     if (!props2.getProperty('sold_out_enviado')) {
@@ -204,12 +196,10 @@ function handleStripeWebhook(event) {
       props2.setProperty('sold_out_enviado', 'true');
     }
   }
-  // (sold out ya se maneja arriba con PropertiesService)
 
-  /* ── Correo de confirmación a la compradora ─────────────────── */
+  /* ── Marcar correo enviado en columna O ──────────────────────── */
   if (correo) {
-    enviarCorreoConfirmacion(nombre, correo, fase);
-    marcarCorreoEnviado(getSheet(), correo);
+    marcarCorreoEnviado(sheet, correo);
   }
 
   return ContentService
