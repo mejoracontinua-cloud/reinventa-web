@@ -136,6 +136,12 @@ function handleStripeWebhook(event) {
   }
 
   var sheet = getSheet();
+
+  /* Si este Stripe ID ya está registrado, ignorar el reintento */
+  if (stripeId && findRowByStripeId(sheet, stripeId)) {
+    return ContentService.createTextOutput(JSON.stringify({ result: 'duplicate' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
   var existingRow = findRowByEmail(sheet, correo);
 
   if (existingRow) {
@@ -457,6 +463,15 @@ function findRowByEmail(sheet, correo) {
     if ((data[i][2] || '').toString().toLowerCase().trim() === correo) {
       return i + 1;
     }
+  }
+  return null;
+}
+
+/* Busca si un Stripe ID ya existe en columna K */
+function findRowByStripeId(sheet, stripeId) {
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if ((data[i][10] || '').toString().trim() === stripeId) return i + 1;
   }
   return null;
 }
