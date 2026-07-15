@@ -75,10 +75,11 @@
     .field textarea { resize: none; min-height: 60px; }
     .req { color: var(--mauve); margin-left: .1em; }
     .err { font-size: .75rem; color: #8a3b3b; min-height: 1em; }
-    .radio-row { display: flex; gap: 1.6rem; margin-top: .4rem; }
+    .radio-row { display: flex; flex-wrap: wrap; gap: .8rem 1.6rem; margin-top: .4rem; }
     .radio-row label {
       display: flex; align-items: center; gap: .4rem;
       font-size: .95rem; color: var(--ink); cursor: pointer;
+      text-transform: none; font-weight: 400; letter-spacing: 0;
     }
     .check-row {
       display: flex; align-items: flex-start; gap: .55rem;
@@ -137,7 +138,7 @@
       <span class="err" id="err-whatsapp"></span>
     </div>
     <div class="field">
-      <label>¿Cómo prefieres que Mary te contacte?<span class="req">*</span></label>
+      <label>¿Cómo prefieres que Mary te contacte?<span class="req" style="white-space:nowrap;">*</span></label>
       <div class="radio-row">
         <label><input type="radio" name="contacto" value="WhatsApp" style="accent-color:var(--gold);" /> WhatsApp</label>
         <label><input type="radio" name="contacto" value="Correo electrónico" style="accent-color:var(--gold);" /> Correo electrónico</label>
