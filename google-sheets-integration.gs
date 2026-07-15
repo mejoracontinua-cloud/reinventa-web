@@ -311,17 +311,19 @@ function enviarConfirmacionExistentes() {
   var sheet = getSheet();
   var data  = sheet.getDataRange().getValues();
   var enviados = 0;
+  var correosYaEnviados = {}; // evita duplicados por filas repetidas del mismo correo
 
   for (var i = 1; i < data.length; i++) {
     var pago      = data[i][9];  // J — Pagó ✓
     var nombre    = data[i][1];  // B
-    var correo    = data[i][2];  // C
+    var correo    = (data[i][2] || '').toLowerCase().trim(); // C
     var fase      = data[i][6];  // G
     var yaEnviado = data[i][14]; // O — Correo confirmación enviado
 
-    if (pago === '✓' && correo && yaEnviado !== 'Sí') {
+    if (pago === '✓' && correo && yaEnviado !== 'Sí' && !correosYaEnviados[correo]) {
       enviarCorreoConfirmacion(nombre, correo, fase);
-      sheet.getRange(i + 1, 15).setValue('Sí'); // marcar columna O
+      sheet.getRange(i + 1, 15).setValue('Sí');
+      correosYaEnviados[correo] = true;
       enviados++;
       Utilities.sleep(1000);
     }
