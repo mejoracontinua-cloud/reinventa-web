@@ -975,6 +975,11 @@
         </select>
         <span class="modal-error" id="err-ocupacion"></span>
       </div>
+      <div class="modal-field" id="mfield-ocupacion-otro" hidden>
+        <label for="m-ocupacion-otro">¿A qué te dedicas exactamente?<span class="modal-req">*</span></label>
+        <input type="text" id="m-ocupacion-otro" style="font-family:'Gill Sans','Gill Sans MT','Segoe UI',Calibri,sans-serif;font-size:1rem;color:#221019;background:transparent;border:none;border-bottom:1px solid rgba(34,16,25,.3);padding:.5rem .1rem;width:100%;" />
+        <span class="modal-error" id="err-ocupacion-otro"></span>
+      </div>
       <div class="modal-field" style="margin-bottom:.7rem;">
         <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;text-transform:none;letter-spacing:0;color:#221019;font-weight:400;cursor:pointer;line-height:1.5;">
           <input type="checkbox" id="m-privacidad" required style="accent-color:#C6A56A;width:1rem;height:1rem;flex-shrink:0;margin-top:.15rem;" />
@@ -1040,7 +1045,12 @@
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !modal.hidden) closeModal(); });
 
   function setErr(id, msg){ var el=document.getElementById(id); if(el) el.textContent = msg || ''; }
-  function clearErrors(){ setErr('err-nombre',''); setErr('err-correo',''); setErr('err-whatsapp',''); setErr('err-contacto',''); setErr('err-busca',''); setErr('err-ocupacion',''); setErr('err-privacidad',''); setErr('err-marketing',''); setErr('err-imagen',''); }
+  /* Mostrar/ocultar campos "otro" en modal */
+  document.getElementById('m-ocupacion').addEventListener('change', function(){
+    document.getElementById('mfield-ocupacion-otro').hidden = this.value !== 'Otro';
+  });
+
+  function clearErrors(){ setErr('err-nombre',''); setErr('err-correo',''); setErr('err-whatsapp',''); setErr('err-contacto',''); setErr('err-busca',''); setErr('err-ocupacion',''); setErr('err-ocupacion-otro',''); setErr('err-privacidad',''); setErr('err-marketing',''); setErr('err-imagen',''); }
 
   function validate(){
     var ok = true;
@@ -1054,7 +1064,9 @@
     if(!contacto){ setErr('err-contacto','Elige una opción.'); ok=false; } else setErr('err-contacto','');
     var busca = document.getElementById('m-busca').value.trim();
     if(busca.length < 2){ setErr('err-busca','Cuéntanos qué estás buscando.'); ok=false; } else setErr('err-busca','');
-    if(!document.getElementById('m-ocupacion').value){ setErr('err-ocupacion','Selecciona una opción.'); ok=false; } else setErr('err-ocupacion','');
+    var mocup = document.getElementById('m-ocupacion').value;
+    if(!mocup){ setErr('err-ocupacion','Selecciona una opción.'); ok=false; } else setErr('err-ocupacion','');
+    if(mocup === 'Otro'){ var mocupOtro = document.getElementById('m-ocupacion-otro').value.trim(); if(!mocupOtro){ setErr('err-ocupacion-otro','Cuéntanos a qué te dedicas.'); ok=false; } else setErr('err-ocupacion-otro',''); }
     if(!document.getElementById('m-privacidad').checked){ setErr('err-privacidad','Debes aceptar el aviso de privacidad para continuar.'); ok=false; } else setErr('err-privacidad','');
     if(!document.getElementById('m-imagen').checked){ setErr('err-imagen','Este campo es obligatorio.'); ok=false; } else setErr('err-imagen','');
     return ok;
@@ -1077,7 +1089,7 @@
       autoriza_imagen: document.getElementById('m-imagen').checked ? 'Sí' : 'No',
       origen: 'landing-taller',
       fecha: new Date().toISOString(),
-      ocupacion: document.getElementById('m-ocupacion').value,
+      ocupacion: document.getElementById('m-ocupacion').value === 'Otro' ? 'Otro: ' + document.getElementById('m-ocupacion-otro').value.trim() : document.getElementById('m-ocupacion').value,
       canal_utm: utmSource,
       como_se_entero: UTM_MAP[utmSource] || ''
     };

@@ -165,6 +165,11 @@
       </select>
       <span class="err" id="err-ocupacion"></span>
     </div>
+    <div class="field" id="field-ocupacion-otro" hidden>
+      <label for="ocupacion-otro">¿A qué te dedicas exactamente?<span class="req">*</span></label>
+      <input type="text" id="ocupacion-otro" />
+      <span class="err" id="err-ocupacion-otro"></span>
+    </div>
     <div class="field">
       <label for="como">¿Cómo te enteraste del taller?<span class="req">*</span></label>
       <select id="como" style="font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;border:none;border-bottom:1px solid rgba(34,16,25,.25);padding:.5rem .1rem;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;">
@@ -176,6 +181,11 @@
         <option value="Otro">Otro</option>
       </select>
       <span class="err" id="err-como"></span>
+    </div>
+    <div class="field" id="field-como-otro" hidden>
+      <label for="como-otro">¿Cómo te enteraste exactamente?<span class="req">*</span></label>
+      <input type="text" id="como-otro" />
+      <span class="err" id="err-como-otro"></span>
     </div>
 
     <div style="margin-top:.6rem;">
@@ -253,7 +263,15 @@
   var btn  = document.getElementById('submitBtn');
 
   function err(id, msg){ document.getElementById(id).textContent = msg || ''; }
-  function clearErr(){ err('err-nombre',''); err('err-correo',''); err('err-whatsapp',''); err('err-contacto',''); err('err-busca',''); err('err-ocupacion',''); err('err-como',''); err('err-privacidad',''); err('err-imagen',''); }
+  /* Mostrar/ocultar campos "otro" */
+  document.getElementById('ocupacion').addEventListener('change', function(){
+    document.getElementById('field-ocupacion-otro').hidden = this.value !== 'Otro';
+  });
+  document.getElementById('como').addEventListener('change', function(){
+    document.getElementById('field-como-otro').hidden = this.value !== 'Otro';
+  });
+
+  function clearErr(){ err('err-nombre',''); err('err-correo',''); err('err-whatsapp',''); err('err-contacto',''); err('err-busca',''); err('err-ocupacion',''); err('err-ocupacion-otro',''); err('err-como',''); err('err-como-otro',''); err('err-privacidad',''); err('err-imagen',''); }
 
   function validate(){
     var ok = true;
@@ -267,8 +285,12 @@
     if(!cont){ err('err-contacto','Elige una opción.'); ok=false; } else err('err-contacto','');
     var busca = document.getElementById('busca').value.trim();
     if(busca.length < 2){ err('err-busca','Cuéntanos qué estás buscando.'); ok=false; } else err('err-busca','');
-    if(!document.getElementById('ocupacion').value){ err('err-ocupacion','Selecciona una opción.'); ok=false; } else err('err-ocupacion','');
-    if(!document.getElementById('como').value){ err('err-como','Selecciona una opción.'); ok=false; } else err('err-como','');
+    var ocup = document.getElementById('ocupacion').value;
+    if(!ocup){ err('err-ocupacion','Selecciona una opción.'); ok=false; } else err('err-ocupacion','');
+    if(ocup === 'Otro'){ var ocupOtro = document.getElementById('ocupacion-otro').value.trim(); if(!ocupOtro){ err('err-ocupacion-otro','Cuéntanos a qué te dedicas.'); ok=false; } else err('err-ocupacion-otro',''); }
+    var como = document.getElementById('como').value;
+    if(!como){ err('err-como','Selecciona una opción.'); ok=false; } else err('err-como','');
+    if(como === 'Otro'){ var comoOtro = document.getElementById('como-otro').value.trim(); if(!comoOtro){ err('err-como-otro','Cuéntanos cómo te enteraste.'); ok=false; } else err('err-como-otro',''); }
     if(!document.getElementById('privacidad').checked){ err('err-privacidad','Debes aceptar el aviso de privacidad.'); ok=false; } else err('err-privacidad','');
     if(!document.getElementById('imagen').checked){ err('err-imagen','Este campo es obligatorio.'); ok=false; } else err('err-imagen','');
     return ok;
@@ -293,9 +315,9 @@
       autoriza_imagen: document.getElementById('imagen').checked ? 'Sí' : 'No',
       origen:          'link-directo',
       cuando:          'Reserva taller 15 agosto',
-      ocupacion:       document.getElementById('ocupacion').value,
+      ocupacion:       document.getElementById('ocupacion').value === 'Otro' ? 'Otro: ' + document.getElementById('ocupacion-otro').value.trim() : document.getElementById('ocupacion').value,
       canal_utm:       utmSource,
-      como_se_entero:  document.getElementById('como').value
+      como_se_entero:  document.getElementById('como').value === 'Otro' ? 'Otro: ' + document.getElementById('como-otro').value.trim() : document.getElementById('como').value
     };
 
     function goStripe(){
