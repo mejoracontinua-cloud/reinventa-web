@@ -160,7 +160,9 @@ function handleStripeWebhook(event) {
       // Ya tiene ✓ — buscar otra fila sin pago para conciliar (ej. acompañante)
       var pendingRow = findRowWithoutPayment(sheet);
       if (pendingRow) {
-        if (nombre) sheet.getRange(pendingRow, 2).setValue(nombre);
+        // No sobreescribir nombre si ya existe uno en la fila
+        var nombreExistente = sheet.getRange(pendingRow, 2).getValue();
+        if (nombre && !nombreExistente) sheet.getRange(pendingRow, 2).setValue(nombre);
         sheet.getRange(pendingRow, 7).setValue(fase);
         sheet.getRange(pendingRow, 8).setValue(monto);
         sheet.getRange(pendingRow, 9).setValue(fecha);
