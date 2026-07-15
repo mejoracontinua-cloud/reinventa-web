@@ -958,8 +958,9 @@
         <span class="modal-error" id="err-contacto"></span>
       </div>
       <div class="modal-field">
-        <label for="m-busca">¿Qué estás buscando?</label>
-        <textarea id="m-busca" name="busca" rows="2"></textarea>
+        <label for="m-busca">¿Qué estás buscando?<span class="modal-req">*</span></label>
+        <textarea id="m-busca" name="busca" rows="2" required></textarea>
+        <span class="modal-error" id="err-busca"></span>
       </div>
       <div class="modal-field" style="margin-bottom:.7rem;">
         <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;text-transform:none;letter-spacing:0;color:#221019;font-weight:400;cursor:pointer;line-height:1.5;">
@@ -1026,6 +1027,8 @@
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)){ setErr('err-correo','Escribe un correo válido.'); ok=false; } else setErr('err-correo','');
     if(!/^[0-9+()\s\-]{8,}$/.test(wa)){ setErr('err-whatsapp','Escribe un número de WhatsApp válido.'); ok=false; } else setErr('err-whatsapp','');
     if(!contacto){ setErr('err-contacto','Elige una opción.'); ok=false; } else setErr('err-contacto','');
+    var busca = document.getElementById('m-busca').value.trim();
+    if(busca.length < 2){ setErr('err-busca','Cuéntanos qué estás buscando.'); ok=false; } else setErr('err-busca','');
     if(!document.getElementById('m-privacidad').checked){ setErr('err-privacidad','Debes aceptar el aviso de privacidad para continuar.'); ok=false; } else setErr('err-privacidad','');
     if(!document.getElementById('m-imagen').checked){ setErr('err-imagen','Este campo es obligatorio.'); ok=false; } else setErr('err-imagen','');
     return ok;

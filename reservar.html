@@ -145,8 +145,9 @@
       <span class="err" id="err-contacto"></span>
     </div>
     <div class="field">
-      <label for="busca">¿Qué estás buscando?</label>
-      <textarea id="busca" rows="2"></textarea>
+      <label for="busca">¿Qué estás buscando?<span class="req">*</span></label>
+      <textarea id="busca" rows="2" required></textarea>
+      <span class="err" id="err-busca"></span>
     </div>
 
     <div style="margin-top:.6rem;">
@@ -201,7 +202,7 @@
   var btn  = document.getElementById('submitBtn');
 
   function err(id, msg){ document.getElementById(id).textContent = msg || ''; }
-  function clearErr(){ err('err-nombre',''); err('err-correo',''); err('err-whatsapp',''); err('err-contacto',''); err('err-privacidad',''); err('err-imagen',''); }
+  function clearErr(){ err('err-nombre',''); err('err-correo',''); err('err-whatsapp',''); err('err-contacto',''); err('err-busca',''); err('err-privacidad',''); err('err-imagen',''); }
 
   function validate(){
     var ok = true;
@@ -213,6 +214,8 @@
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)){ err('err-correo','Escribe un correo válido.'); ok=false; } else err('err-correo','');
     if(!/^[0-9+()\s\-]{8,}$/.test(wa)){ err('err-whatsapp','Escribe un número válido.'); ok=false; } else err('err-whatsapp','');
     if(!cont){ err('err-contacto','Elige una opción.'); ok=false; } else err('err-contacto','');
+    var busca = document.getElementById('busca').value.trim();
+    if(busca.length < 2){ err('err-busca','Cuéntanos qué estás buscando.'); ok=false; } else err('err-busca','');
     if(!document.getElementById('privacidad').checked){ err('err-privacidad','Debes aceptar el aviso de privacidad.'); ok=false; } else err('err-privacidad','');
     if(!document.getElementById('imagen').checked){ err('err-imagen','Este campo es obligatorio.'); ok=false; } else err('err-imagen','');
     return ok;
