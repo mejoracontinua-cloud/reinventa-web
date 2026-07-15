@@ -824,11 +824,7 @@
   }
 
   /* ---------------------------------------------------------------
-     FASES DE VENTA — cambian automáticamente por fecha (hora CDMX)
-     Early Bird : hasta el 21 jul 2026
-     Preventa   : 22 jul – 9 ago 2026
-     Últimos    : 10 ago – 14 ago 2026
-     Cerrado    : después del 14 ago 2026
+     FASES DE VENTA — consulta /api/fase (fecha + inventario Stripe)
   --------------------------------------------------------------- */
   var STRIPE_LINKS = {
     early_bird:   'https://buy.stripe.com/aFa6oG2Mi3ED2505w76Ri00',
@@ -836,13 +832,10 @@
     precio_final: 'https://buy.stripe.com/14A8wO86C3ED7pk8Ij6Ri02'
   };
 
-  /* Fecha actual en zona CDMX (UTC-6) */
-  var now = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Mexico_City'}));
-  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  var D_PREVENTA    = new Date(2026,  6, 22); /* 22 jul */
-  var D_FINAL       = new Date(2026,  7, 10); /* 10 ago */
-  var D_CIERRE      = new Date(2026,  7, 15); /* 15 ago — después del taller */
+  var CAPTIONS = {
+    preventa:     'Hasta el 10 de agosto',
+    precio_final: 'Últimos días · cierra 15 ago'
+  };
 
   /* Mostrar aviso si vinieron de /reservar con cupo agotado */
   var _params = new URLSearchParams(window.location.search);
@@ -851,46 +844,58 @@
     if (msg) msg.hidden = false;
   }
 
-  /* Abrir popup automáticamente si vienen de /reservar */
-  if (_params.get('reservar') === '1') {
-    openModal();
+  function aplicarFase(ACTIVE_TIER) {
+    var TIER_ORDER = ['early_bird', 'preventa', 'precio_final'];
+    var activeIndex = TIER_ORDER.indexOf(ACTIVE_TIER);
+
+    document.querySelectorAll('.price-card').forEach(function(card){
+      var tier = card.getAttribute('data-tier');
+      var idx  = TIER_ORDER.indexOf(tier);
+      var btn  = card.querySelector('.tier-btn');
+      var caption = card.querySelector('.tier-caption');
+
+      if (ACTIVE_TIER === 'agotado' || ACTIVE_TIER === 'cerrado') {
+        btn.hidden = true;
+        caption.hidden = false;
+        caption.textContent = ACTIVE_TIER === 'agotado' ? 'Cupo agotado' : 'Venta cerrada';
+        card.classList.remove('featured');
+        return;
+      }
+
+      if (idx === activeIndex) {
+        card.classList.add('featured');
+        btn.hidden = false;
+        btn.textContent = tier === 'preventa' ? 'Reservar en Preventa' : tier === 'precio_final' ? 'Reservar mi lugar' : btn.textContent;
+        caption.hidden = true;
+        btn.addEventListener('click', openModal);
+      } else if (idx < activeIndex) {
+        card.classList.remove('featured');
+        btn.hidden = true;
+        caption.hidden = false;
+        caption.textContent = 'Cupo agotado';
+      } else {
+        card.classList.remove('featured');
+        btn.hidden = true;
+        caption.hidden = false;
+        caption.textContent = CAPTIONS[tier] || 'Próximamente';
+      }
+    });
   }
 
-  var ACTIVE_TIER;
-  if      (today < D_PREVENTA) ACTIVE_TIER = 'early_bird';
-  else if (today < D_FINAL)    ACTIVE_TIER = 'preventa';
-  else if (today < D_CIERRE)   ACTIVE_TIER = 'precio_final';
-  else                          ACTIVE_TIER = 'cerrado';
+  /* Fallback por fecha mientras carga la API */
+  var now = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Mexico_City'}));
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var fallbackTier = today < new Date(2026,6,22) ? 'early_bird'
+                   : today < new Date(2026,7,10) ? 'preventa'
+                   : today < new Date(2026,7,15) ? 'precio_final' : 'cerrado';
+  aplicarFase(fallbackTier);
 
-  var TIER_ORDER = ['early_bird', 'preventa', 'precio_final'];
-  var activeIndex = TIER_ORDER.indexOf(ACTIVE_TIER);
+  /* Consultar fase real (inventario + fecha) */
+  fetch('/api/fase')
+    .then(function(r){ return r.json(); })
+    .then(function(data){ if (data.fase) aplicarFase(data.fase); })
+    .catch(function(){}); /* Si falla, queda el fallback por fecha */
 
-  document.querySelectorAll('.price-card').forEach(function(card){
-    var tier = card.getAttribute('data-tier');
-    var idx = TIER_ORDER.indexOf(tier);
-    var btn = card.querySelector('.tier-btn');
-    var caption = card.querySelector('.tier-caption');
-
-    if (ACTIVE_TIER === 'cerrado') {
-      btn.hidden = true;
-      caption.hidden = false;
-      caption.textContent = 'Venta cerrada';
-      return;
-    }
-
-    if (idx === activeIndex) {
-      card.classList.add('featured');
-      btn.hidden = false;
-      caption.hidden = true;
-      btn.addEventListener('click', openModal);
-    } else {
-      card.classList.remove('featured');
-      btn.hidden = true;
-      caption.hidden = false;
-      var proximoTexto = tier === 'preventa' ? 'Próximamente' : 'Próximamente · 10 ago';
-      caption.textContent = idx < activeIndex ? 'Cupo agotado' : proximoTexto;
-    }
-  });
 </script>
 
 

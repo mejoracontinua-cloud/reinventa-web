@@ -35,6 +35,11 @@
 
 var SHEET_NAME = 'Registros'; // Cambia si tu hoja tiene otro nombre
 
+/* ── Correos de notificación ────────────────────────────────── */
+var EMAILS_NOTIFICACION = ['mejoracontinua@caceca.org', 'alopez@alumbrastudios.com'];
+var LIMITE_EARLY_BIRD   = 10;
+var LIMITE_TOTAL        = 40;
+
 function doPost(e) {
   try {
     var raw = e.postData.contents;
@@ -144,9 +149,231 @@ function handleStripeWebhook(event) {
     ]);
   }
 
+  /* ── Revisar hitos después de cada pago ─────────────────────── */
+  var sheet2 = getSheet();
+  var totalPagos     = contarPagosSheet(sheet2);
+  var totalEarlyBird = contarFaseSheet(sheet2, 'Early Bird');
+
+  // Notificar Early Bird agotado SOLO cuando este pago es exactamente el #10 de EB
+  var hoy = new Date();
+  var D_PREVENTA = new Date(2026, 6, 22);
+  if (fase === 'Early Bird' && totalEarlyBird === LIMITE_EARLY_BIRD && hoy < D_PREVENTA) {
+    notificarEarlyBirdAgotado(totalPagos);
+  }
+  if (totalPagos === LIMITE_TOTAL) {
+    notificarCupoAgotado(sheet2);
+  }
+
+  /* ── Correo de confirmación a la compradora ─────────────────── */
+  if (correo) {
+    enviarCorreoConfirmacion(nombre, correo, fase);
+  }
+
   return ContentService
     .createTextOutput(JSON.stringify({ result: 'success' }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/* ── Correo de confirmación post-pago ───────────────────────── */
+function enviarCorreoConfirmacion(nombre, correo, fase) {
+  var primerNombre = nombre ? nombre.split(' ')[0] : 'Hola';
+
+  var calLink = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=Taller+de+imagen+y+liderazgo+%E2%80%94+REINVENTA'
+    + '&dates=20260815T160000Z/20260815T180000Z'
+    + '&details=Taller+Lo+que+tu+imagen+comunica+%7C+REINVENTA+by+Mary+M%C3%A9ndez'
+    + '&location=The+University+Club+of+Mexico%2C+Av.+Paseo+de+la+Reforma+150%2C+Ju%C3%A1rez%2C+CDMX';
+
+  var asunto = 'Tu lugar en el taller está confirmado ✦ REINVENTA';
+
+  var html = '<div style="background:#E8E2DB;padding:2rem 1rem;font-family:\'Gill Sans\',Calibri,\'Segoe UI\',sans-serif;">'
+    + '<div style="max-width:540px;margin:0 auto;background:#EFE9E2;box-shadow:0 4px 40px rgba(42,15,37,.13);">'
+
+    // Header
+    + '<div style="background:#2A0F25;padding:2rem 2.4rem 1.6rem;text-align:center;">'
+    + '<span style="font-family:Georgia,serif;font-weight:400;font-size:1rem;letter-spacing:.22em;text-transform:uppercase;color:#C6A56A;display:block;margin-bottom:.2rem;">Reinventa</span>'
+    + '<span style="font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(198,165,106,.5);">by Mary Méndez</span>'
+    + '</div>'
+    + '<div style="height:2px;background:#C6A56A;opacity:.45;"></div>'
+
+    // Body
+    + '<div style="padding:2.2rem 2.6rem 2rem;">'
+
+    // Badge
+    + '<div style="display:inline-block;background:rgba(42,15,37,.07);border-left:2px solid #C6A56A;padding:.4rem .75rem;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:#2A0F25;margin-bottom:1.4rem;">Pago confirmado &middot; ' + fase + '</div>'
+
+    // Saludo
+    + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 1rem;">Tu lugar está reservado,<br>' + primerNombre + '.</h1>'
+    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Nos da mucho gusto tenerte en el taller. Mary estará encantada de acompañarte en este proceso. Guarda la fecha en tu calendario para que no se te pase ningún detalle.</p>'
+
+    // Tarjeta evento
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .8rem;">Detalles del evento</p>'
+    + '<p style="font-family:Georgia,serif;font-size:1.05rem;font-weight:400;color:#2A0F25;margin:0 0 .1rem;">Taller de imagen y liderazgo</p>'
+    + '<p style="font-size:.78rem;color:#8F7383;font-style:italic;margin:0 0 1rem;">Lo que tu imagen comunica</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;margin:0 0 .5rem;">📅 &nbsp;Sábado 15 de agosto de 2026 &middot; 10:00–12:00 pm</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;margin:0;">📍 &nbsp;The University Club of Mexico<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#8F7383;font-size:.8rem;">Av. Paseo de la Reforma 150, Juárez, CDMX</span></p>'
+    + '</div>'
+
+    // Botón Google Calendar
+    + '<a href="' + calLink + '" style="display:block;background:#2A0F25;color:#EFE9E2;text-align:center;padding:.9rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.6rem;">&#128197; &nbsp;Agregar a Google Calendar</a>'
+
+    // Divider
+    + '<hr style="border:none;border-top:1px solid rgba(42,15,37,.1);margin:0 0 1.4rem;" />'
+
+    + '<p style="font-size:.87rem;line-height:1.7;color:#4a3545;margin:0 0 .5rem;">Si tienes alguna pregunta antes del taller, puedes escribirle directamente a Mary. Nos vemos el 15 de agosto.</p>'
+    + '<p style="font-family:Georgia,serif;font-size:.98rem;color:#2A0F25;margin:.8rem 0 .1rem;">Mary Méndez</p>'
+    + '<p style="font-size:.72rem;color:#8F7383;margin:0;">Consultora de imagen y liderazgo</p>'
+    + '</div>'
+
+    // Footer
+    + '<div style="background:#2A0F25;padding:1.1rem 2rem;text-align:center;">'
+    + '<p style="font-size:.63rem;letter-spacing:.07em;color:rgba(198,165,106,.5);line-height:1.7;margin:0;">REINVENTA by Mary Méndez &middot; Ciudad de México<br>'
+    + 'Este correo fue enviado a ' + correo + ' porque realizaste un pago.</p>'
+    + '</div>'
+    + '</div></div>';
+
+  MailApp.sendEmail({
+    to: correo,
+    bcc: 'alopez@alumbrastudios.com',
+    name: 'Reinventa by Mary Méndez',
+    subject: asunto,
+    htmlBody: html
+  });
+}
+
+/* ── Correo de prueba a mejoracontinua@caceca.org ───────────── */
+function enviarCorreoPrueba() {
+  enviarCorreoConfirmacion('Valeria García', 'mejoracontinua@caceca.org', 'Early Bird');
+}
+
+/* ── Enviar correo de confirmación a los 3 pagos existentes ─── */
+function enviarConfirmacionExistentes() {
+  var sheet = getSheet();
+  var data  = sheet.getDataRange().getValues();
+  var enviados = 0;
+
+  for (var i = 1; i < data.length; i++) {
+    var pago   = data[i][9]; // J — Pagó ✓
+    var nombre = data[i][1]; // B
+    var correo = data[i][2]; // C
+    var fase   = data[i][6]; // G
+
+    if (pago === '✓' && correo) {
+      enviarCorreoConfirmacion(nombre, correo, fase);
+      enviados++;
+      Utilities.sleep(1000); // pausa para no saturar
+    }
+  }
+
+  Logger.log('Correos enviados: ' + enviados);
+}
+
+/* ── Notificaciones ──────────────────────────────────────────── */
+
+function notificarEarlyBirdAgotado(totalActual) {
+  var asunto = '🎉 REINVENTA — Early Bird agotado (10/10 lugares)';
+  var cuerpo = '¡Se agotaron los 10 lugares de Early Bird!\n\n'
+    + 'Lugares vendidos en total: ' + totalActual + ' de ' + LIMITE_TOTAL + '\n'
+    + 'A partir de ahora el link /reservar redirige automáticamente a Preventa ($1,500 MXN).\n\n'
+    + 'Puedes revisar todos los registros en tu hoja de cálculo.';
+  enviarCorreo(asunto, cuerpo);
+}
+
+function notificarCupoAgotado(sheet) {
+  var totalPagos = contarPagosSheet(sheet);
+  var eb  = contarFaseSheet(sheet, 'Early Bird');
+  var pre = contarFaseSheet(sheet, 'Preventa');
+  var fin = contarFaseSheet(sheet, 'Últimos lugares');
+  var recaudado = (eb * 1300) + (pre * 1500) + (fin * 1700);
+
+  var asunto = '🏆 REINVENTA — ¡Cupo completo! 40/40 lugares vendidos';
+  var cuerpo = '¡SOLD OUT! Se vendieron los 40 lugares del taller.\n\n'
+    + '— Early Bird:    ' + eb  + ' personas ($1,300)\n'
+    + '— Preventa:      ' + pre + ' personas ($1,500)\n'
+    + '— Precio Final:  ' + fin + ' personas ($1,700)\n\n'
+    + 'Total recaudado estimado: $' + recaudado.toLocaleString('es-MX') + ' MXN\n\n'
+    + 'El link /reservar ya muestra "cupo agotado" automáticamente.';
+  enviarCorreo(asunto, cuerpo);
+}
+
+function notificarCambioDeFase(fase) {
+  var textos = {
+    preventa: {
+      asunto: '📅 REINVENTA — Hoy arranca Preventa',
+      cuerpo: 'Hoy 22 de julio arranca la fase de Preventa ($1,500 MXN).\n\n'
+        + 'El link /reservar ya redirige automáticamente a Preventa.\n'
+        + 'Es buen momento para activar comunicación en redes y WhatsApp.'
+    },
+    precio_final: {
+      asunto: '📅 REINVENTA — Hoy arranca Precio Final',
+      cuerpo: 'Hoy 10 de agosto arranca la fase de Precio Final ($1,700 MXN).\n\n'
+        + 'El link /reservar ya redirige automáticamente a Precio Final.\n'
+        + 'Quedan 5 días para el cierre de ventas (15 ago).'
+    }
+  };
+  var t = textos[fase];
+  if (t) enviarCorreo(t.asunto, t.cuerpo);
+}
+
+/* Disparadores de fecha — ejecutar UNA sola vez para registrarlos */
+function configurarTriggersDeFecha() {
+  // Eliminar triggers anteriores de estas funciones para no duplicar
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    var fn = t.getHandlerFunction();
+    if (fn === 'triggerPreventa' || fn === 'triggerPrecioFinal') {
+      ScriptApp.deleteTrigger(t);
+    }
+  });
+
+  // 22 jul 2026 08:00 CDMX — inicio Preventa
+  var fechaPreventa = new Date('2026-07-22T08:00:00-06:00');
+  ScriptApp.newTrigger('triggerPreventa')
+    .timeBased()
+    .at(fechaPreventa)
+    .create();
+
+  // 10 ago 2026 08:00 CDMX — inicio Precio Final
+  var fechaFinal = new Date('2026-08-10T08:00:00-06:00');
+  ScriptApp.newTrigger('triggerPrecioFinal')
+    .timeBased()
+    .at(fechaFinal)
+    .create();
+}
+
+function triggerPreventa() {
+  // Solo enviar si el Early Bird NO se agotó antes (si ya se agotó, ya llegó ese correo)
+  var sheet = getSheet();
+  var totalEarlyBird = contarFaseSheet(sheet, 'Early Bird');
+  if (totalEarlyBird < LIMITE_EARLY_BIRD) {
+    notificarCambioDeFase('preventa');
+  }
+}
+function triggerPrecioFinal() { notificarCambioDeFase('precio_final'); }
+
+function enviarCorreo(asunto, cuerpo) {
+  EMAILS_NOTIFICACION.forEach(function(email) {
+    MailApp.sendEmail(email, asunto, cuerpo);
+  });
+}
+
+/* ── Helpers de conteo en Sheet ──────────────────────────────── */
+function contarPagosSheet(sheet) {
+  var data = sheet.getDataRange().getValues();
+  var count = 0;
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][9] === '✓') count++; // columna J
+  }
+  return count;
+}
+
+function contarFaseSheet(sheet, fase) {
+  var data = sheet.getDataRange().getValues();
+  var count = 0;
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][9] === '✓' && data[i][6] === fase) count++; // J=pagó, G=fase
+  }
+  return count;
 }
 
 /* ── Helpers ─────────────────────────────────────────────────── */
