@@ -153,7 +153,7 @@
       <span class="err" id="err-busca"></span>
     </div>
     <div class="field">
-      <label for="ocupacion">¿A qué te dedicas?</label>
+      <label for="ocupacion">¿A qué te dedicas?<span class="req">*</span></label>
       <select id="ocupacion" style="font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;border:none;border-bottom:1px solid rgba(34,16,25,.25);padding:.5rem .1rem;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;">
         <option value="">— Selecciona una opción —</option>
         <option value="Empresaria / ejecutiva">Empresaria / ejecutiva</option>
@@ -163,17 +163,19 @@
         <option value="Sector público">Sector público</option>
         <option value="Otro">Otro</option>
       </select>
+      <span class="err" id="err-ocupacion"></span>
     </div>
     <div class="field">
-      <label for="como">¿Cómo te enteraste del taller?</label>
+      <label for="como">¿Cómo te enteraste del taller?<span class="req">*</span></label>
       <select id="como" style="font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;border:none;border-bottom:1px solid rgba(34,16,25,.25);padding:.5rem .1rem;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;">
         <option value="">— Selecciona una opción —</option>
-        <option value="Newsletter CACECA">Newsletter de CACECA</option>
+        <option value="Newsletter">Newsletter</option>
         <option value="Instagram">Instagram</option>
         <option value="Mary me contactó">Mary me contactó directamente</option>
         <option value="Recomendación">Me lo recomendaron</option>
         <option value="Otro">Otro</option>
       </select>
+      <span class="err" id="err-como"></span>
     </div>
 
     <div style="margin-top:.6rem;">
@@ -225,7 +227,7 @@
 
   /* Capturar UTM y persistir en sessionStorage */
   var UTM_MAP = {
-    caceca: 'Newsletter CACECA',
+    caceca: 'Newsletter',
     instagram: 'Instagram',
     instagram_stories: 'Instagram Stories',
     mary: 'Mary me contactó',
@@ -251,7 +253,7 @@
   var btn  = document.getElementById('submitBtn');
 
   function err(id, msg){ document.getElementById(id).textContent = msg || ''; }
-  function clearErr(){ err('err-nombre',''); err('err-correo',''); err('err-whatsapp',''); err('err-contacto',''); err('err-busca',''); err('err-privacidad',''); err('err-imagen',''); }
+  function clearErr(){ err('err-nombre',''); err('err-correo',''); err('err-whatsapp',''); err('err-contacto',''); err('err-busca',''); err('err-ocupacion',''); err('err-como',''); err('err-privacidad',''); err('err-imagen',''); }
 
   function validate(){
     var ok = true;
@@ -265,6 +267,8 @@
     if(!cont){ err('err-contacto','Elige una opción.'); ok=false; } else err('err-contacto','');
     var busca = document.getElementById('busca').value.trim();
     if(busca.length < 2){ err('err-busca','Cuéntanos qué estás buscando.'); ok=false; } else err('err-busca','');
+    if(!document.getElementById('ocupacion').value){ err('err-ocupacion','Selecciona una opción.'); ok=false; } else err('err-ocupacion','');
+    if(!document.getElementById('como').value){ err('err-como','Selecciona una opción.'); ok=false; } else err('err-como','');
     if(!document.getElementById('privacidad').checked){ err('err-privacidad','Debes aceptar el aviso de privacidad.'); ok=false; } else err('err-privacidad','');
     if(!document.getElementById('imagen').checked){ err('err-imagen','Este campo es obligatorio.'); ok=false; } else err('err-imagen','');
     return ok;
