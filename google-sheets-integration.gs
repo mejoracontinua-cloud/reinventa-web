@@ -130,16 +130,20 @@ function handleStripeWebhook(event) {
   else if (monto == '1500.00') fase = 'Preventa';
   else if (monto == '1700.00') fase = 'Últimos lugares';
 
-  /* ── Correo de confirmación — se envía primero para garantizar entrega ── */
-  if (correo) {
-    enviarCorreoConfirmacion(nombre, correo, fase);
-  }
-
   var sheet = getSheet();
 
   /* Si este Stripe ID ya está registrado, ignorar el reintento */
   if (stripeId && findRowByStripeId(sheet, stripeId)) {
     return ContentService.createTextOutput(JSON.stringify({ result: 'duplicate' })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  /* Enviar correo solo si no se ha enviado antes (columna O ≠ Sí) */
+  if (correo) {
+    var filaExistente = findRowByEmail(sheet, correo);
+    var yaEnviado = filaExistente ? sheet.getRange(filaExistente, 15).getValue() : '';
+    if (yaEnviado !== 'Sí') {
+      enviarCorreoConfirmacion(nombre, correo, fase);
+    }
   }
 
   var existingRow = findRowByEmail(sheet, correo);
