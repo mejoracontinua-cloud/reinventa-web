@@ -20,6 +20,9 @@
  *   L  Origen
  *   M  Acepta marketing
  *   N  Autoriza uso de imagen
+ *   O  Correo confirmación enviado
+ *   P  Canal UTM (utm_source)
+ *   Q  ¿Cómo se enteró?
  *
  * INSTRUCCIONES DE DESPLIEGUE:
  *   1. Pega este código en Apps Script (Extensiones > Apps Script).
@@ -77,6 +80,8 @@ function handleFormSubmit(data) {
     sheet.getRange(existingRow, 12).setValue('landing + stripe');
     sheet.getRange(existingRow, 13).setValue(data.marketing       || '');
     sheet.getRange(existingRow, 14).setValue(data.autoriza_imagen || '');
+    if (data.canal_utm)      sheet.getRange(existingRow, 16).setValue(data.canal_utm);
+    if (data.como_se_entero) sheet.getRange(existingRow, 17).setValue(data.como_se_entero);
   } else {
     sheet.appendRow([
       new Date(),               // A Fecha registro
@@ -92,7 +97,10 @@ function handleFormSubmit(data) {
       '',                       // K Stripe ID
       data.origen     || 'landing', // L Origen
       data.marketing       || '',   // M Acepta marketing
-      data.autoriza_imagen || ''    // N Autoriza imagen
+      data.autoriza_imagen || '',   // N Autoriza imagen
+      '',                           // O Correo confirmación enviado
+      data.canal_utm       || '',   // P Canal UTM
+      data.como_se_entero  || ''    // Q ¿Cómo se enteró?
     ]);
   }
 

@@ -996,6 +996,18 @@
   var STRIPE_URL = STRIPE_LINKS['preventa']; /* Fase actual: Preventa */
   var SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzw2YuhsQXtnwF8btABlqeolGykBs6KPkLXFP4RUG0FU34sBX2Kli3CBSnu2AxfJXtqBQ/exec';
 
+  /* Capturar UTM de la landing page y persistir en sessionStorage */
+  var UTM_MAP = {
+    caceca: 'Newsletter CACECA',
+    instagram: 'Instagram',
+    instagram_stories: 'Instagram Stories',
+    mary: 'Mary me contactó',
+    boca_a_boca: 'Recomendación'
+  };
+  var utmSource = new URLSearchParams(window.location.search).get('utm_source') || '';
+  if (utmSource) sessionStorage.setItem('utm_source', utmSource);
+  else utmSource = sessionStorage.getItem('utm_source') || '';
+
   /* Actualizar STRIPE_URL cuando la API confirme la fase */
   document.addEventListener('faseActualizada', function(e){
     if (STRIPE_LINKS[e.detail]) STRIPE_URL = STRIPE_LINKS[e.detail];
@@ -1050,7 +1062,9 @@
       marketing: document.getElementById('m-marketing').checked ? 'Sí' : 'No',
       autoriza_imagen: document.getElementById('m-imagen').checked ? 'Sí' : 'No',
       origen: 'landing-taller',
-      fecha: new Date().toISOString()
+      fecha: new Date().toISOString(),
+      canal_utm: utmSource,
+      como_se_entero: UTM_MAP[utmSource] || ''
     };
     function goStripe(){ window.open(STRIPE_URL, '_blank'); closeModal(); submitBtn.disabled=false; submitBtn.textContent='Continuar al pago'; }
     if(SHEETS_ENDPOINT){

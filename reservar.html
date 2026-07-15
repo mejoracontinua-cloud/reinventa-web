@@ -150,6 +150,17 @@
       <textarea id="busca" rows="2" required></textarea>
       <span class="err" id="err-busca"></span>
     </div>
+    <div class="field">
+      <label for="como">¿Cómo te enteraste del taller?</label>
+      <select id="como" style="font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;border:none;border-bottom:1px solid rgba(34,16,25,.25);padding:.5rem .1rem;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;">
+        <option value="">— Selecciona una opción —</option>
+        <option value="Newsletter CACECA">Newsletter de CACECA</option>
+        <option value="Instagram">Instagram</option>
+        <option value="Mary me contactó">Mary me contactó directamente</option>
+        <option value="Recomendación">Me lo recomendaron</option>
+        <option value="Otro">Otro</option>
+      </select>
+    </div>
 
     <div style="margin-top:.6rem;">
       <label class="check-row">
@@ -194,8 +205,31 @@
   };
 
   /* Leer fase del parámetro ?fase= que viene de /api/reservar */
-  var fase = new URLSearchParams(window.location.search).get('fase') || 'early_bird';
+  var params = new URLSearchParams(window.location.search);
+  var fase = params.get('fase') || 'early_bird';
   if (!LINKS[fase]) fase = 'early_bird';
+
+  /* Capturar UTM y persistir en sessionStorage */
+  var UTM_MAP = {
+    caceca: 'Newsletter CACECA',
+    instagram: 'Instagram',
+    instagram_stories: 'Instagram Stories',
+    mary: 'Mary me contactó',
+    boca_a_boca: 'Recomendación'
+  };
+  var utmSource = params.get('utm_source') || '';
+  if (utmSource) sessionStorage.setItem('utm_source', utmSource);
+  else utmSource = sessionStorage.getItem('utm_source') || '';
+
+  /* Pre-llenar el dropdown si hay UTM */
+  if (utmSource && UTM_MAP[utmSource]) {
+    var comoSelect = document.getElementById('como');
+    for (var i = 0; i < comoSelect.options.length; i++) {
+      if (comoSelect.options[i].value === UTM_MAP[utmSource]) {
+        comoSelect.selectedIndex = i; break;
+      }
+    }
+  }
 
   document.getElementById('fase-badge').textContent = BADGES[fase];
 
@@ -240,7 +274,9 @@
       marketing:       document.getElementById('marketing').checked ? 'Sí' : 'No',
       autoriza_imagen: document.getElementById('imagen').checked ? 'Sí' : 'No',
       origen:          'link-directo',
-      cuando:          'Reserva taller 15 agosto'
+      cuando:          'Reserva taller 15 agosto',
+      canal_utm:       utmSource,
+      como_se_entero:  document.getElementById('como').value
     };
 
     function goStripe(){
