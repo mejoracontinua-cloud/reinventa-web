@@ -290,6 +290,26 @@ function enviarCorreoPrueba() {
   enviarCorreoConfirmacion('Valeria García', 'mejoracontinua@caceca.org', 'Early Bird');
 }
 
+/* ── Debug: prueba escritura de columnas P, Q, R ────────────── */
+function probarColumnasPQR() {
+  var sheet = getSheet();
+  handleFormSubmit({
+    nombre:          'TEST columnas PQR',
+    correo:          'test-pqr-debug@reinventa.mx',
+    whatsapp:        '5500000000',
+    contacto:        'WhatsApp',
+    transformar:     'Prueba debug',
+    servicio:        'Taller de imagen y liderazgo — Preventa',
+    marketing:       'No',
+    autoriza_imagen: 'Sí',
+    origen:          'debug',
+    canal_utm:       'instagram',
+    como_se_entero:  'Otro: boca a boca debug',
+    ocupacion:       'Otro: coach de negocios debug'
+  });
+  Logger.log('✅ Fila de prueba insertada. Revisa el sheet.');
+}
+
 /* ── Enviar correo de confirmación a quienes no lo han recibido ─ */
 function enviarConfirmacionExistentes() {
   var sheet = getSheet();
