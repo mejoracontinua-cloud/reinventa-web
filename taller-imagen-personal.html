@@ -227,6 +227,7 @@
   .price-card .btn{margin-top:1.6rem;width:100%;}
   .price-card .tier-caption{display:block;margin-top:1.4rem;font-family:'Big Caslon','Didot',Georgia,serif;font-style:italic;font-size:1rem;color:var(--mauve);}
   .price-card.featured .tier-caption{color:rgba(239,233,226,.65);}
+  .price-card .tier-caption.agotado{font-family:var(--font-body);font-style:normal;font-size:1.15rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--plum);}
   .price-card .tier-soon{margin-top:.9rem;font-size:.8rem;color:var(--mauve);}
   .price-card.featured .tier-soon{color:rgba(239,233,226,.75);}
   .inversion-note{text-align:center;font-size:.86rem;color:var(--mauve);}
@@ -654,14 +655,14 @@
         <p class="p-sub">Primeros 10 lugares</p>
         <div class="p-amount">$1,300<span class="cur">MXN</span></div>
         <button class="btn btn-primary tier-btn" id="btnEarlyBird" hidden>Reservar Early Bird</button>
-        <span class="tier-caption">Agotado</span>
+        <span class="tier-caption agotado">Cupo agotado</span>
         <p class="tier-soon" hidden></p>
       </div>
       <div class="price-card featured" data-tier="preventa">
         <span class="p-tag">Preventa</span>
         <p class="p-sub">22 jul – 10 ago · Lugares limitados</p>
         <div class="p-amount">$1,500<span class="cur">MXN</span></div>
-        <button class="btn btn-primary tier-btn">Reservar en Preventa</button>
+        <a href="/reservar" class="btn btn-primary tier-btn">Reservar en Preventa</a>
         <span class="tier-caption" hidden>Hasta el 10 de agosto</span>
         <p class="tier-soon" hidden></p>
       </div>
@@ -865,9 +866,10 @@
       if (idx === activeIndex) {
         card.classList.add('featured');
         btn.hidden = false;
-        btn.textContent = tier === 'preventa' ? 'Reservar en Preventa' : tier === 'precio_final' ? 'Reservar mi lugar' : btn.textContent;
         caption.hidden = true;
-        btn.addEventListener('click', openModal);
+        if (btn.tagName === 'BUTTON') {
+          btn.addEventListener('click', function(){ window.location.href = '/reservar'; });
+        }
       } else if (idx < activeIndex) {
         card.classList.remove('featured');
         btn.hidden = true;
