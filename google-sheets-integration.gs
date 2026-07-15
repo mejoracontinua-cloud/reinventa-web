@@ -23,6 +23,7 @@
  *   O  Correo confirmación enviado
  *   P  Canal UTM (utm_source)
  *   Q  ¿Cómo se enteró?
+ *   R  ¿A qué se dedica?
  *
  * INSTRUCCIONES DE DESPLIEGUE:
  *   1. Pega este código en Apps Script (Extensiones > Apps Script).
@@ -82,6 +83,7 @@ function handleFormSubmit(data) {
     sheet.getRange(existingRow, 14).setValue(data.autoriza_imagen || '');
     if (data.canal_utm)      sheet.getRange(existingRow, 16).setValue(data.canal_utm);
     if (data.como_se_entero) sheet.getRange(existingRow, 17).setValue(data.como_se_entero);
+    if (data.ocupacion)      sheet.getRange(existingRow, 18).setValue(data.ocupacion);
   } else {
     sheet.appendRow([
       new Date(),               // A Fecha registro
@@ -100,7 +102,8 @@ function handleFormSubmit(data) {
       data.autoriza_imagen || '',   // N Autoriza imagen
       '',                           // O Correo confirmación enviado
       data.canal_utm       || '',   // P Canal UTM
-      data.como_se_entero  || ''    // Q ¿Cómo se enteró?
+      data.como_se_entero  || '',   // Q ¿Cómo se enteró?
+      data.ocupacion       || ''    // R ¿A qué se dedica?
     ]);
   }
 
