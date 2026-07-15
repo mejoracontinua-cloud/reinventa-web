@@ -155,18 +155,29 @@ function handleStripeWebhook(event) {
   var totalEarlyBird = contarFaseSheet(sheet2, 'Early Bird');
 
   // Notificar Early Bird agotado SOLO cuando este pago es exactamente el #10 de EB
+  // y no se ha enviado antes (evita duplicados por reintentos de Stripe)
   var hoy = new Date();
   var D_PREVENTA = new Date(2026, 6, 22);
   if (fase === 'Early Bird' && totalEarlyBird === LIMITE_EARLY_BIRD && hoy < D_PREVENTA) {
-    notificarEarlyBirdAgotado(totalPagos);
+    var props = PropertiesService.getScriptProperties();
+    if (!props.getProperty('eb_agotado_enviado')) {
+      notificarEarlyBirdAgotado(totalPagos);
+      props.setProperty('eb_agotado_enviado', 'true');
+    }
   }
   if (totalPagos === LIMITE_TOTAL) {
-    notificarCupoAgotado(sheet2);
+    var props2 = PropertiesService.getScriptProperties();
+    if (!props2.getProperty('sold_out_enviado')) {
+      notificarCupoAgotado(sheet2);
+      props2.setProperty('sold_out_enviado', 'true');
+    }
   }
+  // (sold out ya se maneja arriba con PropertiesService)
 
   /* ── Correo de confirmación a la compradora ─────────────────── */
   if (correo) {
     enviarCorreoConfirmacion(nombre, correo, fase);
+    marcarCorreoEnviado(getSheet(), correo);
   }
 
   return ContentService
@@ -247,26 +258,39 @@ function enviarCorreoPrueba() {
   enviarCorreoConfirmacion('Valeria García', 'mejoracontinua@caceca.org', 'Early Bird');
 }
 
-/* ── Enviar correo de confirmación a los 3 pagos existentes ─── */
+/* ── Enviar correo de confirmación a quienes no lo han recibido ─ */
 function enviarConfirmacionExistentes() {
   var sheet = getSheet();
   var data  = sheet.getDataRange().getValues();
   var enviados = 0;
 
   for (var i = 1; i < data.length; i++) {
-    var pago   = data[i][9]; // J — Pagó ✓
-    var nombre = data[i][1]; // B
-    var correo = data[i][2]; // C
-    var fase   = data[i][6]; // G
+    var pago      = data[i][9];  // J — Pagó ✓
+    var nombre    = data[i][1];  // B
+    var correo    = data[i][2];  // C
+    var fase      = data[i][6];  // G
+    var yaEnviado = data[i][14]; // O — Correo confirmación enviado
 
-    if (pago === '✓' && correo) {
+    if (pago === '✓' && correo && yaEnviado !== 'Sí') {
       enviarCorreoConfirmacion(nombre, correo, fase);
+      sheet.getRange(i + 1, 15).setValue('Sí'); // marcar columna O
       enviados++;
-      Utilities.sleep(1000); // pausa para no saturar
+      Utilities.sleep(1000);
     }
   }
 
   Logger.log('Correos enviados: ' + enviados);
+}
+
+/* ── Marcar columna O en webhook automático ──────────────────── */
+function marcarCorreoEnviado(sheet, correo) {
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if ((data[i][2] || '').toLowerCase().trim() === correo.toLowerCase().trim()) {
+      sheet.getRange(i + 1, 15).setValue('Sí');
+      return;
+    }
+  }
 }
 
 /* ── Notificaciones ──────────────────────────────────────────── */

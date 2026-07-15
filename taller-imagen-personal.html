@@ -653,17 +653,17 @@
         <span class="p-tag">Early Bird</span>
         <p class="p-sub">Primeros 10 lugares</p>
         <div class="p-amount">$1,300<span class="cur">MXN</span></div>
-        <button class="btn btn-primary tier-btn" id="btnEarlyBird">Reservar Early Bird</button>
-        <span class="tier-caption"></span>
-        <p class="tier-soon" hidden>El enlace de pago estará disponible muy pronto.</p>
+        <button class="btn btn-primary tier-btn" id="btnEarlyBird" hidden>Reservar Early Bird</button>
+        <span class="tier-caption">Agotado</span>
+        <p class="tier-soon" hidden></p>
       </div>
-      <div class="price-card" data-tier="preventa">
+      <div class="price-card featured" data-tier="preventa">
         <span class="p-tag">Preventa</span>
-        <p class="p-sub">Lugares limitados</p>
+        <p class="p-sub">22 jul – 10 ago · Lugares limitados</p>
         <div class="p-amount">$1,500<span class="cur">MXN</span></div>
-        <button class="btn btn-primary tier-btn" data-tier-label="Reservar en preventa" hidden>Reservar en preventa</button>
-        <span class="tier-caption">Próximamente</span>
-        <p class="tier-soon" hidden>El enlace de pago estará disponible muy pronto.</p>
+        <button class="btn btn-primary tier-btn">Reservar en Preventa</button>
+        <span class="tier-caption" hidden>Hasta el 10 de agosto</span>
+        <p class="tier-soon" hidden></p>
       </div>
       <div class="price-card" data-tier="precio_final">
         <span class="p-tag">Precio final</span>
@@ -882,19 +882,19 @@
     });
   }
 
-  /* Fallback por fecha mientras carga la API */
-  var now = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Mexico_City'}));
-  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  var fallbackTier = today < new Date(2026,6,22) ? 'early_bird'
-                   : today < new Date(2026,7,10) ? 'preventa'
-                   : today < new Date(2026,7,15) ? 'precio_final' : 'cerrado';
-  aplicarFase(fallbackTier);
+  /* Fallback: preventa activa (Early Bird agotado) */
+  aplicarFase('preventa');
 
   /* Consultar fase real (inventario + fecha) */
   fetch('/api/fase')
     .then(function(r){ return r.json(); })
-    .then(function(data){ if (data.fase) aplicarFase(data.fase); })
-    .catch(function(){}); /* Si falla, queda el fallback por fecha */
+    .then(function(data){
+      if (data.fase) {
+        aplicarFase(data.fase);
+        document.dispatchEvent(new CustomEvent('faseActualizada', { detail: data.fase }));
+      }
+    })
+    .catch(function(){});
 
 </script>
 
@@ -990,8 +990,13 @@
 
 <script>
 (function(){
-  var STRIPE_URL = STRIPE_LINKS[ACTIVE_TIER] || '';
+  var STRIPE_URL = STRIPE_LINKS['preventa']; /* Fase actual: Preventa */
   var SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzw2YuhsQXtnwF8btABlqeolGykBs6KPkLXFP4RUG0FU34sBX2Kli3CBSnu2AxfJXtqBQ/exec';
+
+  /* Actualizar STRIPE_URL cuando la API confirme la fase */
+  document.addEventListener('faseActualizada', function(e){
+    if (STRIPE_LINKS[e.detail]) STRIPE_URL = STRIPE_LINKS[e.detail];
+  });
 
   var modal = document.getElementById('leadModal');
   var modalForm = document.getElementById('modalForm');
@@ -1033,7 +1038,7 @@
       nombre: document.getElementById('m-nombre').value.trim(),
       correo: document.getElementById('m-correo').value.trim(),
       whatsapp: document.getElementById('m-whatsapp').value.trim(),
-      servicio: 'Taller de imagen y liderazgo — Early Bird',
+      servicio: 'Taller de imagen y liderazgo — Preventa',
       transformar: document.getElementById('m-busca').value.trim(),
       cuando: 'Reserva taller 15 agosto',
       contacto: (document.querySelector('input[name="contacto"]:checked') || {}).value || '',
