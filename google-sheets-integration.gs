@@ -134,14 +134,35 @@ function handleStripeWebhook(event) {
   var existingRow = findRowByEmail(sheet, correo);
 
   if (existingRow) {
-    // Ya existe por popup — completar con datos de pago
-    if (nombre) sheet.getRange(existingRow, 2).setValue(nombre);
-    sheet.getRange(existingRow, 7).setValue(fase);
-    sheet.getRange(existingRow, 8).setValue(monto);
-    sheet.getRange(existingRow, 9).setValue(fecha);
-    sheet.getRange(existingRow, 10).setValue('✓');
-    sheet.getRange(existingRow, 11).setValue(stripeId);
-    sheet.getRange(existingRow, 12).setValue('landing + stripe');
+    var yaPago = sheet.getRange(existingRow, 10).getValue() === '✓';
+
+    if (!yaPago) {
+      // Existe por popup, aún sin pago — completar normalmente
+      if (nombre) sheet.getRange(existingRow, 2).setValue(nombre);
+      sheet.getRange(existingRow, 7).setValue(fase);
+      sheet.getRange(existingRow, 8).setValue(monto);
+      sheet.getRange(existingRow, 9).setValue(fecha);
+      sheet.getRange(existingRow, 10).setValue('✓');
+      sheet.getRange(existingRow, 11).setValue(stripeId);
+      sheet.getRange(existingRow, 12).setValue('landing + stripe');
+    } else {
+      // Ya tiene ✓ — buscar otra fila sin pago para conciliar (ej. acompañante)
+      var pendingRow = findRowWithoutPayment(sheet);
+      if (pendingRow) {
+        if (nombre) sheet.getRange(pendingRow, 2).setValue(nombre);
+        sheet.getRange(pendingRow, 7).setValue(fase);
+        sheet.getRange(pendingRow, 8).setValue(monto);
+        sheet.getRange(pendingRow, 9).setValue(fecha);
+        sheet.getRange(pendingRow, 10).setValue('✓');
+        sheet.getRange(pendingRow, 11).setValue(stripeId);
+        sheet.getRange(pendingRow, 12).setValue('stripe conciliado');
+      } else {
+        // No hay fila pendiente — crear nueva fila
+        sheet.appendRow([
+          new Date(), nombre, correo, '', '', '', fase, monto, fecha, '✓', stripeId, 'stripe duplicado'
+        ]);
+      }
+    }
   } else {
     // Pagó directo sin pasar por el popup
     sheet.appendRow([
@@ -424,7 +445,18 @@ function findRowByEmail(sheet, correo) {
   var data = sheet.getDataRange().getValues();
   for (var i = 1; i < data.length; i++) {
     if ((data[i][2] || '').toString().toLowerCase().trim() === correo) {
-      return i + 1; // fila 1-indexed
+      return i + 1;
+    }
+  }
+  return null;
+}
+
+/* Busca la fila más reciente sin pago (columna J vacía o sin ✓) */
+function findRowWithoutPayment(sheet) {
+  var data = sheet.getDataRange().getValues();
+  for (var i = data.length - 1; i >= 1; i--) {
+    if (data[i][9] !== '✓') {
+      return i + 1;
     }
   }
   return null;
