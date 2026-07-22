@@ -8,1089 +8,825 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --plum:   #2A0F25;
-      --gold:   #C6A56A;
-      --cream:  #EFE9E2;
-      --sand:   #E8E2DB;
-      --mauve:  #8F7383;
-      --plum-5: rgba(42,15,37,.05);
-      --plum-10: rgba(42,15,37,.1);
-      --plum-15: rgba(42,15,37,.15);
-      --gold-40: rgba(198,165,106,.4);
-      --gold-20: rgba(198,165,106,.2);
+      --gold:    #C6A56A;
+      --gold-dim: rgba(198,165,106,.35);
+      --gold-glow: rgba(198,165,106,.12);
+      --cream:   #EFE9E2;
+      --glass:   rgba(255,255,255,.055);
+      --glass-border: rgba(255,255,255,.1);
+      --glass-strong: rgba(255,255,255,.09);
+      --text:    rgba(255,255,255,.92);
+      --text-dim: rgba(255,255,255,.45);
+      --text-muted: rgba(255,255,255,.28);
+      --ok:      #5fc98a;
+      --ok-bg:   rgba(95,201,138,.12);
     }
 
     html, body {
       height: 100%;
-      background: var(--sand);
+      background: #100818;
+      color: var(--text);
       font-family: 'Gill Sans', Calibri, 'Segoe UI', sans-serif;
-      color: var(--plum);
       -webkit-font-smoothing: antialiased;
+      overflow: hidden;
     }
 
-    /* ── Cargando / Error ───────────────────────── */
+    /* ── Fondo animado ──────────────────────────────── */
+    .bg {
+      position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    }
+    .bg-blob {
+      position: absolute; border-radius: 50%; filter: blur(80px);
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .bg-blob:nth-child(1) {
+      width: 520px; height: 520px; top: -120px; left: -80px;
+      background: radial-gradient(circle, rgba(90,20,70,.55) 0%, transparent 70%);
+      animation-duration: 20s;
+    }
+    .bg-blob:nth-child(2) {
+      width: 400px; height: 400px; bottom: -60px; right: -60px;
+      background: radial-gradient(circle, rgba(198,165,106,.18) 0%, transparent 65%);
+      animation-duration: 15s; animation-delay: -5s;
+    }
+    .bg-blob:nth-child(3) {
+      width: 300px; height: 300px; top: 40%; left: 55%;
+      background: radial-gradient(circle, rgba(60,15,50,.4) 0%, transparent 70%);
+      animation-duration: 25s; animation-delay: -10s;
+    }
+    @keyframes drift {
+      0%   { transform: translate(0,0) scale(1); }
+      100% { transform: translate(30px, 20px) scale(1.06); }
+    }
+
+    /* ── Pantalla carga ─────────────────────────────── */
     #pantallaCarga {
-      position: fixed; inset: 0;
-      background: var(--plum);
+      position: fixed; inset: 0; z-index: 200;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      z-index: 100;
-      transition: opacity .4s;
+      align-items: center; justify-content: center; gap: 1.2rem;
     }
-    #pantallaCarga .marca {
-      font-family: Georgia, serif;
-      font-size: 1.1rem;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: .25rem;
-    }
-    #pantallaCarga .sub {
-      font-size: .6rem;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      color: var(--gold-40);
-      margin-bottom: 2rem;
-    }
-    #pantallaCarga .spinner {
-      width: 28px; height: 28px;
-      border: 2px solid var(--gold-20);
+    .spinner {
+      width: 32px; height: 32px;
+      border: 2px solid var(--gold-dim);
       border-top-color: var(--gold);
       border-radius: 50%;
       animation: spin .9s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .load-marca {
+      font-family: Georgia, serif;
+      font-size: .85rem; letter-spacing: .24em;
+      text-transform: uppercase; color: var(--gold);
+    }
 
-    #pantallaError {
-      display: none;
-      position: fixed; inset: 0;
-      background: var(--sand);
-      align-items: center; justify-content: center;
-      flex-direction: column;
+    /* ── Pantalla login ─────────────────────────────── */
+    #pantallaLogin {
+      position: fixed; inset: 0; z-index: 199;
+      display: none; align-items: center; justify-content: center;
+      padding: 1.5rem;
+    }
+    .login-card {
+      width: 100%; max-width: 380px;
+      background: var(--glass-strong);
+      backdrop-filter: blur(28px) saturate(160%);
+      -webkit-backdrop-filter: blur(28px) saturate(160%);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    .login-top {
+      padding: 2rem 2rem 1.5rem;
       text-align: center;
-      padding: 2rem;
-      z-index: 99;
+      border-bottom: 1px solid var(--glass-border);
     }
-    #pantallaError h2 {
+    .login-marca {
       font-family: Georgia, serif;
-      font-weight: 400;
-      font-size: 1.3rem;
-      margin-bottom: .6rem;
+      font-size: 1.1rem; letter-spacing: .22em;
+      text-transform: uppercase; color: var(--gold);
+      display: block; margin-bottom: .2rem;
     }
-    #pantallaError p { font-size: .9rem; color: var(--mauve); }
-
-    /* ── Layout principal ───────────────────────── */
-    #app {
-      display: none;
-      flex-direction: column;
-      min-height: 100dvh;
-      max-width: 480px;
-      margin: 0 auto;
-      position: relative;
+    .login-sub {
+      font-size: .55rem; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--gold-dim);
     }
-
-    /* ── Header ─────────────────────────────────── */
-    .hub-header {
-      background: var(--plum);
-      padding: env(safe-area-inset-top, 0) 0 0;
-      flex-shrink: 0;
+    .login-body { padding: 1.6rem 1.8rem 1.8rem; }
+    .login-eyebrow {
+      font-size: .55rem; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--gold);
+      display: block; margin-bottom: .4rem;
     }
-    .hub-header-inner {
-      padding: 1.1rem 1.4rem .9rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .hub-marca {
+    .login-title {
       font-family: Georgia, serif;
-      font-size: .75rem;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      color: var(--gold);
-      display: block;
-      line-height: 1;
+      font-size: 1.3rem; font-weight: 400;
+      margin-bottom: .35rem;
     }
-    .hub-sub {
-      font-size: .5rem;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--gold-40);
-      display: block;
-      margin-top: .15rem;
+    .login-desc {
+      font-size: .8rem; color: var(--text-dim);
+      line-height: 1.55; margin-bottom: 1.2rem;
     }
-    .hub-avatar {
-      width: 34px; height: 34px;
-      border-radius: 50%;
-      background: var(--gold-20);
-      border: 1px solid var(--gold-40);
-      display: flex; align-items: center; justify-content: center;
-      font-size: .72rem;
-      font-weight: 600;
-      color: var(--gold);
-      letter-spacing: 0;
-      flex-shrink: 0;
+    .field-label {
+      font-size: .52rem; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--text-muted);
+      display: block; margin-bottom: .4rem;
     }
-    .hub-header-divider {
-      height: 1px;
-      background: linear-gradient(to right, transparent, var(--gold-40), transparent);
-    }
-
-    /* ── Tabs content ────────────────────────────── */
-    .tab-content {
-      display: none;
-      flex: 1;
-      overflow-y: auto;
-      padding: 1.4rem 1.2rem calc(4.5rem + env(safe-area-inset-bottom, 0));
-    }
-    .tab-content.active { display: block; }
-
-    /* ── Nav ─────────────────────────────────────── */
-    .hub-nav {
-      position: fixed;
-      bottom: 0; left: 50%;
-      transform: translateX(-50%);
+    .field-input {
       width: 100%;
-      max-width: 480px;
-      background: var(--plum);
-      display: flex;
-      border-top: 1px solid rgba(198,165,106,.12);
-      padding-bottom: env(safe-area-inset-bottom, 0);
-      z-index: 10;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: .85rem 1rem;
+      font-size: 1rem; font-family: inherit;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      outline: none;
+      transition: border-color .15s;
+      -webkit-appearance: none;
     }
-    .nav-btn {
-      flex: 1;
-      padding: .65rem .2rem .5rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: .18rem;
-      background: none;
-      border: none;
-      color: rgba(198,165,106,.3);
-      cursor: pointer;
-      font-family: inherit;
+    .field-input::placeholder { color: var(--text-muted); text-transform: uppercase; }
+    .field-input:focus { border-color: var(--gold-dim); }
+    .login-btn {
+      width: 100%; margin-top: .8rem;
+      background: var(--gold);
+      color: #100818;
+      border: none; border-radius: 12px;
+      padding: .9rem 1rem;
+      font-size: .8rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      font-family: inherit; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .login-btn:hover { opacity: .88; }
+    .login-error {
+      font-size: .75rem; color: #f87171;
+      text-align: center; margin-top: .6rem; display: none;
+    }
+    .login-admin-link {
+      display: block; text-align: center;
+      margin-top: 1.1rem; padding-top: 1rem;
+      border-top: 1px solid var(--glass-border);
+      font-size: .68rem; color: var(--text-muted);
+      text-decoration: none;
+    }
+    .login-admin-link span { color: var(--gold); }
+
+    /* ── App shell ──────────────────────────────────── */
+    #app {
+      display: none; flex-direction: column;
+      height: 100dvh; position: relative; z-index: 1;
+    }
+
+    /* ── Top nav ────────────────────────────────────── */
+    .top-nav {
+      flex-shrink: 0;
+      background: rgba(16,8,24,.6);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 0 1rem;
+      display: flex; align-items: stretch;
+      gap: 0;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .7rem 1rem .7rem 0;
+      border-right: 1px solid var(--glass-border);
+      margin-right: .5rem; flex-shrink: 0;
+    }
+    .nav-brand .marca {
+      font-family: Georgia, serif;
+      font-size: .72rem; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--gold);
+    }
+    .nav-tabs {
+      display: flex; align-items: stretch;
+      gap: 0; overflow-x: auto; flex: 1;
+      scrollbar-width: none;
+    }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      display: flex; align-items: center; gap: .35rem;
+      padding: .7rem .85rem;
+      background: none; border: none;
+      color: var(--text-muted);
+      font-size: .68rem; font-family: inherit;
+      letter-spacing: .06em; cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
       transition: color .15s;
     }
-    .nav-btn.active { color: var(--gold); }
-    .nav-btn svg { width: 22px; height: 22px; }
-    .nav-btn span {
-      font-size: .46rem;
-      letter-spacing: .08em;
-      text-transform: uppercase;
+    .nav-tab svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .nav-tab.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+    .nav-right {
+      display: flex; align-items: center; gap: .7rem;
+      padding: .5rem 0 .5rem .8rem;
+      border-left: 1px solid var(--glass-border);
+      margin-left: .5rem; flex-shrink: 0;
+    }
+    .nav-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-dim);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .6rem; font-weight: 600; color: var(--gold);
+      flex-shrink: 0;
+    }
+    .nav-name {
+      font-size: .65rem; color: var(--text-dim);
+      display: none;
+    }
+    @media (min-width: 520px) { .nav-name { display: block; } }
+    .nav-salir {
+      font-size: .6rem; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-muted);
+      background: none; border: 1px solid var(--glass-border);
+      border-radius: 6px; padding: .3rem .65rem;
+      cursor: pointer; font-family: inherit;
+      transition: color .15s;
+    }
+    .nav-salir:hover { color: var(--text-dim); }
+
+    /* ── Contenido ──────────────────────────────────── */
+    .tab-wrap {
+      flex: 1; overflow: hidden; position: relative;
+    }
+    .tab-pane {
+      display: none; height: 100%; overflow-y: auto;
+      padding: 1.2rem;
+    }
+    .tab-pane.active { display: block; }
+
+    /* scrollbar sutil */
+    .tab-pane::-webkit-scrollbar { width: 4px; }
+    .tab-pane::-webkit-scrollbar-track { background: transparent; }
+    .tab-pane::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+
+    /* ── Glass cards ────────────────────────────────── */
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+    }
+    .glass-strong {
+      background: var(--glass-strong);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
     }
 
-    /* ── Secciones compartidas ───────────────────── */
-    .section-label {
-      font-size: .55rem;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      color: var(--mauve);
-      margin-bottom: .7rem;
-      display: block;
+    /* ── INICIO ─────────────────────────────────────── */
+    .welcome-card {
+      padding: 1.5rem 1.4rem;
+      margin-bottom: 1rem;
+      position: relative; overflow: hidden;
     }
-    .card {
-      background: var(--cream);
-      border-radius: 2px;
-      padding: 1.2rem 1.3rem;
-      margin-bottom: .9rem;
+    .welcome-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(198,165,106,.08) 0%, transparent 60%);
+      pointer-events: none;
     }
-    .card-title {
-      font-family: Georgia, serif;
-      font-size: 1rem;
-      font-weight: 400;
-      margin-bottom: .25rem;
-      line-height: 1.3;
-    }
-    .card-sub {
-      font-size: .78rem;
-      color: var(--mauve);
-      font-style: italic;
-    }
-    .divider {
-      height: 1px;
-      background: var(--plum-10);
-      margin: 1rem 0;
-    }
-    .btn-primary {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: .4rem;
-      width: 100%;
-      background: var(--plum);
-      color: var(--cream);
-      padding: .85rem 1rem;
-      font-size: .72rem;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      font-family: inherit;
-      border: none;
-      cursor: pointer;
-      text-decoration: none;
-      margin-top: .8rem;
-      transition: background .15s;
-    }
-    .btn-primary:hover { background: #3d1536; }
-    .btn-outline {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: .4rem;
-      width: 100%;
-      background: none;
-      color: var(--plum);
-      padding: .75rem 1rem;
-      font-size: .72rem;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      font-family: inherit;
-      border: 1px solid var(--plum-15);
-      cursor: pointer;
-      text-decoration: none;
-      margin-top: .6rem;
-      transition: background .15s;
-    }
-    .btn-outline:hover { background: var(--plum-5); }
-
-    /* ── INICIO ──────────────────────────────────── */
-    .bienvenida {
-      background: var(--plum);
-      border-radius: 2px;
-      padding: 1.5rem 1.4rem 1.3rem;
-      margin-bottom: .9rem;
-    }
-    .bienvenida-label {
-      font-size: .52rem;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      color: var(--gold-40);
+    .welcome-eyebrow {
+      font-size: .52rem; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--gold-dim);
       margin-bottom: .4rem;
     }
-    .bienvenida-nombre {
+    .welcome-nombre {
       font-family: Georgia, serif;
-      font-size: 1.55rem;
-      font-weight: 400;
-      color: var(--cream);
-      line-height: 1.2;
-      margin-bottom: .7rem;
+      font-size: 1.7rem; font-weight: 400;
+      line-height: 1.15; margin-bottom: .6rem;
     }
-    .bienvenida-fase {
-      display: inline-block;
-      background: var(--gold-20);
-      border: 1px solid var(--gold-40);
-      padding: .25rem .65rem;
-      font-size: .58rem;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--gold);
+    .welcome-fase {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-dim);
+      border-radius: 20px;
+      padding: .25rem .75rem;
+      font-size: .62rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 1rem;
     }
-    .status-grid {
+    .welcome-meta {
+      display: flex; align-items: center; gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .75rem; color: var(--text-dim);
+    }
+    .meta-item svg { width: 14px; height: 14px; color: var(--gold); flex-shrink: 0; }
+    .checkin-badge {
+      display: flex; align-items: center; gap: .35rem;
+      background: var(--ok-bg);
+      border: 1px solid rgba(95,201,138,.25);
+      border-radius: 20px;
+      padding: .25rem .75rem;
+      font-size: .68rem; color: var(--ok);
+    }
+    .checkin-badge svg { width: 13px; height: 13px; }
+
+    .grid-cards {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: .6rem;
-      margin-bottom: .9rem;
+      gap: .8rem;
     }
-    .status-chip {
-      background: var(--cream);
-      border-radius: 2px;
-      padding: .9rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: .6rem;
+    @media (min-width: 600px) { .grid-cards { grid-template-columns: repeat(3, 1fr); } }
+    .grid-card {
+      padding: 1.1rem 1rem;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+      display: flex; flex-direction: column; gap: .5rem;
+      min-height: 110px;
     }
-    .status-chip svg { width: 20px; height: 20px; flex-shrink: 0; }
-    .status-chip .chip-label {
-      font-size: .62rem;
-      color: var(--mauve);
-      display: block;
-      margin-bottom: .05rem;
+    .grid-card:hover { background: rgba(255,255,255,.08); transform: translateY(-1px); }
+    .grid-card:active { transform: scale(.98); }
+    .grid-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--gold-glow);
     }
-    .status-chip .chip-val {
-      font-size: .78rem;
-      font-weight: 500;
-      color: var(--plum);
-    }
-    .chip-ok svg { color: #4a9e6a; }
-    .chip-pending svg { color: var(--mauve); opacity: .5; }
+    .grid-icon svg { width: 18px; height: 18px; color: var(--gold); }
+    .grid-titulo { font-size: .85rem; font-weight: 500; }
+    .grid-desc { font-size: .68rem; color: var(--text-dim); line-height: 1.4; }
 
-    .evento-mini {
-      background: var(--cream);
-      border-radius: 2px;
-      padding: 1rem 1.2rem;
-      display: flex;
-      gap: .9rem;
-      align-items: flex-start;
+    /* ── MI PASE ────────────────────────────────────── */
+    .pase-card { padding: 1.5rem; text-align: center; margin-bottom: .9rem; }
+    .pase-eyebrow {
+      font-size: .52rem; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--gold-dim); margin-bottom: .5rem;
     }
-    .evento-mini svg { flex-shrink: 0; margin-top: .1rem; color: var(--gold); width: 18px; height: 18px; }
-    .evento-mini .ev-titulo {
-      font-family: Georgia, serif;
-      font-size: .88rem;
-      margin-bottom: .15rem;
+    .pase-nombre {
+      font-family: Georgia, serif; font-size: 1.2rem;
+      margin-bottom: 1.2rem;
     }
-    .evento-mini .ev-dato {
-      font-size: .75rem;
-      color: var(--mauve);
-      line-height: 1.5;
+    .qr-wrap {
+      background: white;
+      border-radius: 16px;
+      padding: 1rem;
+      display: inline-block;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
     }
+    .qr-wrap img { display: block; width: 180px; height: 180px; border-radius: 4px; }
+    .pase-id {
+      font-family: monospace; font-size: 1rem;
+      letter-spacing: .1em; color: var(--gold);
+      margin-bottom: .4rem;
+    }
+    .pase-hint { font-size: .72rem; color: var(--text-dim); line-height: 1.5; }
 
-    /* ── AGENDA ──────────────────────────────────── */
+    /* ── AGENDA ─────────────────────────────────────── */
+    .agenda-list { display: flex; flex-direction: column; gap: .6rem; }
     .agenda-item {
-      display: flex;
-      gap: 1rem;
-      align-items: flex-start;
-      padding: .9rem 0;
-      border-bottom: 1px solid var(--plum-10);
+      display: flex; gap: 1rem; align-items: flex-start;
+      padding: .9rem 1.1rem;
     }
-    .agenda-item:last-child { border-bottom: none; }
     .agenda-hora {
-      font-size: .68rem;
-      color: var(--gold);
-      font-feature-settings: 'tnum';
-      flex-shrink: 0;
-      padding-top: .1rem;
-      min-width: 42px;
+      font-size: .72rem; color: var(--gold);
+      font-feature-settings: 'tnum'; flex-shrink: 0;
+      padding-top: .1rem; min-width: 40px;
     }
-    .agenda-titulo {
-      font-size: .88rem;
-      margin-bottom: .1rem;
-    }
-    .agenda-desc {
-      font-size: .75rem;
-      color: var(--mauve);
-      line-height: 1.5;
+    .agenda-titulo { font-size: .9rem; margin-bottom: .15rem; }
+    .agenda-desc { font-size: .75rem; color: var(--text-dim); line-height: 1.5; }
+    .maps-btn {
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      width: 100%;
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-dim);
+      border-radius: 12px;
+      padding: .8rem;
+      font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gold); text-decoration: none;
+      margin-top: .8rem;
     }
 
-    /* ── RECURSOS ────────────────────────────────── */
-    .lock-banner {
-      background: var(--cream);
-      border-radius: 2px;
-      padding: 1.8rem 1.4rem;
-      text-align: center;
-      margin-bottom: .9rem;
+    /* ── RECURSOS ────────────────────────────────────── */
+    .step-row {
+      display: flex; flex-direction: column; gap: .5rem;
+      margin-bottom: 1rem;
     }
+    .step {
+      display: flex; align-items: center; gap: .7rem;
+      padding: .75rem 1rem;
+    }
+    .step svg { width: 17px; height: 17px; flex-shrink: 0; }
+    .step-done svg { color: var(--ok); }
+    .step-pending svg { color: var(--text-muted); }
+    .step-text { font-size: .8rem; }
+
+    .guia-card { overflow: hidden; margin-bottom: .7rem; }
+    .guia-head {
+      padding: .85rem 1.1rem;
+      display: flex; align-items: center; gap: .8rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .guia-head svg { width: 17px; height: 17px; color: var(--gold); flex-shrink: 0; }
+    .guia-titulo { font-size: .9rem; display: block; }
+    .guia-sub { font-size: .58rem; color: var(--text-muted); display: block; margin-top: .1rem; }
+    .guia-body { padding: .9rem 1.1rem; }
+    .guia-desc { font-size: .78rem; color: var(--text-dim); line-height: 1.6; margin-bottom: .8rem; }
+    .prox-badge {
+      display: inline-block;
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-dim);
+      border-radius: 20px;
+      padding: .2rem .7rem;
+      font-size: .58rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--gold);
+    }
+
+    .lock-card { padding: 1.8rem 1.4rem; text-align: center; margin-bottom: .9rem; }
     .lock-icon {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: 1px solid var(--plum-10);
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 1px solid var(--glass-border);
       display: flex; align-items: center; justify-content: center;
       margin: 0 auto .9rem;
     }
-    .lock-icon svg { width: 20px; height: 20px; color: var(--mauve); opacity: .5; }
-    .lock-title {
-      font-family: Georgia, serif;
-      font-size: 1.1rem;
-      margin-bottom: .4rem;
-    }
-    .lock-sub {
-      font-size: .8rem;
-      color: var(--mauve);
-      line-height: 1.5;
-    }
-    .pasos {
-      display: flex;
-      flex-direction: column;
-      gap: .5rem;
-      margin-top: 1.1rem;
-      text-align: left;
-    }
-    .paso {
-      display: flex;
-      align-items: center;
-      gap: .7rem;
-      padding: .65rem .9rem;
-      background: white;
-      border-radius: 2px;
-    }
-    .paso svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .paso-done svg { color: #4a9e6a; }
-    .paso-pending svg { color: var(--mauve); opacity: .35; }
-    .paso-text { font-size: .75rem; }
+    .lock-icon svg { width: 22px; height: 22px; color: var(--text-muted); }
+    .lock-title { font-family: Georgia, serif; font-size: 1.1rem; margin-bottom: .4rem; }
+    .lock-sub { font-size: .8rem; color: var(--text-dim); line-height: 1.5; }
 
-    /* Encuesta */
-    .enc-titulo {
-      font-family: Georgia, serif;
-      font-size: 1.15rem;
-      margin-bottom: .3rem;
-    }
-    .enc-sub {
-      font-size: .8rem;
-      color: var(--mauve);
-      line-height: 1.5;
-      margin-bottom: 1.2rem;
-    }
-    .campo-label {
-      font-size: .55rem;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--mauve);
-      display: block;
-      margin-bottom: .5rem;
-      margin-top: 1rem;
-    }
-    .estrellas {
-      display: flex;
-      gap: .4rem;
-      margin-bottom: .2rem;
-    }
-    .estrella {
-      font-size: 1.7rem;
-      cursor: pointer;
-      color: var(--plum-10);
-      transition: color .1s;
-      user-select: none;
-      line-height: 1;
-    }
-    .estrella.on { color: var(--gold); }
-    .enc-ta {
-      width: 100%;
-      border: 1px solid var(--plum-10);
-      background: white;
-      padding: .75rem .9rem;
-      font-size: .82rem;
-      font-family: inherit;
-      color: var(--plum);
-      resize: none;
-      height: 80px;
-      border-radius: 2px;
-      margin-top: .3rem;
-    }
-    .enc-ta::placeholder { color: var(--mauve); opacity: .6; }
-
-    /* Guías */
-    .guia-card {
-      background: var(--cream);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-bottom: .8rem;
-    }
-    .guia-header {
-      background: var(--plum);
-      padding: .9rem 1.1rem;
-      display: flex;
-      align-items: center;
-      gap: .8rem;
-    }
-    .guia-header svg { width: 18px; height: 18px; color: var(--gold); flex-shrink: 0; }
-    .guia-header-titulo {
-      font-family: Georgia, serif;
-      font-size: .88rem;
-      color: var(--cream);
-      display: block;
-    }
-    .guia-header-sub {
-      font-size: .58rem;
-      color: var(--gold-40);
-      display: block;
-      margin-top: .1rem;
-    }
-    .guia-body {
+    /* ── ENCUESTA PREVIA ─────────────────────────────── */
+    .enc-intro {
+      font-size: .8rem; color: var(--text-dim);
+      line-height: 1.6; margin-bottom: 1.2rem;
       padding: 1rem 1.1rem;
     }
-    .guia-desc {
-      font-size: .8rem;
-      color: var(--mauve);
-      line-height: 1.6;
-      margin-bottom: .8rem;
+    .enc-section-label {
+      font-size: .52rem; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--gold);
+      display: block; margin: 0 0 .8rem;
+    }
+    .enc-card { padding: 1.1rem; margin-bottom: .7rem; }
+    .enc-q {
+      font-family: Georgia, serif; font-size: .92rem;
+      margin-bottom: .3rem;
+    }
+    .enc-hint { font-size: .75rem; color: var(--text-dim); line-height: 1.5; margin-bottom: .9rem; }
+    .slider-row { display: flex; align-items: center; gap: .7rem; }
+    .slider-row span { font-size: .65rem; color: var(--text-muted); }
+    .slider-row input[type=range] {
+      flex: 1; accent-color: var(--gold); cursor: pointer;
+    }
+    .slider-val {
+      font-family: Georgia, serif; font-size: 1.1rem;
+      color: var(--gold); min-width: 20px; text-align: right;
     }
 
-    /* Constancia */
-    .constancia-card {
-      background: var(--plum);
-      border-radius: 2px;
-      padding: 1.6rem 1.4rem;
-      text-align: center;
-      margin-bottom: .9rem;
-      position: relative;
-      overflow: hidden;
+    .radio-opts { display: flex; flex-direction: column; gap: .45rem; }
+    .radio-opt {
+      display: flex; align-items: flex-start; gap: .75rem;
+      padding: .7rem .9rem;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      cursor: pointer; font-size: .8rem; line-height: 1.45;
+      color: var(--text-dim);
     }
-    .constancia-card::before {
-      content: '';
-      position: absolute;
-      inset: 7px;
-      border: 1px solid var(--gold-20);
-      pointer-events: none;
-    }
-    .constancia-eyebrow {
-      font-size: .5rem;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--gold-40);
-      margin-bottom: .5rem;
-    }
-    .constancia-titulo {
-      font-family: Georgia, serif;
-      font-size: .88rem;
-      color: var(--cream);
-      margin-bottom: .2rem;
-    }
-    .constancia-evento {
-      font-size: .65rem;
-      font-style: italic;
-      color: var(--gold-40);
-      margin-bottom: 1rem;
-    }
-    .constancia-nombre {
-      font-family: Georgia, serif;
-      font-size: 1.3rem;
-      color: var(--gold);
-      border-bottom: 1px solid var(--gold-20);
-      padding-bottom: .7rem;
-      margin-bottom: .5rem;
-    }
-    .constancia-fecha {
-      font-size: .58rem;
-      color: var(--gold-40);
-    }
-    .constancia-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: .4rem;
+    .radio-opt input { margin-top: .15rem; accent-color: var(--gold); flex-shrink: 0; }
+
+    .textarea-field {
       width: 100%;
-      background: var(--gold-20);
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: .75rem .9rem;
+      font-size: .82rem; font-family: inherit;
+      color: var(--text); resize: none; height: 76px;
+      outline: none;
+    }
+    .textarea-field::placeholder { color: var(--text-muted); }
+    .textarea-field:focus { border-color: var(--gold-dim); }
+
+    .enc-done-card { padding: 1.8rem; text-align: center; }
+    .enc-done-card svg { width: 44px; height: 44px; color: var(--ok); margin-bottom: .8rem; }
+
+    /* ── CONSTANCIA ──────────────────────────────────── */
+    .cert-card { padding: 1.6rem 1.4rem; text-align: center; position: relative; overflow: hidden; }
+    .cert-card::before {
+      content: ''; position: absolute; inset: 8px;
+      border: 1px solid rgba(198,165,106,.2);
+      border-radius: 14px; pointer-events: none;
+    }
+    .cert-eyebrow { font-size: .5rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: .5rem; }
+    .cert-titulo { font-family: Georgia, serif; font-size: .9rem; margin-bottom: .2rem; }
+    .cert-evento { font-size: .65rem; font-style: italic; color: var(--text-muted); margin-bottom: 1rem; }
+    .cert-nombre-disp { font-family: Georgia, serif; font-size: 1.4rem; color: var(--gold); border-bottom: 1px solid rgba(198,165,106,.25); padding-bottom: .7rem; margin-bottom: .5rem; }
+    .cert-fecha { font-size: .58rem; color: var(--text-muted); }
+
+    .btn-gold {
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      width: 100%;
+      background: var(--gold);
+      color: #100818;
+      border: none; border-radius: 12px;
+      padding: .85rem 1rem;
+      font-size: .72rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      font-family: inherit; cursor: pointer;
+      margin-top: .9rem; text-decoration: none;
+      transition: opacity .15s;
+    }
+    .btn-gold:hover { opacity: .88; }
+    .btn-ghost {
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      width: 100%;
+      background: var(--gold-glow);
       color: var(--gold);
-      border: 1px solid var(--gold-40);
-      padding: .7rem 1rem;
-      font-size: .65rem;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      font-family: inherit;
-      cursor: pointer;
-      margin-top: 1rem;
+      border: 1px solid var(--gold-dim);
+      border-radius: 12px;
+      padding: .8rem 1rem;
+      font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+      font-family: inherit; cursor: pointer;
+      margin-top: .7rem; text-decoration: none;
+      transition: background .15s;
     }
-    .constancia-btn svg { width: 15px; height: 15px; }
+    .btn-ghost:hover { background: rgba(198,165,106,.2); }
 
-    /* ── INFO ────────────────────────────────────── */
-    .info-fila {
-      display: flex;
-      gap: .8rem;
-      align-items: flex-start;
-      padding: .8rem 0;
-      border-bottom: 1px solid var(--plum-10);
+    .section-label {
+      font-size: .52rem; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--text-muted);
+      display: block; margin-bottom: .7rem; margin-top: 1.2rem;
     }
-    .info-fila:last-child { border-bottom: none; }
-    .info-fila svg { width: 18px; height: 18px; color: var(--gold); flex-shrink: 0; margin-top: .1rem; }
-    .info-label {
-      font-size: .6rem;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--mauve);
-      margin-bottom: .2rem;
-    }
-    .info-val {
-      font-size: .85rem;
-      line-height: 1.5;
-    }
-    .info-val a { color: var(--plum); }
+    .section-label:first-child { margin-top: 0; }
 
-    /* ── Powered by ──────────────────────────────── */
+    .msg-error { font-size: .72rem; color: #f87171; text-align: center; margin-top: .5rem; display: none; }
+
+    /* ── Powered ─────────────────────────────────────── */
     .powered {
-      text-align: center;
-      padding: .6rem 0 .2rem;
-      font-size: .52rem;
-      letter-spacing: .09em;
-      color: var(--mauve);
-      opacity: .6;
+      text-align: center; padding: 1rem 0 .2rem;
+      font-size: .5rem; letter-spacing: .1em;
+      color: var(--text-muted);
     }
     .powered a { color: inherit; text-decoration: none; }
 
-    /* ── Print: constancia ───────────────────────── */
+    /* ── Print constancia ────────────────────────────── */
     @media print {
-      body { background: white; }
-      #app, .hub-nav, .hub-header { display: none !important; }
-      #print-constancia {
-        display: flex !important;
-        min-height: 100vh;
-        align-items: center;
-        justify-content: center;
-      }
+      body { background: white; overflow: auto; }
+      #app, #pantallaCarga, #pantallaLogin, .bg { display: none !important; }
+      #print-constancia { display: flex !important; }
     }
-    #print-constancia { display: none; }
-    .cert-wrap {
-      width: 700px;
-      min-height: 490px;
+    #print-constancia { display: none; min-height: 100vh; align-items: center; justify-content: center; }
+    .cert-print {
+      width: 700px; min-height: 490px;
       border: 2px solid #2A0F25;
-      padding: 3rem;
-      text-align: center;
-      font-family: 'Gill Sans', Calibri, 'Segoe UI', sans-serif;
-      position: relative;
+      padding: 3rem; text-align: center;
+      font-family: 'Gill Sans', Calibri, sans-serif;
+      position: relative; color: #2A0F25;
     }
-    .cert-inner-border {
-      position: absolute;
-      inset: 10px;
-      border: 1px solid rgba(42,15,37,.2);
-    }
-    .cert-ornamento {
-      font-size: .55rem;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      color: #8F7383;
-      margin-bottom: .8rem;
-    }
-    .cert-h {
-      font-family: Georgia, serif;
-      font-size: 1rem;
-      font-weight: 400;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: #2A0F25;
-      margin-bottom: .6rem;
-    }
-    .cert-para {
-      font-size: .8rem;
-      color: #8F7383;
-      margin-bottom: 1.2rem;
-    }
-    .cert-nombre-print {
-      font-family: Georgia, serif;
-      font-size: 2rem;
-      font-weight: 400;
-      color: #2A0F25;
-      border-bottom: 1px solid rgba(42,15,37,.25);
-      display: inline-block;
-      padding-bottom: .5rem;
-      margin-bottom: 1.2rem;
-    }
-    .cert-evento-print {
-      font-family: Georgia, serif;
-      font-size: 1.1rem;
-      font-style: italic;
-      color: #4a3545;
-      margin-bottom: .3rem;
-    }
-    .cert-fecha-print {
-      font-size: .72rem;
-      color: #8F7383;
-      margin-bottom: 2rem;
-    }
-    .cert-firmas {
-      display: flex;
-      justify-content: center;
-      gap: 4rem;
-      margin-top: 2rem;
-    }
+    .cert-print-inner { position: absolute; inset: 10px; border: 1px solid rgba(42,15,37,.2); }
+    .cert-print h2 { font-family: Georgia, serif; font-size: 1rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 400; margin-bottom: .6rem; }
+    .cert-print p { font-size: .8rem; color: #8F7383; margin-bottom: 1rem; }
+    .cert-print .p-nombre { font-family: Georgia, serif; font-size: 2rem; font-weight: 400; color: #2A0F25; border-bottom: 1px solid rgba(42,15,37,.25); display: inline-block; padding-bottom: .5rem; margin-bottom: 1.2rem; }
+    .cert-print .p-ev { font-family: Georgia, serif; font-size: 1.1rem; font-style: italic; color: #4a3545; margin-bottom: .3rem; }
+    .cert-print .p-fecha { font-size: .72rem; color: #8F7383; margin-bottom: 2rem; }
+    .cert-firmas { display: flex; justify-content: center; gap: 4rem; margin-top: 2rem; }
     .cert-firma { text-align: center; }
-    .cert-firma-linea {
-      width: 140px;
-      height: 1px;
-      background: rgba(42,15,37,.3);
-      margin: 0 auto .4rem;
-    }
-    .cert-firma-nombre { font-size: .7rem; color: #2A0F25; }
-    .cert-firma-rol { font-size: .6rem; color: #8F7383; }
-    .cert-sello {
-      margin-top: 1.4rem;
-      font-size: .5rem;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: #C6A56A;
-    }
+    .cert-firma-linea { width: 140px; height: 1px; background: rgba(42,15,37,.3); margin: 0 auto .4rem; }
+    .cert-firma-n { font-size: .7rem; color: #2A0F25; }
+    .cert-firma-r { font-size: .6rem; color: #8F7383; }
+    .cert-sello { margin-top: 1.4rem; font-size: .5rem; letter-spacing: .14em; text-transform: uppercase; color: #C6A56A; }
   </style>
 </head>
 <body>
 
+<div class="bg">
+  <div class="bg-blob"></div>
+  <div class="bg-blob"></div>
+  <div class="bg-blob"></div>
+</div>
+
 <!-- Carga -->
 <div id="pantallaCarga">
-  <span class="marca">Reinventa</span>
-  <span class="sub">by Mary Méndez</span>
+  <span class="load-marca">Reinventa</span>
   <div class="spinner"></div>
 </div>
 
-<!-- Login (sin ?id=) -->
-<div id="pantallaLogin" style="display:none;position:fixed;inset:0;background:var(--sand);z-index:98;display:none;align-items:center;justify-content:center;padding:1.5rem;">
-  <div style="background:var(--cream);max-width:360px;width:100%;box-shadow:0 4px 40px rgba(42,15,37,.12);overflow:hidden;">
-    <div style="background:var(--plum);padding:1.8rem 2rem 1.4rem;text-align:center;">
-      <span style="font-family:Georgia,serif;font-size:.95rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:.2rem;">Reinventa</span>
-      <span style="font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-40);">by Mary Méndez</span>
+<!-- Login -->
+<div id="pantallaLogin">
+  <div class="login-card">
+    <div class="login-top">
+      <span class="login-marca">Reinventa</span>
+      <span class="login-sub">by Mary Méndez</span>
     </div>
-    <div style="height:2px;background:var(--gold);opacity:.45;"></div>
-    <div style="padding:1.6rem;">
-      <p style="font-family:Georgia,serif;font-size:1rem;margin-bottom:.3rem;">Tu espacio del taller</p>
-      <p style="font-size:.78rem;color:var(--mauve);line-height:1.5;margin-bottom:1.1rem;">Ingresa el código que recibiste en tu correo o WhatsApp.</p>
-      <label style="font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mauve);display:block;margin-bottom:.4rem;">Código de acceso</label>
-      <input id="login-codigo" type="text" placeholder="RNV-001" style="width:100%;border:1px solid var(--plum-10);background:white;padding:.75rem .9rem;font-size:.95rem;font-family:inherit;color:var(--plum);text-transform:uppercase;letter-spacing:.05em;outline:none;" onkeydown="if(event.key==='Enter')accederConCodigo()">
-      <button onclick="accederConCodigo()" style="width:100%;background:var(--plum);color:var(--cream);border:none;padding:.9rem;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-family:inherit;cursor:pointer;margin-top:.7rem;">Acceder</button>
-      <p id="login-error" style="font-size:.72rem;color:#b44;text-align:center;margin-top:.5rem;display:none;">Código no encontrado. Revisa tu correo o WhatsApp.</p>
-      <div style="border-top:1px solid var(--plum-10);margin-top:1.2rem;padding-top:1rem;text-align:center;">
-        <a href="/admin" style="font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mauve);text-decoration:none;">Acceso administrador →</a>
-      </div>
+    <div class="login-body">
+      <span class="login-eyebrow">Tu acceso</span>
+      <p class="login-title">Bienvenida</p>
+      <p class="login-desc">Ingresa el código que recibiste en tu correo o WhatsApp para acceder a tu espacio.</p>
+      <label class="field-label" for="login-codigo">Código de acceso</label>
+      <input id="login-codigo" type="text" class="field-input" placeholder="RNV-001"
+        onkeydown="if(event.key==='Enter')accederConCodigo()">
+      <button class="login-btn" onclick="accederConCodigo()">Ingresar al evento</button>
+      <p class="login-error" id="login-error">Código no encontrado. Revisa tu correo o WhatsApp.</p>
+      <a href="/admin" class="login-admin-link">¿Eres del equipo? <span>Acceso administrador ↗</span></a>
     </div>
   </div>
 </div>
 
-<!-- Error -->
-<div id="pantallaError" style="display:none;position:fixed;inset:0;background:var(--sand);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem;z-index:99;">
-  <h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.3rem;margin-bottom:.6rem;">Acceso no válido</h2>
-  <p style="font-size:.9rem;color:var(--mauve);" id="mensajeError">No se encontró este registro.</p>
-  <a href="/hub" style="margin-top:1rem;font-size:.75rem;color:var(--mauve);">← Volver al inicio</a>
-</div>
-
-<!-- App principal -->
+<!-- App -->
 <div id="app">
 
-  <div class="hub-header">
-    <div class="hub-header-inner">
-      <div>
-        <span class="hub-marca">Reinventa</span>
-        <span class="hub-sub">by Mary Méndez</span>
-      </div>
-      <div class="hub-avatar" id="avatarInicial">—</div>
+  <!-- Nav superior -->
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="marca">Reinventa</span>
     </div>
-    <div class="hub-header-divider"></div>
-  </div>
-
-  <!-- INICIO -->
-  <div class="tab-content active" id="tab-inicio">
-
-    <div class="bienvenida">
-      <p class="bienvenida-label">Bienvenida a tu espacio</p>
-      <p class="bienvenida-nombre" id="nombreBienvenida">—</p>
-      <span class="bienvenida-fase" id="faseBienvenida">—</span>
+    <div class="nav-tabs" id="nav-tabs">
+      <button class="nav-tab active" data-tab="inicio" onclick="ir('inicio',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Inicio
+      </button>
+      <button class="nav-tab" data-tab="pase" onclick="ir('pase',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7zM14 14h1M14 17h3M17 14v3"/></svg>
+        Mi Pase
+      </button>
+      <button class="nav-tab" data-tab="agenda" onclick="ir('agenda',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Agenda
+      </button>
+      <button class="nav-tab" data-tab="recursos" onclick="ir('recursos',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Recursos
+      </button>
+      <button class="nav-tab" data-tab="encuesta" onclick="ir('encuesta',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        Encuesta
+      </button>
+      <button class="nav-tab" data-tab="constancia" onclick="ir('constancia',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M9 21l3-3 3 3"/><path d="M6.2 18a8 8 0 0111.6 0"/></svg>
+        Constancia
+      </button>
     </div>
+    <div class="nav-right">
+      <div class="nav-avatar" id="nav-avatar">—</div>
+      <span class="nav-name" id="nav-name">—</span>
+      <button class="nav-salir" onclick="salir()">Salir</button>
+    </div>
+  </nav>
 
-    <div class="status-grid">
-      <div class="status-chip" id="chipCheckin">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 12l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="2"/>
-        </svg>
-        <div>
-          <span class="chip-label">Check-in</span>
-          <span class="chip-val" id="chipCheckinVal">Pendiente</span>
+  <div class="tab-wrap">
+
+    <!-- INICIO -->
+    <div class="tab-pane active" id="tab-inicio">
+      <div class="welcome-card glass" style="margin-bottom:1rem;">
+        <p class="welcome-eyebrow">Bienvenida a tu espacio</p>
+        <p class="welcome-nombre" id="wNombre">—</p>
+        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+          <span class="welcome-fase" id="wFase">—</span>
+          <span class="checkin-badge" id="wCheckin" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Check-in confirmado
+          </span>
+        </div>
+        <div class="welcome-meta" style="margin-top:.9rem;">
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            15 agosto 2026
+          </span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            10:00 – 12:00 am
+          </span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            The University Club of Mexico
+          </span>
         </div>
       </div>
-      <div class="status-chip" id="chipEncuesta">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-        </svg>
-        <div>
-          <span class="chip-label">Encuesta</span>
-          <span class="chip-val" id="chipEncuestaVal">Pendiente</span>
+
+      <span class="section-label">Acceso rápido</span>
+      <div class="grid-cards">
+        <div class="grid-card glass" onclick="ir('pase', navTabBtn('pase'))">
+          <div class="grid-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7zM14 14h1M14 17h3M17 14v3"/></svg>
+          </div>
+          <span class="grid-titulo">Mi Pase</span>
+          <span class="grid-desc">QR de entrada al evento</span>
         </div>
+        <div class="grid-card glass" onclick="ir('recursos', navTabBtn('recursos'))">
+          <div class="grid-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <span class="grid-titulo">Recursos</span>
+          <span class="grid-desc">Guías del taller</span>
+        </div>
+        <div class="grid-card glass" onclick="ir('encuesta', navTabBtn('encuesta'))" id="card-encuesta">
+          <div class="grid-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+          </div>
+          <span class="grid-titulo" id="card-encuesta-titulo">Encuesta previa</span>
+          <span class="grid-desc" id="card-encuesta-desc">Ayuda a Mary a prepararse</span>
+        </div>
+        <div class="grid-card glass" onclick="ir('agenda', navTabBtn('agenda'))">
+          <div class="grid-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
+          <span class="grid-titulo">Agenda</span>
+          <span class="grid-desc">Programa del día</span>
+        </div>
+        <div class="grid-card glass" onclick="ir('constancia', navTabBtn('constancia'))">
+          <div class="grid-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M9 21l3-3 3 3"/><path d="M6.2 18a8 8 0 0111.6 0"/></svg>
+          </div>
+          <span class="grid-titulo">Constancia</span>
+          <span class="grid-desc">Certificado de asistencia</span>
+        </div>
+      </div>
+      <div class="powered" style="margin-top:1.2rem;">
+        Plataforma por <a href="https://www.innermap.mx" target="_blank" rel="noopener">Innermap</a>
       </div>
     </div>
 
-    <span class="section-label">El evento</span>
-    <div class="evento-mini">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
-      </svg>
-      <div>
-        <p class="ev-titulo">Lo que tu imagen comunica</p>
-        <p class="ev-dato">Sábado 15 de agosto de 2026<br>10:00 – 12:00 am<br>The University Club of Mexico</p>
-      </div>
-    </div>
-
-    <div id="cta-encuesta-previa" style="display:none;background:var(--cream);border-radius:2px;padding:1.1rem 1.3rem;margin-bottom:.9rem;border-left:3px solid var(--gold);">
-      <p style="font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.3rem;">Antes del taller</p>
-      <p style="font-family:Georgia,serif;font-size:.95rem;margin-bottom:.25rem;">Completa tu encuesta previa</p>
-      <p style="font-size:.78rem;color:var(--mauve);line-height:1.5;margin-bottom:.7rem;">Ayuda a Mary a personalizar el taller respondiendo unas preguntas sobre tu imagen y propósito.</p>
-      <button class="btn-primary" style="margin-top:0;" onclick="abrirEncuestaPrevia()">Completar encuesta</button>
-    </div>
-    <div id="cta-encuesta-lista" style="display:none;background:var(--cream);border-radius:2px;padding:.9rem 1.3rem;margin-bottom:.9rem;align-items:center;gap:.7rem;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a9e6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      <p style="font-size:.82rem;color:var(--plum);">Encuesta previa completada — gracias.</p>
-    </div>
-
-    <div class="powered">
-      Plataforma desarrollada por <a href="https://www.innermap.mx" target="_blank" rel="noopener">Innermap</a>
-    </div>
-
-  </div>
-
-  <!-- AGENDA -->
-  <div class="tab-content" id="tab-agenda">
-    <span class="section-label">Programa del día</span>
-    <div class="card">
-      <div class="agenda-item">
-        <span class="agenda-hora">9:45</span>
-        <div>
-          <p class="agenda-titulo">Registro y bienvenida</p>
-          <p class="agenda-desc">Llegada, check-in y café de bienvenida.</p>
+    <!-- MI PASE -->
+    <div class="tab-pane" id="tab-pase">
+      <div class="pase-card glass">
+        <p class="pase-eyebrow">Tu acceso al evento</p>
+        <p class="pase-nombre" id="paseNombre">—</p>
+        <div class="qr-wrap">
+          <img id="qrImg" src="" alt="QR de entrada" width="180" height="180">
         </div>
+        <p class="pase-id" id="paseId">—</p>
+        <p class="pase-hint">Muestra este QR en la entrada el 15 de agosto.<br>También puedes usar el enlace directo de tu correo.</p>
       </div>
-      <div class="agenda-item">
-        <span class="agenda-hora">10:00</span>
-        <div>
-          <p class="agenda-titulo">Apertura — ¿Qué comunica tu imagen?</p>
-          <p class="agenda-desc">Mary introduce los fundamentos de la comunicación no verbal y cómo la imagen define percepciones antes de hablar.</p>
-        </div>
-      </div>
-      <div class="agenda-item">
-        <span class="agenda-hora">10:30</span>
-        <div>
-          <p class="agenda-titulo">Arquetipos de estilo</p>
-          <p class="agenda-desc">Descubre tu arquetipo de imagen personal y cómo usarlo a tu favor en diferentes contextos.</p>
-        </div>
-      </div>
-      <div class="agenda-item">
-        <span class="agenda-hora">11:00</span>
-        <div>
-          <p class="agenda-titulo">Dinámica práctica</p>
-          <p class="agenda-desc">Ejercicio grupal de análisis y retroalimentación con Mary.</p>
-        </div>
-      </div>
-      <div class="agenda-item">
-        <span class="agenda-hora">11:30</span>
-        <div>
-          <p class="agenda-titulo">Cierre — Tu plan de acción</p>
-          <p class="agenda-desc">Herramientas concretas para llevar a casa y seguir transformando tu imagen.</p>
-        </div>
-      </div>
-      <div class="agenda-item">
-        <span class="agenda-hora">12:00</span>
-        <div>
-          <p class="agenda-titulo">Networking y preguntas</p>
-          <p class="agenda-desc">Espacio abierto para conectar con las demás participantes.</p>
-        </div>
-      </div>
-    </div>
-    <a href="https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7" target="_blank" rel="noopener" class="btn-outline">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-      Ver ubicación en Maps
-    </a>
-  </div>
-
-  <!-- RECURSOS -->
-  <div class="tab-content" id="tab-recursos">
-    <!-- contenido dinámico según estado -->
-    <div id="recursos-inner"></div>
-  </div>
-
-  <!-- INFO -->
-  <div class="tab-content" id="tab-info">
-    <span class="section-label">Sobre Mary Méndez</span>
-    <div class="card" style="margin-bottom:1.1rem;">
-      <p style="font-size:.85rem;line-height:1.65;color:#4a3545;margin-bottom:.8rem;">Consultora de imagen y liderazgo con más de 15 años acompañando a mujeres y líderes a comunicar con autenticidad quiénes son.</p>
-      <a href="https://reinventabymarymendez.com.mx" target="_blank" rel="noopener" class="btn-outline" style="margin-top:0;">
-        reinventabymarymendez.com.mx →
+      <a href="https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7" target="_blank" rel="noopener" class="btn-ghost">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        Cómo llegar — Ver en Maps
       </a>
     </div>
-    <span class="section-label">Sede del evento</span>
-    <div class="card">
-      <div class="info-fila">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-        <div>
-          <p class="info-label">Dirección</p>
-          <p class="info-val">Av. Paseo de la Reforma 150<br>Col. Juárez, CDMX</p>
+
+    <!-- AGENDA -->
+    <div class="tab-pane" id="tab-agenda">
+      <span class="section-label">Programa — 15 agosto 2026</span>
+      <div class="agenda-list">
+        <div class="agenda-item glass">
+          <span class="agenda-hora">9:45</span>
+          <div><p class="agenda-titulo">Registro y café de bienvenida</p><p class="agenda-desc">Llegada y check-in en la entrada.</p></div>
+        </div>
+        <div class="agenda-item glass">
+          <span class="agenda-hora">10:00</span>
+          <div><p class="agenda-titulo">Apertura — ¿Qué comunica tu imagen?</p><p class="agenda-desc">Mary introduce los fundamentos de la comunicación no verbal y cómo la imagen define percepciones antes de hablar.</p></div>
+        </div>
+        <div class="agenda-item glass">
+          <span class="agenda-hora">10:30</span>
+          <div><p class="agenda-titulo">Arquetipos de estilo</p><p class="agenda-desc">Descubre tu arquetipo de imagen personal y cómo usarlo a tu favor en diferentes contextos.</p></div>
+        </div>
+        <div class="agenda-item glass">
+          <span class="agenda-hora">11:00</span>
+          <div><p class="agenda-titulo">Dinámica práctica</p><p class="agenda-desc">Ejercicio grupal de análisis y retroalimentación con Mary.</p></div>
+        </div>
+        <div class="agenda-item glass">
+          <span class="agenda-hora">11:30</span>
+          <div><p class="agenda-titulo">Cierre — Tu plan de acción</p><p class="agenda-desc">Herramientas concretas para llevar a casa y seguir transformando tu imagen.</p></div>
+        </div>
+        <div class="agenda-item glass">
+          <span class="agenda-hora">12:00</span>
+          <div><p class="agenda-titulo">Networking y preguntas</p><p class="agenda-desc">Espacio abierto para conectar con las demás participantes.</p></div>
         </div>
       </div>
-      <div class="info-fila">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-        <div>
-          <p class="info-label">Fecha y hora</p>
-          <p class="info-val">Sábado 15 de agosto de 2026<br>10:00 – 12:00 am</p>
-        </div>
-      </div>
-    </div>
-    <span class="section-label">Organización</span>
-    <div class="card">
-      <div class="info-fila">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-        <div>
-          <p class="info-label">Producción del evento</p>
-          <p class="info-val"><a href="https://www.alumbrastudios.com" target="_blank" rel="noopener">Alumbra Studios</a></p>
-        </div>
-      </div>
-    </div>
-    <div class="powered">
-      Plataforma desarrollada por <a href="https://www.innermap.mx" target="_blank" rel="noopener">Innermap</a>
-    </div>
-  </div>
-
-  <nav class="hub-nav">
-    <button class="nav-btn active" data-tab="inicio" onclick="mostrarTab('inicio', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>Inicio</span>
-    </button>
-    <button class="nav-btn" data-tab="agenda" onclick="mostrarTab('agenda', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      <span>Agenda</span>
-    </button>
-    <button class="nav-btn" data-tab="recursos" onclick="mostrarTab('recursos', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      <span>Recursos</span>
-    </button>
-    <button class="nav-btn" data-tab="info" onclick="mostrarTab('info', this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      <span>Info</span>
-    </button>
-  </nav>
-</div>
-
-<!-- Overlay: encuesta previa al evento -->
-<div id="overlay-previa" style="display:none;position:fixed;inset:0;background:var(--sand);z-index:200;overflow-y:auto;padding-bottom:2rem;">
-  <div style="background:var(--plum);padding:1rem 1.4rem;display:flex;align-items:center;gap:.8rem;position:sticky;top:0;z-index:1;">
-    <button onclick="cerrarEncuestaPrevia()" style="background:none;border:none;color:var(--gold-40);cursor:pointer;padding:.2rem;flex-shrink:0;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-    </button>
-    <div>
-      <span style="font-family:Georgia,serif;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);display:block;">Encuesta previa</span>
-      <span style="font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-40);">Imagen y propósito</span>
-    </div>
-  </div>
-
-  <div style="max-width:480px;margin:0 auto;padding:1.4rem 1.2rem;">
-
-    <p style="font-size:.78rem;color:var(--mauve);line-height:1.6;margin-bottom:1.4rem;background:var(--cream);padding:1rem 1.1rem;border-radius:2px;">Este ejercicio es un espacio seguro. Responde con total honestidad para que Mary pueda acompañarte mejor durante el taller.</p>
-
-    <!-- Sección 1 -->
-    <span style="font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:.9rem;">Sección 1 — Imagen y propósito</span>
-
-    <div class="card">
-      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.3rem;">1. Satisfacción personal</p>
-      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Qué tan satisfecha te sientes hoy con tu imagen en general frente al espejo?</p>
-      <div style="display:flex;align-items:center;gap:.7rem;">
-        <span style="font-size:.62rem;color:var(--mauve);">1</span>
-        <input type="range" id="q-satisfaccion" min="1" max="10" value="5" style="flex:1;accent-color:var(--gold);" oninput="document.getElementById('v-satisfaccion').textContent=this.value">
-        <span style="font-size:.62rem;color:var(--mauve);">10</span>
-        <span id="v-satisfaccion" style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);min-width:24px;text-align:right;">5</span>
-      </div>
+      <a href="https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7" target="_blank" rel="noopener" class="btn-ghost" style="margin-top:.8rem;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        The University Club of Mexico — Ver en Maps
+      </a>
     </div>
 
-    <div class="card">
-      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.3rem;">2. Coherencia y autenticidad</p>
-      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Qué tanto sientes que la ropa que usas realmente representa quién eres por dentro?</p>
-      <div style="display:flex;align-items:center;gap:.7rem;">
-        <span style="font-size:.62rem;color:var(--mauve);">1</span>
-        <input type="range" id="q-coherencia" min="1" max="10" value="5" style="flex:1;accent-color:var(--gold);" oninput="document.getElementById('v-coherencia').textContent=this.value">
-        <span style="font-size:.62rem;color:var(--mauve);">10</span>
-        <span id="v-coherencia" style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);min-width:24px;text-align:right;">5</span>
-      </div>
+    <!-- RECURSOS -->
+    <div class="tab-pane" id="tab-recursos">
+      <div id="recursos-inner"></div>
     </div>
 
-    <div class="card">
-      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.3rem;">3. Confianza y practicidad diaria</p>
-      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Qué tanta seguridad y comodidad te da tu closet al momento de decidir qué ponerte cada mañana?</p>
-      <div style="display:flex;align-items:center;gap:.7rem;">
-        <span style="font-size:.62rem;color:var(--mauve);">1</span>
-        <input type="range" id="q-confianza" min="1" max="10" value="5" style="flex:1;accent-color:var(--gold);" oninput="document.getElementById('v-confianza').textContent=this.value">
-        <span style="font-size:.62rem;color:var(--mauve);">10</span>
-        <span id="v-confianza" style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);min-width:24px;text-align:right;">5</span>
-      </div>
+    <!-- ENCUESTA PREVIA -->
+    <div class="tab-pane" id="tab-encuesta">
+      <div id="encuesta-inner"></div>
     </div>
 
-    <div class="card">
-      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.3rem;">4. Proyección y liderazgo</p>
-      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Qué tanta autoridad, presencia y credibilidad sientes que transmite tu imagen en tu entorno?</p>
-      <div style="display:flex;align-items:center;gap:.7rem;">
-        <span style="font-size:.62rem;color:var(--mauve);">1</span>
-        <input type="range" id="q-proyeccion" min="1" max="10" value="5" style="flex:1;accent-color:var(--gold);" oninput="document.getElementById('v-proyeccion').textContent=this.value">
-        <span style="font-size:.62rem;color:var(--mauve);">10</span>
-        <span id="v-proyeccion" style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);min-width:24px;text-align:right;">5</span>
-      </div>
+    <!-- CONSTANCIA -->
+    <div class="tab-pane" id="tab-constancia">
+      <div id="constancia-inner"></div>
     </div>
-
-    <div class="card">
-      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.8rem;">5. Tu motivación principal</p>
-      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Cuál es el motivo número uno que te trajo a este taller? <em>(Elige solo una)</em></p>
-      <div style="display:flex;flex-direction:column;gap:.5rem;" id="motiv-opts">
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="motivacion" value="Meta profesional" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Meta profesional — quiero proyectar mayor liderazgo, seguridad y credibilidad en mi trabajo.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="motivacion" value="Bienestar personal" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Bienestar personal — quiero dejar de batallar con mi closet y sentirme cómoda, segura y auténtica.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="motivacion" value="Etapa de transición" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Etapa de transición — estoy viviendo un cambio y busco una nueva versión de mí.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="motivacion" value="otra" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;" onchange="document.getElementById('motiv-otra').style.display='block'"> Otra razón
-        </label>
-        <input id="motiv-otra" type="text" placeholder="¿Cuál?" style="display:none;padding:.65rem .9rem;border:1px solid var(--plum-10);border-radius:2px;font-family:inherit;font-size:.8rem;color:var(--plum);background:white;margin-top:.2rem;">
-      </div>
-    </div>
-
-    <div class="card">
-      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.35rem;">6. Tu expectativa</p>
-      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.7rem;">En una sola frase, ¿qué te gustarías llevarte al terminar este taller?</p>
-      <textarea id="q-expectativa" class="enc-ta" placeholder="Al terminar el taller quiero..."></textarea>
-    </div>
-
-    <!-- Sección 2 -->
-    <span style="font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);display:block;margin:.4rem 0 .9rem;">Sección 2 — Características naturales</span>
-    <p style="font-size:.75rem;color:var(--mauve);line-height:1.6;margin-bottom:1rem;background:var(--cream);padding:1rem 1.1rem;border-radius:2px;">Observa tus rasgos con luz natural (cerca de una ventana). Esta información es completamente confidencial.</p>
-
-    <div class="card">
-      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.8rem;">1. ¿Cómo describirías tu tono de piel?</p>
-      <div style="display:flex;flex-direction:column;gap:.5rem;">
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="piel" value="Muy clara o rosada" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Muy clara o rosada — me quemo con facilidad, casi nunca me bronceo.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="piel" value="Clara, beige o marfil" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Clara, beige o marfil — me quemo un poco pero luego tomo tono dorado.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="piel" value="Morena clara o mate" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Morena clara o mate — me bronceo con facilidad y rara vez me quemo.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="piel" value="Morena oscura o negra" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Morena oscura o negra.
-        </label>
-      </div>
-    </div>
-
-    <div class="card">
-      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.8rem;">2. ¿Cuál es tu color de cabello natural?</p>
-      <div style="display:flex;flex-direction:column;gap:.5rem;">
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="cabello" value="Negro o castaño muy oscuro" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Negro o castaño muy oscuro.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="cabello" value="Castaño medio o claro" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Castaño medio o claro — bajo el sol puede verse ligeramente dorado.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="cabello" value="Rubio" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Rubio — con destellos amarillos o miel.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="cabello" value="Pelirrojo" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Pelirrojo — tonos con base naranja o roja natural.
-        </label>
-      </div>
-    </div>
-
-    <div class="card">
-      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.8rem;">3. ¿De qué color son tus ojos?</p>
-      <div style="display:flex;flex-direction:column;gap:.5rem;">
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="ojos" value="Café oscuro o negro" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Café oscuro o negro — tono muy profundo, casi no se distingue la pupila.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="ojos" value="Café claro, miel o avellana" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Café claro, miel o avellana — a veces con destellos verdes o amarillos.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="ojos" value="Verdes o azules intensos" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Verdes o azules intensos — contrastan mucho con el rostro.
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
-          <input type="radio" name="ojos" value="Grises, azules suaves o verdes aceituna" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Grises, azules suaves o verdes aceituna — claros pero de tono suave.
-        </label>
-      </div>
-    </div>
-
-    <button class="btn-primary" id="btn-enviar-previa" onclick="enviarEncuestaPrevia()" style="margin-top:.4rem;">Enviar encuesta</button>
-    <p id="msg-previa" style="font-size:.72rem;color:var(--mauve);text-align:center;margin-top:.6rem;display:none;"></p>
 
   </div>
 </div>
 
-<!-- Constancia imprimible (solo visible en @media print) -->
+<!-- Constancia imprimible -->
 <div id="print-constancia">
-  <div class="cert-wrap">
-    <div class="cert-inner-border"></div>
-    <p class="cert-ornamento">✦ &nbsp; &nbsp; &nbsp; &nbsp; ✦</p>
-    <h2 class="cert-h">Constancia de asistencia</h2>
-    <p class="cert-para">Se otorga la presente constancia a</p>
-    <p class="cert-nombre-print" id="certNombre">—</p>
-    <p class="cert-evento-print">Taller — Lo que tu imagen comunica</p>
-    <p class="cert-fecha-print">REINVENTA by Mary Méndez &nbsp;·&nbsp; 15 de agosto de 2026<br>The University Club of Mexico · Ciudad de México</p>
+  <div class="cert-print">
+    <div class="cert-print-inner"></div>
+    <p style="font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:#C6A56A;margin-bottom:.8rem;">✦ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✦</p>
+    <h2>Constancia de asistencia</h2>
+    <p>Se otorga la presente constancia a</p>
+    <p class="p-nombre" id="certNombreP">—</p>
+    <p class="p-ev">Taller — Lo que tu imagen comunica</p>
+    <p class="p-fecha">REINVENTA by Mary Méndez &nbsp;·&nbsp; 15 de agosto de 2026<br>The University Club of Mexico · Ciudad de México</p>
     <div class="cert-firmas">
-      <div class="cert-firma">
-        <div class="cert-firma-linea"></div>
-        <p class="cert-firma-nombre">Mary Méndez</p>
-        <p class="cert-firma-rol">Consultora de imagen</p>
-      </div>
-      <div class="cert-firma">
-        <div class="cert-firma-linea"></div>
-        <p class="cert-firma-nombre">Alumbra Studios</p>
-        <p class="cert-firma-rol">Organización del evento</p>
-      </div>
+      <div class="cert-firma"><div class="cert-firma-linea"></div><p class="cert-firma-n">Mary Méndez</p><p class="cert-firma-r">Consultora de imagen</p></div>
+      <div class="cert-firma"><div class="cert-firma-linea"></div><p class="cert-firma-n">Alumbra Studios</p><p class="cert-firma-r">Organización del evento</p></div>
     </div>
     <p class="cert-sello">REINVENTA by Mary Méndez &nbsp;·&nbsp; reinventabymarymendez.com.mx</p>
   </div>
@@ -1098,295 +834,335 @@
 
 <script>
 var perfil = null;
-var calificacionSeleccionada = 0;
+var calPost = 0;
 
-/* ── Utilidades ─────────────────────────────────── */
+/* ── Utilidades ─────────────────────────── */
+function iniciales(n) {
+  if (!n) return '—';
+  var p = n.trim().split(' ').filter(Boolean);
+  return p.length === 1 ? p[0][0].toUpperCase() : (p[0][0] + p[p.length-1][0]).toUpperCase();
+}
+
+function navTabBtn(tab) {
+  return document.querySelector('.nav-tab[data-tab="' + tab + '"]');
+}
+
+function ir(tab, btn) {
+  document.querySelectorAll('.tab-pane').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.nav-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (tab === 'recursos')   renderRecursos();
+  if (tab === 'encuesta')   renderEncuesta();
+  if (tab === 'constancia') renderConstancia();
+}
+
+function salir() {
+  history.replaceState(null, '', '/hub');
+  location.reload();
+}
+
 function mostrarApp() {
   document.getElementById('pantallaCarga').style.opacity = '0';
-  setTimeout(function() {
+  setTimeout(function(){
     document.getElementById('pantallaCarga').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-  }, 350);
+  }, 300);
 }
 
-function mostrarError(msg) {
-  document.getElementById('pantallaCarga').style.display = 'none';
-  var el = document.getElementById('pantallaError');
-  el.style.display = 'flex';
-  document.getElementById('mensajeError').textContent = msg || 'No se encontró este registro.';
+/* ── Poblar UI ──────────────────────────── */
+function poblarUI(p) {
+  perfil = p;
+  document.getElementById('wNombre').textContent    = p.nombre || '—';
+  document.getElementById('wFase').textContent      = p.fase   || '—';
+  document.getElementById('nav-avatar').textContent = iniciales(p.nombre);
+  document.getElementById('nav-name').textContent   = (p.nombre || '').split(' ')[0];
+  if (p.asistio) document.getElementById('wCheckin').style.display = 'flex';
+
+  // Mi Pase — QR
+  var urlEntrada = 'https://reinventabymarymendez.com.mx/entrada?id=' + p.id;
+  var urlQR = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(urlEntrada);
+  document.getElementById('qrImg').src  = urlQR;
+  document.getElementById('paseNombre').textContent = p.nombre || '—';
+  document.getElementById('paseId').textContent     = p.id    || '—';
+
+  // Tarjeta encuesta en grid
+  if (p.encuestaPrevia) {
+    document.getElementById('card-encuesta-titulo').textContent = 'Encuesta enviada';
+    document.getElementById('card-encuesta-desc').textContent   = 'Gracias por responder';
+  }
 }
 
-function mostrarTab(nombre, btn) {
-  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
-  document.getElementById('tab-' + nombre).classList.add('active');
-  btn.classList.add('active');
-  if (nombre === 'recursos') renderRecursos();
-}
-
-function iniciales(nombre) {
-  if (!nombre) return '—';
-  var partes = nombre.trim().split(' ').filter(Boolean);
-  if (partes.length === 1) return partes[0][0].toUpperCase();
-  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
-}
-
-/* ── Íconos SVG inline ──────────────────────────── */
-var iconCheck = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:#4a9e6a"><polyline points="20 6 9 17 4 12"/></svg>';
-var iconLock  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--mauve);opacity:.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
-var iconBook  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--gold)"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>';
-var iconHanger = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--gold)"><path d="M20.38 18.57l-9-5.14a1 1 0 00-1 0L2 18"/><path d="M12 3a3 3 0 00-3 3v.08a3 3 0 003 2.92 3 3 0 003-2.92V6a3 3 0 00-3-3z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>';
-var iconDl    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-var iconPrint = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>';
-var iconStar  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--mauve);opacity:.35"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
-
-/* ── Render de sección Recursos ─────────────────── */
+/* ── Recursos ───────────────────────────── */
 function renderRecursos() {
   if (!perfil) return;
   var el = document.getElementById('recursos-inner');
+  var iconCheck = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  var iconLock  = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+  var prox = '<span class="prox-badge">Próximamente</span>';
 
   if (!perfil.asistio) {
-    el.innerHTML =
-      '<div class="lock-banner">'
-      + '<div class="lock-icon">' + iconLock + '</div>'
-      + '<p class="lock-title">Tus recursos del taller</p>'
-      + '<p class="lock-sub">Completa los dos pasos para desbloquear tus guías y constancia.</p>'
-      + '<div class="pasos">'
-      + '<div class="paso paso-pending">' + iconStar + '<span class="paso-text">Haz check-in el día del evento</span></div>'
-      + '<div class="paso paso-pending">' + iconStar + '<span class="paso-text">Completa la encuesta de satisfacción</span></div>'
+    el.innerHTML = '<div class="lock-card glass"><div class="lock-icon">' + iconLock + '</div>'
+      + '<p class="lock-title">Recursos del taller</p>'
+      + '<p class="lock-sub">Se desbloquean una vez que hagas check-in el día del evento y completes la encuesta de satisfacción.</p>'
+      + '<div class="step-row" style="margin-top:1.1rem;text-align:left;">'
+      + '<div class="step glass step-pending">' + iconLock + '<span class="step-text">Haz check-in el día del evento</span></div>'
+      + '<div class="step glass step-pending">' + iconLock + '<span class="step-text">Completa la encuesta de satisfacción</span></div>'
       + '</div></div>';
     return;
   }
 
   if (!perfil.encuesta) {
-    el.innerHTML =
-      '<div class="lock-banner" style="text-align:left;padding:1.2rem 1.3rem;">'
-      + '<p class="lock-title" style="margin-bottom:.2rem;">¡Ya hiciste check-in!</p>'
-      + '<p class="lock-sub" style="margin-bottom:.8rem;">Completa la encuesta para desbloquear tus guías y constancia.</p>'
-      + '<div class="pasos" style="margin-top:0;">'
-      + '<div class="paso paso-done">' + iconCheck + '<span class="paso-text">Check-in completado</span></div>'
-      + '<div class="paso paso-pending">' + iconStar + '<span class="paso-text">Completa la encuesta de satisfacción</span></div>'
+    el.innerHTML = '<div class="lock-card glass" style="text-align:left;padding:1.2rem 1.3rem;">'
+      + '<p style="font-family:Georgia,serif;font-size:1rem;margin-bottom:.25rem;">¡Ya hiciste check-in!</p>'
+      + '<p style="font-size:.8rem;color:var(--text-dim);line-height:1.5;margin-bottom:.8rem;">Completa la encuesta de satisfacción para desbloquear tus guías.</p>'
+      + '<div class="step-row" style="margin:0;">'
+      + '<div class="step glass step-done">' + iconCheck + '<span class="step-text">Check-in completado</span></div>'
+      + '<div class="step glass step-pending">' + iconLock + '<span class="step-text">Completa la encuesta de satisfacción</span></div>'
       + '</div></div>'
-      + renderEncuestaHTML();
+      + renderEncuestaPost();
     bindEstrellas();
     return;
   }
 
   // Todo desbloqueado
-  el.innerHTML =
-    '<div class="pasos" style="margin-bottom:1rem;">'
-    + '<div class="paso paso-done">' + iconCheck + '<span class="paso-text">Check-in completado</span></div>'
-    + '<div class="paso paso-done">' + iconCheck + '<span class="paso-text">Encuesta completada — gracias</span></div>'
+  el.innerHTML = '<div class="step-row">'
+    + '<div class="step glass step-done">' + iconCheck + '<span class="step-text">Check-in completado</span></div>'
+    + '<div class="step glass step-done">' + iconCheck + '<span class="step-text">Encuesta completada — gracias</span></div>'
     + '</div>'
-    + renderGuiasHTML()
-    + renderConstanciaHTML();
+    + '<span class="section-label">Guías del taller</span>'
+    + guiaCard('Guía de compras inteligentes', 'Aprende a identificar piezas clave, construir un guardarropa cápsula y comprar con intención.', prox)
+    + guiaCard('Guía de estilos y sus esenciales', 'Descubre tu arquetipo de imagen personal y las prendas esenciales para cada estilo.', prox);
 }
 
-function renderEncuestaHTML() {
-  return '<div class="card" style="margin-top:.8rem;">'
-    + '<p class="enc-titulo">¿Cómo estuvo el taller?</p>'
-    + '<p class="enc-sub">Tu retroalimentación ayuda a Mary a seguir mejorando.</p>'
-    + '<span class="campo-label" style="margin-top:0;">Calificación general</span>'
-    + '<div class="estrellas" id="estrellas">'
-    + '<span class="estrella" data-val="1">★</span>'
-    + '<span class="estrella" data-val="2">★</span>'
-    + '<span class="estrella" data-val="3">★</span>'
-    + '<span class="estrella" data-val="4">★</span>'
-    + '<span class="estrella" data-val="5">★</span>'
+function guiaCard(titulo, desc, accion) {
+  return '<div class="guia-card glass"><div class="guia-head">'
+    + '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>'
+    + '<div><span class="guia-titulo">' + titulo + '</span><span class="guia-sub">por Mary Méndez · PDF</span></div>'
+    + '</div><div class="guia-body"><p class="guia-desc">' + desc + '</p>' + accion + '</div></div>';
+}
+
+function renderEncuestaPost() {
+  return '<span class="section-label" style="margin-top:.9rem;">Encuesta de satisfacción</span>'
+    + '<div class="enc-card glass">'
+    + '<p class="enc-q">¿Cómo estuvo el taller?</p>'
+    + '<p class="enc-hint">Tu retroalimentación ayuda a Mary a seguir mejorando.</p>'
+    + '<p style="font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.5rem;">Calificación</p>'
+    + '<div id="estrellas-post" style="display:flex;gap:.4rem;margin-bottom:1rem;">'
+    + '<span class="est" data-v="1" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.2);">★</span>'
+    + '<span class="est" data-v="2" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.2);">★</span>'
+    + '<span class="est" data-v="3" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.2);">★</span>'
+    + '<span class="est" data-v="4" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.2);">★</span>'
+    + '<span class="est" data-v="5" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.2);">★</span>'
     + '</div>'
-    + '<span class="campo-label">Comentarios o sugerencias</span>'
-    + '<textarea class="enc-ta" id="enc-comentario" placeholder="Fue una experiencia increíble..."></textarea>'
-    + '<button class="btn-primary" id="btn-encuesta" onclick="enviarEncuesta()">'
-    + iconDl + ' Enviar y desbloquear recursos</button>'
-    + '<p id="enc-msg" style="font-size:.72rem;color:var(--mauve);text-align:center;margin-top:.6rem;display:none;"></p>'
-    + '</div>';
-}
-
-function renderGuiasHTML() {
-  var prox = '<div style="display:inline-block;background:rgba(198,165,106,.15);border:1px solid var(--gold-40);padding:.2rem .6rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:.6rem;">Próximamente</div>';
-  return '<span class="section-label">Guías del taller</span>'
-    + '<div class="guia-card">'
-    + '<div class="guia-header">' + iconBook
-    + '<div><span class="guia-header-titulo">Guía de compras inteligentes</span>'
-    + '<span class="guia-header-sub">por Mary Méndez · PDF</span></div></div>'
-    + '<div class="guia-body"><p class="guia-desc">Aprende a identificar piezas clave, construir un guardarropa cápsula y comprar con intención y estrategia.</p>'
-    + prox + '</div></div>'
-    + '<div class="guia-card">'
-    + '<div class="guia-header">' + iconHanger
-    + '<div><span class="guia-header-titulo">Guía de estilos y sus esenciales</span>'
-    + '<span class="guia-header-sub">por Mary Méndez · PDF</span></div></div>'
-    + '<div class="guia-body"><p class="guia-desc">Descubre tu arquetipo de imagen personal, las prendas esenciales para cada estilo y cómo adaptarlas a tu vida.</p>'
-    + prox + '</div></div>';
-}
-
-function renderConstanciaHTML() {
-  return '<span class="section-label">Constancia de asistencia</span>'
-    + '<div class="constancia-card">'
-    + '<p class="constancia-eyebrow">Constancia de asistencia</p>'
-    + '<p class="constancia-titulo">Lo que tu imagen comunica</p>'
-    + '<p class="constancia-evento">REINVENTA by Mary Méndez &middot; 15 agosto 2026</p>'
-    + '<p class="constancia-nombre">' + (perfil.nombre || '—') + '</p>'
-    + '<p class="constancia-fecha">The University Club of Mexico &middot; Ciudad de México</p>'
-    + '<button class="constancia-btn" onclick="imprimirConstancia()">'
-    + iconPrint + ' Imprimir / Guardar como PDF</button>'
-    + '</div>';
+    + '<p style="font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.4rem;">Comentarios</p>'
+    + '<textarea id="enc-post-ta" class="textarea-field" placeholder="Fue una experiencia increíble..."></textarea>'
+    + '<button class="btn-gold" id="btn-post" onclick="enviarPost()" style="margin-top:.7rem;">Enviar y desbloquear recursos</button>'
+    + '<p class="msg-error" id="msg-post"></p></div>';
 }
 
 function bindEstrellas() {
-  var estrellas = document.querySelectorAll('.estrella');
-  estrellas.forEach(function(s) {
+  var stars = document.querySelectorAll('.est');
+  stars.forEach(function(s) {
     s.addEventListener('click', function() {
-      calificacionSeleccionada = parseInt(this.getAttribute('data-val'));
-      estrellas.forEach(function(e) {
-        e.classList.toggle('on', parseInt(e.getAttribute('data-val')) <= calificacionSeleccionada);
+      calPost = parseInt(this.getAttribute('data-v'));
+      stars.forEach(function(e) {
+        e.style.color = parseInt(e.getAttribute('data-v')) <= calPost
+          ? '#C6A56A' : 'rgba(198,165,106,.2)';
       });
     });
   });
 }
 
-function enviarEncuesta() {
-  var btn = document.getElementById('btn-encuesta');
-  var msg = document.getElementById('enc-msg');
-  var comentario = document.getElementById('enc-comentario').value;
+function enviarPost() {
+  if (!calPost) {
+    document.getElementById('msg-post').textContent = 'Selecciona una calificación.';
+    document.getElementById('msg-post').style.display = 'block'; return;
+  }
+  var btn = document.getElementById('btn-post');
+  btn.textContent = 'Enviando…'; btn.disabled = true;
+  fetch('/api/encuesta', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ id: perfil.id, calificacion: calPost,
+      comentario: document.getElementById('enc-post-ta').value })
+  }).then(function(r){return r.json();}).then(function(d){
+    if (d.result === 'success' || d.result === 'ya_enviada') {
+      perfil.encuesta = true; renderRecursos();
+    } else {
+      document.getElementById('msg-post').textContent = d.error || 'Error. Intenta de nuevo.';
+      document.getElementById('msg-post').style.display = 'block';
+      btn.textContent = 'Enviar y desbloquear recursos'; btn.disabled = false;
+    }
+  }).catch(function(){
+    document.getElementById('msg-post').textContent = 'Error de conexión.';
+    document.getElementById('msg-post').style.display = 'block';
+    btn.textContent = 'Enviar y desbloquear recursos'; btn.disabled = false;
+  });
+}
 
-  if (!calificacionSeleccionada) {
-    msg.textContent = 'Por favor selecciona una calificación.';
-    msg.style.display = 'block';
+/* ── Encuesta previa ────────────────────── */
+function renderEncuesta() {
+  if (!perfil) return;
+  var el = document.getElementById('encuesta-inner');
+  if (perfil.encuestaPrevia) {
+    el.innerHTML = '<div class="enc-done-card glass" style="text-align:center;">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:44px;height:44px;color:var(--ok);margin-bottom:.8rem;"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+      + '<p style="font-family:Georgia,serif;font-size:1.1rem;margin-bottom:.3rem;">¡Encuesta completada!</p>'
+      + '<p style="font-size:.8rem;color:var(--text-dim);">Gracias. Mary ya tiene tus respuestas para personalizar el taller.</p></div>';
     return;
   }
+  el.innerHTML = '<div class="enc-intro glass">Este ejercicio es un espacio seguro. Responde con honestidad para que Mary pueda acompañarte mejor durante el taller.</div>'
+    + '<span class="enc-section-label">Sección 1 — Imagen y propósito</span>'
+    + slider('q-sat', 'satisfaccion', '1. Satisfacción personal', '¿Qué tan satisfecha te sientes con tu imagen frente al espejo?')
+    + slider('q-coh', 'coherencia',   '2. Coherencia y autenticidad', '¿Qué tanto sientes que la ropa que usas representa quién eres por dentro?')
+    + slider('q-con', 'confianza',    '3. Confianza y practicidad', '¿Qué tanta seguridad te da tu closet al decidir qué ponerte cada mañana?')
+    + slider('q-pro', 'proyeccion',   '4. Proyección y liderazgo', '¿Qué tanta autoridad y credibilidad transmite tu imagen en tu entorno?')
+    + '<div class="enc-card glass">'
+    + '<p class="enc-q">5. Tu motivación principal</p>'
+    + '<p class="enc-hint">¿Cuál es el motivo que te trajo al taller? <em>(Elige solo una)</em></p>'
+    + '<div class="radio-opts">'
+    + radio('motivacion', 'Meta profesional', 'Meta profesional — quiero proyectar liderazgo, seguridad y credibilidad en mi trabajo.')
+    + radio('motivacion', 'Bienestar personal', 'Bienestar personal — quiero dejar de batallar con mi closet y sentirme cómoda y auténtica.')
+    + radio('motivacion', 'Etapa de transición', 'Etapa de transición — estoy viviendo un cambio y busco una nueva versión de mí.')
+    + radio('motivacion', 'otra', 'Otra razón', true)
+    + '</div>'
+    + '<input id="motiv-otra" type="text" placeholder="¿Cuál?" class="field-input" style="display:none;margin-top:.5rem;font-size:.82rem;">'
+    + '</div>'
+    + '<div class="enc-card glass">'
+    + '<p class="enc-q">6. Tu expectativa</p>'
+    + '<p class="enc-hint">En una sola frase, ¿qué te gustaría llevarte al terminar el taller?</p>'
+    + '<textarea id="q-expectativa" class="textarea-field" placeholder="Al terminar quiero..."></textarea>'
+    + '</div>'
+    + '<span class="enc-section-label" style="margin-top:.4rem;">Sección 2 — Características naturales</span>'
+    + '<div class="enc-intro glass" style="margin-bottom:.8rem;">Observa tus rasgos con luz natural cerca de una ventana. Esta información es confidencial.</div>'
+    + '<div class="enc-card glass"><p class="enc-q">1. Tono de piel</p><div class="radio-opts">'
+    + radio('piel', 'Muy clara o rosada', 'Muy clara o rosada — me quemo fácilmente, casi no me bronceo.')
+    + radio('piel', 'Clara, beige o marfil', 'Clara, beige o marfil — tomo tono dorado bajo el sol.')
+    + radio('piel', 'Morena clara o mate', 'Morena clara o mate — me bronceo fácilmente y rara vez me quemo.')
+    + radio('piel', 'Morena oscura o negra', 'Morena oscura o negra.')
+    + '</div></div>'
+    + '<div class="enc-card glass"><p class="enc-q">2. Color de cabello natural</p><div class="radio-opts">'
+    + radio('cabello', 'Negro o castaño muy oscuro', 'Negro o castaño muy oscuro.')
+    + radio('cabello', 'Castaño medio o claro', 'Castaño medio o claro — puede verse dorado bajo el sol.')
+    + radio('cabello', 'Rubio', 'Rubio — con destellos amarillos o miel.')
+    + radio('cabello', 'Pelirrojo', 'Pelirrojo — tonos con base naranja o roja natural.')
+    + '</div></div>'
+    + '<div class="enc-card glass"><p class="enc-q">3. Color de ojos</p><div class="radio-opts">'
+    + radio('ojos', 'Café oscuro o negro', 'Café oscuro o negro — tono muy profundo.')
+    + radio('ojos', 'Café claro, miel o avellana', 'Café claro, miel o avellana — a veces con destellos verdes.')
+    + radio('ojos', 'Verdes o azules intensos', 'Verdes o azules intensos — contrastan mucho con el rostro.')
+    + radio('ojos', 'Grises, azules suaves o verdes aceituna', 'Grises, azules suaves o verdes aceituna — claros pero suaves.')
+    + '</div></div>'
+    + '<button class="btn-gold" id="btn-previa" onclick="enviarPrevia()">Enviar encuesta</button>'
+    + '<p class="msg-error" id="msg-previa"></p>';
 
-  btn.textContent = 'Enviando…';
-  btn.disabled = true;
+  // bind "otra razón" para mostrar campo
+  document.querySelectorAll('input[name="motivacion"]').forEach(function(r) {
+    r.addEventListener('change', function() {
+      document.getElementById('motiv-otra').style.display = this.value === 'otra' ? 'block' : 'none';
+    });
+  });
+}
 
-  fetch('/api/encuesta', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+function slider(id, key, titulo, hint) {
+  return '<div class="enc-card glass">'
+    + '<p class="enc-q">' + titulo + '</p>'
+    + '<p class="enc-hint">' + hint + '</p>'
+    + '<div class="slider-row">'
+    + '<span>1</span>'
+    + '<input type="range" id="' + id + '" min="1" max="10" value="5"'
+    + ' oninput="document.getElementById(\'v-' + id + '\').textContent=this.value">'
+    + '<span>10</span>'
+    + '<span class="slider-val" id="v-' + id + '">5</span>'
+    + '</div></div>';
+}
+
+function radio(name, value, label, showInput) {
+  var extra = showInput
+    ? ' onchange="document.getElementById(\'motiv-otra\').style.display=\'block\'"'
+    : '';
+  return '<label class="radio-opt">'
+    + '<input type="radio" name="' + name + '" value="' + value + '"' + extra + '>'
+    + label + '</label>';
+}
+
+function val(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+function radioVal(name) {
+  var el = document.querySelector('input[name="' + name + '"]:checked');
+  return el ? el.value : '';
+}
+
+function enviarPrevia() {
+  var motivacion = radioVal('motivacion');
+  if (!motivacion) {
+    document.getElementById('msg-previa').textContent = 'Selecciona tu motivación principal.';
+    document.getElementById('msg-previa').style.display = 'block'; return;
+  }
+  if (motivacion === 'otra') motivacion = val('motiv-otra') || 'Otra razón';
+
+  var btn = document.getElementById('btn-previa');
+  btn.textContent = 'Enviando…'; btn.disabled = true;
+
+  fetch('/api/encuesta-previa', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       id: perfil.id,
-      calificacion: calificacionSeleccionada,
-      comentario: comentario
+      satisfaccion: val('q-sat'), coherencia: val('q-coh'),
+      confianza: val('q-con'),    proyeccion: val('q-pro'),
+      motivacion: motivacion,     expectativa: val('q-expectativa'),
+      piel: radioVal('piel'), cabello: radioVal('cabello'), ojos: radioVal('ojos')
     })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.result === 'success' || data.result === 'ya_enviada') {
-      perfil.encuesta = true;
-      renderRecursos();
+  }).then(function(r){return r.json();}).then(function(d){
+    if (d.result === 'success' || d.result === 'ya_enviada') {
+      perfil.encuestaPrevia = true;
+      document.getElementById('card-encuesta-titulo').textContent = 'Encuesta enviada';
+      document.getElementById('card-encuesta-desc').textContent   = 'Gracias por responder';
+      renderEncuesta();
     } else {
-      msg.textContent = data.error || 'Ocurrió un error. Intenta de nuevo.';
-      msg.style.display = 'block';
-      btn.textContent = 'Enviar y desbloquear recursos';
-      btn.disabled = false;
+      document.getElementById('msg-previa').textContent = d.error || 'Error. Intenta de nuevo.';
+      document.getElementById('msg-previa').style.display = 'block';
+      btn.textContent = 'Enviar encuesta'; btn.disabled = false;
     }
-  })
-  .catch(function() {
-    msg.textContent = 'Error de conexión. Intenta de nuevo.';
-    msg.style.display = 'block';
-    btn.textContent = 'Enviar y desbloquear recursos';
-    btn.disabled = false;
+  }).catch(function(){
+    document.getElementById('msg-previa').textContent = 'Error de conexión.';
+    document.getElementById('msg-previa').style.display = 'block';
+    btn.textContent = 'Enviar encuesta'; btn.disabled = false;
   });
+}
+
+/* ── Constancia ─────────────────────────── */
+function renderConstancia() {
+  var el = document.getElementById('constancia-inner');
+  if (!perfil.asistio) {
+    el.innerHTML = '<div class="lock-card glass"><div class="lock-icon">'
+      + '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
+      + '</div><p class="lock-title">Constancia de asistencia</p>'
+      + '<p class="lock-sub">Se genera automáticamente una vez que hagas check-in y completes la encuesta de satisfacción.</p></div>';
+    return;
+  }
+  if (!perfil.encuesta) {
+    el.innerHTML = '<div class="lock-card glass"><p class="lock-title" style="margin-bottom:.3rem;">Casi lista</p>'
+      + '<p class="lock-sub">Completa la encuesta de satisfacción para generar tu constancia. La encuentras en la pestaña Recursos.</p>'
+      + '<button class="btn-ghost" style="margin-top:1rem;" onclick="ir(\'recursos\',navTabBtn(\'recursos\'))">Ir a Recursos →</button></div>';
+    return;
+  }
+  el.innerHTML = '<div class="cert-card glass">'
+    + '<p class="cert-eyebrow">Constancia de asistencia</p>'
+    + '<p class="cert-titulo">Lo que tu imagen comunica</p>'
+    + '<p class="cert-evento">REINVENTA by Mary Méndez &middot; 15 agosto 2026</p>'
+    + '<p class="cert-nombre-disp">' + (perfil.nombre || '—') + '</p>'
+    + '<p class="cert-fecha">The University Club of Mexico &middot; Ciudad de México</p>'
+    + '<button class="btn-gold" onclick="imprimirConstancia()">'
+    + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>'
+    + 'Imprimir / Guardar como PDF</button></div>';
 }
 
 function imprimirConstancia() {
-  document.getElementById('certNombre').textContent = perfil.nombre || '—';
+  document.getElementById('certNombreP').textContent = perfil.nombre || '—';
   window.print();
 }
 
-/* ── Encuesta previa ─────────────────────────────── */
-function abrirEncuestaPrevia() {
-  document.getElementById('overlay-previa').style.display = 'block';
-  window.scrollTo(0, 0);
-}
-
-function cerrarEncuestaPrevia() {
-  document.getElementById('overlay-previa').style.display = 'none';
-}
-
-function enviarEncuestaPrevia() {
-  var btn = document.getElementById('btn-enviar-previa');
-  var msg = document.getElementById('msg-previa');
-
-  var motivRadio = document.querySelector('input[name="motivacion"]:checked');
-  var motivacion = motivRadio ? motivRadio.value : '';
-  if (motivacion === 'otra') {
-    motivacion = document.getElementById('motiv-otra').value.trim() || 'Otra razón';
-  }
-
-  if (!motivacion) {
-    msg.textContent = 'Por favor selecciona tu motivación principal.';
-    msg.style.display = 'block';
-    return;
-  }
-
-  btn.textContent = 'Enviando…';
-  btn.disabled = true;
-  msg.style.display = 'none';
-
-  fetch('/api/encuesta-previa', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id:           perfil.id,
-      satisfaccion: document.getElementById('q-satisfaccion').value,
-      coherencia:   document.getElementById('q-coherencia').value,
-      confianza:    document.getElementById('q-confianza').value,
-      proyeccion:   document.getElementById('q-proyeccion').value,
-      motivacion:   motivacion,
-      expectativa:  document.getElementById('q-expectativa').value,
-      piel:         (document.querySelector('input[name="piel"]:checked') || {}).value || '',
-      cabello:      (document.querySelector('input[name="cabello"]:checked') || {}).value || '',
-      ojos:         (document.querySelector('input[name="ojos"]:checked') || {}).value || ''
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.result === 'success' || data.result === 'ya_enviada') {
-      perfil.encuestaPrevia = true;
-      cerrarEncuestaPrevia();
-      document.getElementById('cta-encuesta-previa').style.display = 'none';
-      var lista = document.getElementById('cta-encuesta-lista');
-      lista.style.display = 'flex';
-    } else {
-      msg.textContent = data.error || 'Ocurrió un error. Intenta de nuevo.';
-      msg.style.display = 'block';
-      btn.textContent = 'Enviar encuesta';
-      btn.disabled = false;
-    }
-  })
-  .catch(function() {
-    msg.textContent = 'Error de conexión. Intenta de nuevo.';
-    msg.style.display = 'block';
-    btn.textContent = 'Enviar encuesta';
-    btn.disabled = false;
-  });
-}
-
-/* ── Poblar interfaz ────────────────────────────── */
-function poblarUI(p) {
-  perfil = p;
-  document.getElementById('nombreBienvenida').textContent = p.nombre || '—';
-  document.getElementById('faseBienvenida').textContent = p.fase || '—';
-  document.getElementById('avatarInicial').textContent = iniciales(p.nombre);
-
-  var chipCI = document.getElementById('chipCheckin');
-  document.getElementById('chipCheckinVal').textContent = p.asistio ? 'Completado' : 'Pendiente';
-  chipCI.classList.toggle('chip-ok', !!p.asistio);
-  chipCI.classList.toggle('chip-pending', !p.asistio);
-
-  var chipEn = document.getElementById('chipEncuesta');
-  document.getElementById('chipEncuestaVal').textContent = p.encuesta ? 'Completada' : 'Pendiente';
-  chipEn.classList.toggle('chip-ok', !!p.encuesta);
-  chipEn.classList.toggle('chip-pending', !p.encuesta);
-
-  // Encuesta previa
-  if (p.encuestaPrevia) {
-    document.getElementById('cta-encuesta-lista').style.display = 'flex';
-  } else {
-    document.getElementById('cta-encuesta-previa').style.display = 'block';
-  }
-}
-
-/* ── Login sin ?id= ─────────────────────────────── */
+/* ── Login ──────────────────────────────── */
 function accederConCodigo() {
   var codigo = (document.getElementById('login-codigo').value || '').trim().toUpperCase();
   if (!codigo) return;
@@ -1394,10 +1170,11 @@ function accederConCodigo() {
   err.style.display = 'none';
   document.getElementById('pantallaLogin').style.display = 'none';
   document.getElementById('pantallaCarga').style.display = 'flex';
+  document.getElementById('pantallaCarga').style.opacity = '1';
 
   fetch('/api/hub?id=' + encodeURIComponent(codigo))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+    .then(function(r){ return r.json(); })
+    .then(function(data){
       if (data.error) {
         document.getElementById('pantallaCarga').style.display = 'none';
         document.getElementById('pantallaLogin').style.display = 'flex';
@@ -1408,7 +1185,7 @@ function accederConCodigo() {
         mostrarApp();
       }
     })
-    .catch(function() {
+    .catch(function(){
       document.getElementById('pantallaCarga').style.display = 'none';
       document.getElementById('pantallaLogin').style.display = 'flex';
       err.textContent = 'Error de conexión. Intenta de nuevo.';
@@ -1416,7 +1193,7 @@ function accederConCodigo() {
     });
 }
 
-/* ── Init ───────────────────────────────────────── */
+/* ── Init ───────────────────────────────── */
 var params = new URLSearchParams(window.location.search);
 var id = params.get('id');
 
@@ -1425,17 +1202,21 @@ if (!id) {
   document.getElementById('pantallaLogin').style.display = 'flex';
 } else {
   fetch('/api/hub?id=' + encodeURIComponent(id))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+    .then(function(r){ return r.json(); })
+    .then(function(data){
       if (data.error) {
-        mostrarError(data.error);
+        document.getElementById('pantallaCarga').style.display = 'none';
+        document.getElementById('pantallaLogin').style.display = 'flex';
+        document.getElementById('login-codigo').value = id;
+        document.getElementById('login-error').style.display = 'block';
       } else {
         poblarUI(data);
         mostrarApp();
       }
     })
-    .catch(function() {
-      mostrarError('Error de conexión. Intenta recargar la página.');
+    .catch(function(){
+      document.getElementById('pantallaCarga').style.display = 'none';
+      document.getElementById('pantallaLogin').style.display = 'flex';
     });
 }
 </script>
