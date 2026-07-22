@@ -8,23 +8,24 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --gold:    #C6A56A;
-      --gold-dim: rgba(198,165,106,.35);
-      --gold-glow: rgba(198,165,106,.12);
-      --cream:   #EFE9E2;
-      --glass:   rgba(255,255,255,.055);
-      --glass-border: rgba(255,255,255,.1);
-      --glass-strong: rgba(255,255,255,.09);
-      --text:    rgba(255,255,255,.92);
-      --text-dim: rgba(255,255,255,.45);
-      --text-muted: rgba(255,255,255,.28);
-      --ok:      #5fc98a;
-      --ok-bg:   rgba(95,201,138,.12);
+      --gold:       #C6A56A;
+      --gold-dim:   rgba(198,165,106,.35);
+      --gold-glow:  rgba(198,165,106,.1);
+      --plum:       #2A0F25;
+      --cream:      #EFE9E2;
+      --glass:      rgba(42,15,37,.45);
+      --glass-border: rgba(198,165,106,.14);
+      --glass-strong: rgba(42,15,37,.6);
+      --text:       #EFE9E2;
+      --text-dim:   rgba(239,233,226,.55);
+      --text-muted: rgba(239,233,226,.35);
+      --ok:      #6dca96;
+      --ok-bg:   rgba(109,202,150,.1);
     }
 
     html, body {
       height: 100%;
-      background: #100818;
+      background: #1C0B1A;
       color: var(--text);
       font-family: 'Gill Sans', Calibri, 'Segoe UI', sans-serif;
       -webkit-font-smoothing: antialiased;
@@ -40,19 +41,19 @@
       animation: drift 18s ease-in-out infinite alternate;
     }
     .bg-blob:nth-child(1) {
-      width: 520px; height: 520px; top: -120px; left: -80px;
-      background: radial-gradient(circle, rgba(90,20,70,.55) 0%, transparent 70%);
-      animation-duration: 20s;
+      width: 500px; height: 500px; top: -100px; left: -100px;
+      background: radial-gradient(circle, rgba(80,15,65,.7) 0%, transparent 65%);
+      animation-duration: 22s;
     }
     .bg-blob:nth-child(2) {
-      width: 400px; height: 400px; bottom: -60px; right: -60px;
-      background: radial-gradient(circle, rgba(198,165,106,.18) 0%, transparent 65%);
-      animation-duration: 15s; animation-delay: -5s;
+      width: 380px; height: 380px; bottom: -60px; right: -40px;
+      background: radial-gradient(circle, rgba(198,165,106,.12) 0%, transparent 60%);
+      animation-duration: 17s; animation-delay: -6s;
     }
     .bg-blob:nth-child(3) {
-      width: 300px; height: 300px; top: 40%; left: 55%;
-      background: radial-gradient(circle, rgba(60,15,50,.4) 0%, transparent 70%);
-      animation-duration: 25s; animation-delay: -10s;
+      width: 280px; height: 280px; top: 45%; left: 50%;
+      background: radial-gradient(circle, rgba(100,20,75,.35) 0%, transparent 65%);
+      animation-duration: 28s; animation-delay: -12s;
     }
     @keyframes drift {
       0%   { transform: translate(0,0) scale(1); }
@@ -86,33 +87,34 @@
       padding: 1.5rem;
     }
     .login-card {
-      width: 100%; max-width: 380px;
+      width: 100%; max-width: 360px;
       background: var(--glass-strong);
-      backdrop-filter: blur(28px) saturate(160%);
-      -webkit-backdrop-filter: blur(28px) saturate(160%);
-      border: 1px solid var(--glass-border);
-      border-radius: 24px;
+      backdrop-filter: blur(28px) saturate(150%);
+      -webkit-backdrop-filter: blur(28px) saturate(150%);
+      border: 1px solid rgba(198,165,106,.18);
+      border-radius: 4px;
       overflow: hidden;
     }
     .login-top {
-      padding: 2rem 2rem 1.5rem;
+      background: var(--plum);
+      padding: 1.8rem 2rem 1.4rem;
       text-align: center;
-      border-bottom: 1px solid var(--glass-border);
+      border-bottom: 2px solid var(--gold);
     }
     .login-marca {
       font-family: Georgia, serif;
-      font-size: 1.1rem; letter-spacing: .22em;
+      font-size: 1rem; letter-spacing: .22em;
       text-transform: uppercase; color: var(--gold);
       display: block; margin-bottom: .2rem;
     }
     .login-sub {
-      font-size: .55rem; letter-spacing: .16em;
-      text-transform: uppercase; color: var(--gold-dim);
+      font-size: .52rem; letter-spacing: .16em;
+      text-transform: uppercase; color: rgba(198,165,106,.5);
     }
     .login-body { padding: 1.6rem 1.8rem 1.8rem; }
     .login-eyebrow {
-      font-size: .55rem; letter-spacing: .16em;
-      text-transform: uppercase; color: var(--gold);
+      font-size: .52rem; letter-spacing: .16em;
+      text-transform: uppercase; color: var(--gold-dim);
       display: block; margin-bottom: .4rem;
     }
     .login-title {
@@ -131,12 +133,12 @@
     }
     .field-input {
       width: 100%;
-      background: rgba(255,255,255,.06);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
+      background: rgba(42,15,37,.4);
+      border: 1px solid rgba(198,165,106,.2);
+      border-radius: 0;
       padding: .85rem 1rem;
       font-size: 1rem; font-family: inherit;
-      color: var(--text);
+      color: var(--cream);
       text-transform: uppercase;
       letter-spacing: .06em;
       outline: none;
@@ -144,19 +146,19 @@
       -webkit-appearance: none;
     }
     .field-input::placeholder { color: var(--text-muted); text-transform: uppercase; }
-    .field-input:focus { border-color: var(--gold-dim); }
+    .field-input:focus { border-color: rgba(198,165,106,.5); }
     .login-btn {
       width: 100%; margin-top: .8rem;
-      background: var(--gold);
-      color: #100818;
-      border: none; border-radius: 12px;
+      background: var(--plum);
+      color: var(--cream);
+      border: none; border-radius: 0;
       padding: .9rem 1rem;
-      font-size: .8rem; font-weight: 600;
-      letter-spacing: .1em; text-transform: uppercase;
+      font-size: .72rem; font-weight: 400;
+      letter-spacing: .14em; text-transform: uppercase;
       font-family: inherit; cursor: pointer;
-      transition: opacity .15s;
+      transition: background .15s;
     }
-    .login-btn:hover { opacity: .88; }
+    .login-btn:hover { background: #3d1536; }
     .login-error {
       font-size: .75rem; color: #f87171;
       text-align: center; margin-top: .6rem; display: none;
@@ -164,7 +166,7 @@
     .login-admin-link {
       display: block; text-align: center;
       margin-top: 1.1rem; padding-top: 1rem;
-      border-top: 1px solid var(--glass-border);
+      border-top: 1px solid rgba(198,165,106,.12);
       font-size: .68rem; color: var(--text-muted);
       text-decoration: none;
     }
@@ -179,10 +181,10 @@
     /* ── Top nav ────────────────────────────────────── */
     .top-nav {
       flex-shrink: 0;
-      background: rgba(16,8,24,.6);
-      backdrop-filter: blur(24px) saturate(160%);
-      -webkit-backdrop-filter: blur(24px) saturate(160%);
-      border-bottom: 1px solid var(--glass-border);
+      background: rgba(28,10,24,.82);
+      backdrop-filter: blur(24px) saturate(140%);
+      -webkit-backdrop-filter: blur(24px) saturate(140%);
+      border-bottom: 1px solid rgba(198,165,106,.18);
       padding: 0 1rem;
       display: flex; align-items: stretch;
       gap: 0;
@@ -267,18 +269,18 @@
 
     /* ── Glass cards ────────────────────────────────── */
     .glass {
-      background: var(--glass);
-      backdrop-filter: blur(20px) saturate(140%);
-      -webkit-backdrop-filter: blur(20px) saturate(140%);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
+      background: rgba(42,15,37,.42);
+      backdrop-filter: blur(18px) saturate(130%);
+      -webkit-backdrop-filter: blur(18px) saturate(130%);
+      border: 1px solid rgba(198,165,106,.13);
+      border-radius: 4px;
     }
     .glass-strong {
-      background: var(--glass-strong);
-      backdrop-filter: blur(24px) saturate(160%);
-      -webkit-backdrop-filter: blur(24px) saturate(160%);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
+      background: rgba(42,15,37,.6);
+      backdrop-filter: blur(22px) saturate(140%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      border: 1px solid rgba(198,165,106,.16);
+      border-radius: 4px;
     }
 
     /* ── INICIO ─────────────────────────────────────── */
@@ -524,31 +526,31 @@
     .btn-gold {
       display: flex; align-items: center; justify-content: center; gap: .5rem;
       width: 100%;
-      background: var(--gold);
-      color: #100818;
-      border: none; border-radius: 12px;
-      padding: .85rem 1rem;
-      font-size: .72rem; font-weight: 600;
-      letter-spacing: .1em; text-transform: uppercase;
+      background: var(--plum);
+      color: var(--cream);
+      border: none; border-radius: 0;
+      padding: .9rem 1rem;
+      font-size: .7rem; font-weight: 400;
+      letter-spacing: .14em; text-transform: uppercase;
       font-family: inherit; cursor: pointer;
       margin-top: .9rem; text-decoration: none;
-      transition: opacity .15s;
+      transition: background .15s;
     }
-    .btn-gold:hover { opacity: .88; }
+    .btn-gold:hover { background: #3d1536; }
     .btn-ghost {
       display: flex; align-items: center; justify-content: center; gap: .5rem;
       width: 100%;
-      background: var(--gold-glow);
+      background: transparent;
       color: var(--gold);
-      border: 1px solid var(--gold-dim);
-      border-radius: 12px;
+      border: 1px solid rgba(198,165,106,.3);
+      border-radius: 0;
       padding: .8rem 1rem;
-      font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+      font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
       font-family: inherit; cursor: pointer;
       margin-top: .7rem; text-decoration: none;
       transition: background .15s;
     }
-    .btn-ghost:hover { background: rgba(198,165,106,.2); }
+    .btn-ghost:hover { background: rgba(198,165,106,.08); }
 
     .section-label {
       font-size: .52rem; letter-spacing: .16em;
