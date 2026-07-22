@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — REINVENTA</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --plum: #2A0F25; --gold: #C6A56A; --cream: #EFE9E2; --sand: #E8E2DB;
+      --mauve: #8F7383; --gold-40: rgba(198,165,106,.4); --plum-10: rgba(42,15,37,.1);
+    }
+    html, body { height: 100%; background: var(--sand); font-family: 'Gill Sans', Calibri, 'Segoe UI', sans-serif; color: var(--plum); -webkit-font-smoothing: antialiased; }
+
+    /* Login */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    .login-card { background: var(--cream); max-width: 360px; width: 100%; overflow: hidden; box-shadow: 0 4px 40px rgba(42,15,37,.12); }
+    .login-header { background: var(--plum); padding: 1.8rem 2rem 1.4rem; text-align: center; }
+    .login-header .marca { font-family: Georgia, serif; font-size: .95rem; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); display: block; margin-bottom: .2rem; }
+    .login-header .sub { font-size: .55rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-40); }
+    .login-divider { height: 2px; background: var(--gold); opacity: .45; }
+    .login-body { padding: 1.8rem 1.6rem; }
+    .login-label { font-size: .55rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mauve); display: block; margin-bottom: .4rem; }
+    .login-input { width: 100%; border: 1px solid var(--plum-10); background: white; padding: .75rem .9rem; font-size: .88rem; font-family: inherit; color: var(--plum); border-radius: 0; outline: none; }
+    .login-input:focus { border-color: var(--gold); }
+    .login-btn { width: 100%; background: var(--plum); color: var(--cream); border: none; padding: .9rem; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; font-family: inherit; cursor: pointer; margin-top: .8rem; transition: background .15s; }
+    .login-btn:hover { background: #3d1536; }
+    .login-error { font-size: .75rem; color: #b44; text-align: center; margin-top: .6rem; display: none; }
+
+    /* Panel */
+    #admin-panel { display: none; min-height: 100vh; flex-direction: column; }
+    .panel-header { background: var(--plum); padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .panel-header .marca { font-family: Georgia, serif; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+    .panel-header .badge { font-size: .52rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-40); background: rgba(198,165,106,.12); border: 1px solid rgba(198,165,106,.2); padding: .2rem .6rem; }
+    .panel-body { flex: 1; padding: 1.2rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+
+    /* KPIs */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; margin-bottom: 1.2rem; }
+    @media (max-width: 600px) { .kpi-row { grid-template-columns: 1fr 1fr; } }
+    .kpi { background: var(--cream); padding: 1rem 1.1rem; }
+    .kpi-n { font-family: Georgia, serif; font-size: 2rem; font-weight: 400; line-height: 1; }
+    .kpi-l { font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; color: var(--mauve); margin-top: .3rem; }
+    .kpi-bar { height: 2px; background: var(--plum-10); margin-top: .7rem; }
+    .kpi-fill { height: 100%; background: var(--gold); transition: width .4s; }
+
+    /* Filtros */
+    .filter-row { display: flex; gap: .5rem; margin-bottom: .8rem; flex-wrap: wrap; }
+    .filter-btn { padding: .4rem .9rem; font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; font-family: inherit; border: 1px solid var(--plum-10); background: none; color: var(--mauve); cursor: pointer; }
+    .filter-btn.on { background: var(--plum); color: var(--gold); border-color: var(--plum); }
+    .search-input { flex: 1; min-width: 160px; border: 1px solid var(--plum-10); padding: .4rem .8rem; font-size: .8rem; font-family: inherit; color: var(--plum); background: var(--cream); outline: none; }
+    .search-input:focus { border-color: var(--gold); }
+
+    /* Tabla */
+    .table-wrap { overflow-x: auto; background: var(--cream); }
+    table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    thead th { background: var(--plum); color: var(--gold); font-size: .52rem; letter-spacing: .12em; text-transform: uppercase; padding: .7rem .9rem; text-align: left; white-space: nowrap; font-weight: 400; }
+    tbody td { padding: .7rem .9rem; border-bottom: 1px solid var(--plum-10); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(198,165,106,.05); }
+
+    .pill { font-size: .5rem; padding: .2rem .6rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; white-space: nowrap; }
+    .pill-ok { background: #e8f5ee; color: #2d7a4f; }
+    .pill-pend { background: #f5f0e8; color: #7a5a2d; }
+    .pill-no { background: rgba(42,15,37,.06); color: var(--mauve); }
+
+    .powered { text-align: center; padding: 1.2rem 0 .5rem; font-size: .52rem; letter-spacing: .09em; color: var(--mauve); opacity: .6; }
+    .powered a { color: inherit; text-decoration: none; }
+
+    /* Tabs admin */
+    .admin-tabs { display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--plum-10); }
+    .admin-tab { padding: .65rem 1.1rem; font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; font-family: inherit; border: none; background: none; color: var(--mauve); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s; }
+    .admin-tab.on { color: var(--plum); border-bottom-color: var(--gold); }
+
+    .tab-pane { display: none; }
+    .tab-pane.on { display: block; }
+
+    /* Encuesta previa */
+    .enc-card { background: var(--cream); padding: 1rem 1.1rem; margin-bottom: .6rem; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1.2rem; }
+    @media (max-width: 600px) { .enc-card { grid-template-columns: 1fr; } }
+    .enc-card-name { font-family: Georgia, serif; font-size: .95rem; margin-bottom: .5rem; grid-column: 1/-1; }
+    .enc-field { }
+    .enc-field-label { font-size: .52rem; letter-spacing: .1em; text-transform: uppercase; color: var(--mauve); margin-bottom: .15rem; }
+    .enc-field-val { font-size: .8rem; }
+    .score-bar { height: 4px; background: var(--plum-10); margin-top: .25rem; border-radius: 2px; overflow: hidden; }
+    .score-fill { height: 100%; background: var(--gold); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-header">
+      <span class="marca">Reinventa</span>
+      <span class="sub">Panel de administración</span>
+    </div>
+    <div class="login-divider"></div>
+    <div class="login-body">
+      <label class="login-label" for="admin-key">Contraseña de acceso</label>
+      <input id="admin-key" type="password" class="login-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')entrar()">
+      <button class="login-btn" onclick="entrar()">Entrar al panel</button>
+      <p class="login-error" id="login-error">Contraseña incorrecta.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Panel -->
+<div id="admin-panel">
+  <div class="panel-header">
+    <div>
+      <span class="marca">Reinventa</span>
+      <span style="font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-40);display:block;margin-top:.1rem;">by Mary Méndez · 15 ago 2026</span>
+    </div>
+    <span class="badge">Admin</span>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- KPIs -->
+    <div class="kpi-row" id="kpi-row">
+      <div class="kpi"><div class="kpi-n" id="kpi-total">—</div><div class="kpi-l">Registradas</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-total" style="width:100%"></div></div></div>
+      <div class="kpi"><div class="kpi-n" id="kpi-checkin">—</div><div class="kpi-l">Check-in</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-checkin"></div></div></div>
+      <div class="kpi"><div class="kpi-n" id="kpi-previa">—</div><div class="kpi-l">Encuesta previa</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-previa"></div></div></div>
+      <div class="kpi"><div class="kpi-n" id="kpi-encuesta">—</div><div class="kpi-l">Encuesta post</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-encuesta"></div></div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="admin-tab on" onclick="switchTab('asistentes', this)">Asistentes</button>
+      <button class="admin-tab" onclick="switchTab('previa', this)">Encuesta previa</button>
+      <button class="admin-tab" onclick="switchTab('post', this)">Encuesta post</button>
+    </div>
+
+    <!-- Tab: Asistentes -->
+    <div id="tab-asistentes" class="tab-pane on">
+      <div class="filter-row">
+        <input type="text" class="search-input" placeholder="Buscar por nombre o correo…" oninput="filtrar(this.value)">
+        <button class="filter-btn on" onclick="setFiltro('todos', this)">Todos</button>
+        <button class="filter-btn" onclick="setFiltro('checkin', this)">Con check-in</button>
+        <button class="filter-btn" onclick="setFiltro('sin_checkin', this)">Sin check-in</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Nombre</th><th>Correo</th><th>Fase</th>
+            <th>Check-in</th><th>Enc. previa</th><th>Enc. post</th><th>Hub</th>
+          </tr></thead>
+          <tbody id="tbody-asistentes"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Encuesta previa -->
+    <div id="tab-previa" class="tab-pane">
+      <div id="cards-previa"></div>
+    </div>
+
+    <!-- Tab: Encuesta post -->
+    <div id="tab-post" class="tab-pane">
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Nombre</th><th>Calificación</th><th>Comentario</th><th>Fecha</th>
+          </tr></thead>
+          <tbody id="tbody-post"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="powered">Plataforma desarrollada por <a href="https://www.innermap.mx" target="_blank" rel="noopener">Innermap</a></div>
+  </div>
+</div>
+
+<script>
+var adminKey = '';
+var datos = null;
+var filtroActual = 'todos';
+var busqueda = '';
+
+function entrar() {
+  var k = document.getElementById('admin-key').value.trim();
+  if (!k) return;
+  adminKey = k;
+  var btn = document.querySelector('.login-btn');
+  btn.textContent = 'Verificando…';
+  btn.disabled = true;
+
+  fetch('/api/admin?key=' + encodeURIComponent(k))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        document.getElementById('login-error').style.display = 'block';
+        btn.textContent = 'Entrar al panel';
+        btn.disabled = false;
+      } else {
+        datos = data;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'flex';
+        renderPanel();
+      }
+    })
+    .catch(function() {
+      document.getElementById('login-error').textContent = 'Error de conexión.';
+      document.getElementById('login-error').style.display = 'block';
+      btn.textContent = 'Entrar al panel';
+      btn.disabled = false;
+    });
+}
+
+function switchTab(nombre, btn) {
+  document.querySelectorAll('.tab-pane').forEach(function(t) { t.classList.remove('on'); });
+  document.querySelectorAll('.admin-tab').forEach(function(b) { b.classList.remove('on'); });
+  document.getElementById('tab-' + nombre).classList.add('on');
+  btn.classList.add('on');
+}
+
+function setFiltro(f, btn) {
+  filtroActual = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  renderTabla();
+}
+
+function filtrar(q) { busqueda = q.toLowerCase(); renderTabla(); }
+
+function pill(text, type) {
+  return '<span class="pill pill-' + type + '">' + text + '</span>';
+}
+
+function renderPanel() {
+  var d = datos;
+  var total    = d.asistentes.length;
+  var checkin  = d.asistentes.filter(function(a) { return a.asistio; }).length;
+  var previa   = d.encuestasPrevia.length;
+  var post     = d.asistentes.filter(function(a) { return a.encuesta; }).length;
+
+  document.getElementById('kpi-total').textContent    = total;
+  document.getElementById('kpi-checkin').textContent  = checkin;
+  document.getElementById('kpi-previa').textContent   = previa;
+  document.getElementById('kpi-encuesta').textContent = post;
+  document.getElementById('kpi-fill-checkin').style.width  = (total ? checkin/total*100 : 0) + '%';
+  document.getElementById('kpi-fill-previa').style.width   = (total ? previa/total*100 : 0) + '%';
+  document.getElementById('kpi-fill-encuesta').style.width = (total ? post/total*100 : 0) + '%';
+
+  renderTabla();
+  renderCardsPrevia();
+  renderTablaPost();
+}
+
+function renderTabla() {
+  var d = datos.asistentes;
+  var previaIds = {};
+  datos.encuestasPrevia.forEach(function(e) { previaIds[e.id] = true; });
+
+  var filtrados = d.filter(function(a) {
+    if (filtroActual === 'checkin'     && !a.asistio) return false;
+    if (filtroActual === 'sin_checkin' &&  a.asistio) return false;
+    if (busqueda && !(a.nombre.toLowerCase().includes(busqueda) || a.correo.toLowerCase().includes(busqueda))) return false;
+    return true;
+  });
+
+  var html = filtrados.map(function(a) {
+    var hubUrl = '/hub?id=' + a.id;
+    return '<tr>'
+      + '<td style="font-size:.68rem;color:var(--mauve);font-feature-settings:\'tnum\'">' + a.id + '</td>'
+      + '<td style="font-weight:500">' + a.nombre + '</td>'
+      + '<td style="color:var(--mauve);font-size:.72rem">' + a.correo + '</td>'
+      + '<td>' + pill(a.fase || '—', 'no') + '</td>'
+      + '<td>' + (a.asistio ? pill('✓ ' + (a.fechaEntrada ? fmtHora(a.fechaEntrada) : ''), 'ok') : pill('Pendiente', 'pend')) + '</td>'
+      + '<td>' + (previaIds[a.id] ? pill('✓ Enviada', 'ok') : pill('Pendiente', 'pend')) + '</td>'
+      + '<td>' + (a.encuesta ? pill('✓ Enviada', 'ok') : pill('Pendiente', 'pend')) + '</td>'
+      + '<td><a href="' + hubUrl + '" target="_blank" style="color:var(--gold);font-size:.68rem;text-decoration:none;">Ver →</a></td>'
+      + '</tr>';
+  }).join('');
+
+  document.getElementById('tbody-asistentes').innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--mauve);padding:1.5rem;">Sin resultados</td></tr>';
+}
+
+function renderCardsPrevia() {
+  var html = datos.encuestasPrevia.map(function(e) {
+    return '<div class="enc-card">'
+      + '<p class="enc-card-name">' + e.nombre + ' <span style="font-size:.65rem;color:var(--mauve);font-family:sans-serif">(' + e.correo + ')</span></p>'
+      + campo('Satisfacción personal', e.satisfaccion)
+      + campo('Coherencia y autenticidad', e.coherencia)
+      + campo('Confianza y practicidad', e.confianza)
+      + campo('Proyección y liderazgo', e.proyeccion)
+      + '<div class="enc-field" style="grid-column:1/-1"><div class="enc-field-label">Motivación principal</div><div class="enc-field-val">' + (e.motivacion || '—') + '</div></div>'
+      + '<div class="enc-field" style="grid-column:1/-1"><div class="enc-field-label">Expectativa</div><div class="enc-field-val">' + (e.expectativa || '—') + '</div></div>'
+      + campo2('Tono de piel', e.piel)
+      + campo2('Cabello', e.cabello)
+      + campo2('Ojos', e.ojos)
+      + '</div>';
+  }).join('');
+  document.getElementById('cards-previa').innerHTML = html || '<p style="color:var(--mauve);font-size:.85rem;padding:1rem 0;">Aún no hay respuestas.</p>';
+}
+
+function campo(label, val) {
+  var n = parseInt(val) || 0;
+  return '<div class="enc-field"><div class="enc-field-label">' + label + '</div>'
+    + '<div class="enc-field-val">' + (val || '—') + ' / 10</div>'
+    + '<div class="score-bar"><div class="score-fill" style="width:' + (n * 10) + '%"></div></div></div>';
+}
+
+function campo2(label, val) {
+  return '<div class="enc-field"><div class="enc-field-label">' + label + '</div><div class="enc-field-val">' + (val || '—') + '</div></div>';
+}
+
+function renderTablaPost() {
+  var html = datos.asistentes.filter(function(a) { return a.encuesta && a.calificacion; }).map(function(a) {
+    return '<tr>'
+      + '<td style="font-weight:500">' + a.nombre + '</td>'
+      + '<td>' + renderEstrellas(a.calificacion) + '</td>'
+      + '<td style="color:var(--mauve)">' + (a.comentario || '—') + '</td>'
+      + '<td style="font-size:.68rem;color:var(--mauve)">' + (a.fechaEncuesta ? fmtFecha(a.fechaEncuesta) : '—') + '</td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('tbody-post').innerHTML = html || '<tr><td colspan="4" style="text-align:center;color:var(--mauve);padding:1.5rem;">Sin respuestas aún.</td></tr>';
+}
+
+function renderEstrellas(n) {
+  var s = '';
+  for (var i = 1; i <= 5; i++) s += '<span style="color:' + (i <= n ? '#C6A56A' : 'rgba(42,15,37,.15)') + '">★</span>';
+  return s;
+}
+
+function fmtHora(str) {
+  try { return new Date(str).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }); } catch(e) { return ''; }
+}
+
+function fmtFecha(str) {
+  try { return new Date(str).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }); } catch(e) { return ''; }
+}
+</script>
+</body>
+</html>

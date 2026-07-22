@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi espacio — REINVENTA</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --plum:   #2A0F25;
+      --gold:   #C6A56A;
+      --cream:  #EFE9E2;
+      --sand:   #E8E2DB;
+      --mauve:  #8F7383;
+      --plum-5: rgba(42,15,37,.05);
+      --plum-10: rgba(42,15,37,.1);
+      --plum-15: rgba(42,15,37,.15);
+      --gold-40: rgba(198,165,106,.4);
+      --gold-20: rgba(198,165,106,.2);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--sand);
+      font-family: 'Gill Sans', Calibri, 'Segoe UI', sans-serif;
+      color: var(--plum);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Cargando / Error ───────────────────────── */
+    #pantallaCarga {
+      position: fixed; inset: 0;
+      background: var(--plum);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 100;
+      transition: opacity .4s;
+    }
+    #pantallaCarga .marca {
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: .25rem;
+    }
+    #pantallaCarga .sub {
+      font-size: .6rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold-40);
+      margin-bottom: 2rem;
+    }
+    #pantallaCarga .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--gold-20);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #pantallaError {
+      display: none;
+      position: fixed; inset: 0;
+      background: var(--sand);
+      align-items: center; justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 2rem;
+      z-index: 99;
+    }
+    #pantallaError h2 {
+      font-family: Georgia, serif;
+      font-weight: 400;
+      font-size: 1.3rem;
+      margin-bottom: .6rem;
+    }
+    #pantallaError p { font-size: .9rem; color: var(--mauve); }
+
+    /* ── Layout principal ───────────────────────── */
+    #app {
+      display: none;
+      flex-direction: column;
+      min-height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    .hub-header {
+      background: var(--plum);
+      padding: env(safe-area-inset-top, 0) 0 0;
+      flex-shrink: 0;
+    }
+    .hub-header-inner {
+      padding: 1.1rem 1.4rem .9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .hub-marca {
+      font-family: Georgia, serif;
+      font-size: .75rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: block;
+      line-height: 1;
+    }
+    .hub-sub {
+      font-size: .5rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold-40);
+      display: block;
+      margin-top: .15rem;
+    }
+    .hub-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: var(--gold-20);
+      border: 1px solid var(--gold-40);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0;
+      flex-shrink: 0;
+    }
+    .hub-header-divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold-40), transparent);
+    }
+
+    /* ── Tabs content ────────────────────────────── */
+    .tab-content {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.4rem 1.2rem calc(4.5rem + env(safe-area-inset-bottom, 0));
+    }
+    .tab-content.active { display: block; }
+
+    /* ── Nav ─────────────────────────────────────── */
+    .hub-nav {
+      position: fixed;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: var(--plum);
+      display: flex;
+      border-top: 1px solid rgba(198,165,106,.12);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      z-index: 10;
+    }
+    .nav-btn {
+      flex: 1;
+      padding: .65rem .2rem .5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .18rem;
+      background: none;
+      border: none;
+      color: rgba(198,165,106,.3);
+      cursor: pointer;
+      font-family: inherit;
+      transition: color .15s;
+    }
+    .nav-btn.active { color: var(--gold); }
+    .nav-btn svg { width: 22px; height: 22px; }
+    .nav-btn span {
+      font-size: .46rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    /* ── Secciones compartidas ───────────────────── */
+    .section-label {
+      font-size: .55rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: .7rem;
+      display: block;
+    }
+    .card {
+      background: var(--cream);
+      border-radius: 2px;
+      padding: 1.2rem 1.3rem;
+      margin-bottom: .9rem;
+    }
+    .card-title {
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      font-weight: 400;
+      margin-bottom: .25rem;
+      line-height: 1.3;
+    }
+    .card-sub {
+      font-size: .78rem;
+      color: var(--mauve);
+      font-style: italic;
+    }
+    .divider {
+      height: 1px;
+      background: var(--plum-10);
+      margin: 1rem 0;
+    }
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      width: 100%;
+      background: var(--plum);
+      color: var(--cream);
+      padding: .85rem 1rem;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: .8rem;
+      transition: background .15s;
+    }
+    .btn-primary:hover { background: #3d1536; }
+    .btn-outline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      width: 100%;
+      background: none;
+      color: var(--plum);
+      padding: .75rem 1rem;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-family: inherit;
+      border: 1px solid var(--plum-15);
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: .6rem;
+      transition: background .15s;
+    }
+    .btn-outline:hover { background: var(--plum-5); }
+
+    /* ── INICIO ──────────────────────────────────── */
+    .bienvenida {
+      background: var(--plum);
+      border-radius: 2px;
+      padding: 1.5rem 1.4rem 1.3rem;
+      margin-bottom: .9rem;
+    }
+    .bienvenida-label {
+      font-size: .52rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold-40);
+      margin-bottom: .4rem;
+    }
+    .bienvenida-nombre {
+      font-family: Georgia, serif;
+      font-size: 1.55rem;
+      font-weight: 400;
+      color: var(--cream);
+      line-height: 1.2;
+      margin-bottom: .7rem;
+    }
+    .bienvenida-fase {
+      display: inline-block;
+      background: var(--gold-20);
+      border: 1px solid var(--gold-40);
+      padding: .25rem .65rem;
+      font-size: .58rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .6rem;
+      margin-bottom: .9rem;
+    }
+    .status-chip {
+      background: var(--cream);
+      border-radius: 2px;
+      padding: .9rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .status-chip svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .status-chip .chip-label {
+      font-size: .62rem;
+      color: var(--mauve);
+      display: block;
+      margin-bottom: .05rem;
+    }
+    .status-chip .chip-val {
+      font-size: .78rem;
+      font-weight: 500;
+      color: var(--plum);
+    }
+    .chip-ok svg { color: #4a9e6a; }
+    .chip-pending svg { color: var(--mauve); opacity: .5; }
+
+    .evento-mini {
+      background: var(--cream);
+      border-radius: 2px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      gap: .9rem;
+      align-items: flex-start;
+    }
+    .evento-mini svg { flex-shrink: 0; margin-top: .1rem; color: var(--gold); width: 18px; height: 18px; }
+    .evento-mini .ev-titulo {
+      font-family: Georgia, serif;
+      font-size: .88rem;
+      margin-bottom: .15rem;
+    }
+    .evento-mini .ev-dato {
+      font-size: .75rem;
+      color: var(--mauve);
+      line-height: 1.5;
+    }
+
+    /* ── AGENDA ──────────────────────────────────── */
+    .agenda-item {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      padding: .9rem 0;
+      border-bottom: 1px solid var(--plum-10);
+    }
+    .agenda-item:last-child { border-bottom: none; }
+    .agenda-hora {
+      font-size: .68rem;
+      color: var(--gold);
+      font-feature-settings: 'tnum';
+      flex-shrink: 0;
+      padding-top: .1rem;
+      min-width: 42px;
+    }
+    .agenda-titulo {
+      font-size: .88rem;
+      margin-bottom: .1rem;
+    }
+    .agenda-desc {
+      font-size: .75rem;
+      color: var(--mauve);
+      line-height: 1.5;
+    }
+
+    /* ── RECURSOS ────────────────────────────────── */
+    .lock-banner {
+      background: var(--cream);
+      border-radius: 2px;
+      padding: 1.8rem 1.4rem;
+      text-align: center;
+      margin-bottom: .9rem;
+    }
+    .lock-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--plum-10);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto .9rem;
+    }
+    .lock-icon svg { width: 20px; height: 20px; color: var(--mauve); opacity: .5; }
+    .lock-title {
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      margin-bottom: .4rem;
+    }
+    .lock-sub {
+      font-size: .8rem;
+      color: var(--mauve);
+      line-height: 1.5;
+    }
+    .pasos {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      margin-top: 1.1rem;
+      text-align: left;
+    }
+    .paso {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .65rem .9rem;
+      background: white;
+      border-radius: 2px;
+    }
+    .paso svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .paso-done svg { color: #4a9e6a; }
+    .paso-pending svg { color: var(--mauve); opacity: .35; }
+    .paso-text { font-size: .75rem; }
+
+    /* Encuesta */
+    .enc-titulo {
+      font-family: Georgia, serif;
+      font-size: 1.15rem;
+      margin-bottom: .3rem;
+    }
+    .enc-sub {
+      font-size: .8rem;
+      color: var(--mauve);
+      line-height: 1.5;
+      margin-bottom: 1.2rem;
+    }
+    .campo-label {
+      font-size: .55rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      display: block;
+      margin-bottom: .5rem;
+      margin-top: 1rem;
+    }
+    .estrellas {
+      display: flex;
+      gap: .4rem;
+      margin-bottom: .2rem;
+    }
+    .estrella {
+      font-size: 1.7rem;
+      cursor: pointer;
+      color: var(--plum-10);
+      transition: color .1s;
+      user-select: none;
+      line-height: 1;
+    }
+    .estrella.on { color: var(--gold); }
+    .enc-ta {
+      width: 100%;
+      border: 1px solid var(--plum-10);
+      background: white;
+      padding: .75rem .9rem;
+      font-size: .82rem;
+      font-family: inherit;
+      color: var(--plum);
+      resize: none;
+      height: 80px;
+      border-radius: 2px;
+      margin-top: .3rem;
+    }
+    .enc-ta::placeholder { color: var(--mauve); opacity: .6; }
+
+    /* Guías */
+    .guia-card {
+      background: var(--cream);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: .8rem;
+    }
+    .guia-header {
+      background: var(--plum);
+      padding: .9rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+    }
+    .guia-header svg { width: 18px; height: 18px; color: var(--gold); flex-shrink: 0; }
+    .guia-header-titulo {
+      font-family: Georgia, serif;
+      font-size: .88rem;
+      color: var(--cream);
+      display: block;
+    }
+    .guia-header-sub {
+      font-size: .58rem;
+      color: var(--gold-40);
+      display: block;
+      margin-top: .1rem;
+    }
+    .guia-body {
+      padding: 1rem 1.1rem;
+    }
+    .guia-desc {
+      font-size: .8rem;
+      color: var(--mauve);
+      line-height: 1.6;
+      margin-bottom: .8rem;
+    }
+
+    /* Constancia */
+    .constancia-card {
+      background: var(--plum);
+      border-radius: 2px;
+      padding: 1.6rem 1.4rem;
+      text-align: center;
+      margin-bottom: .9rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .constancia-card::before {
+      content: '';
+      position: absolute;
+      inset: 7px;
+      border: 1px solid var(--gold-20);
+      pointer-events: none;
+    }
+    .constancia-eyebrow {
+      font-size: .5rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold-40);
+      margin-bottom: .5rem;
+    }
+    .constancia-titulo {
+      font-family: Georgia, serif;
+      font-size: .88rem;
+      color: var(--cream);
+      margin-bottom: .2rem;
+    }
+    .constancia-evento {
+      font-size: .65rem;
+      font-style: italic;
+      color: var(--gold-40);
+      margin-bottom: 1rem;
+    }
+    .constancia-nombre {
+      font-family: Georgia, serif;
+      font-size: 1.3rem;
+      color: var(--gold);
+      border-bottom: 1px solid var(--gold-20);
+      padding-bottom: .7rem;
+      margin-bottom: .5rem;
+    }
+    .constancia-fecha {
+      font-size: .58rem;
+      color: var(--gold-40);
+    }
+    .constancia-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      width: 100%;
+      background: var(--gold-20);
+      color: var(--gold);
+      border: 1px solid var(--gold-40);
+      padding: .7rem 1rem;
+      font-size: .65rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    .constancia-btn svg { width: 15px; height: 15px; }
+
+    /* ── INFO ────────────────────────────────────── */
+    .info-fila {
+      display: flex;
+      gap: .8rem;
+      align-items: flex-start;
+      padding: .8rem 0;
+      border-bottom: 1px solid var(--plum-10);
+    }
+    .info-fila:last-child { border-bottom: none; }
+    .info-fila svg { width: 18px; height: 18px; color: var(--gold); flex-shrink: 0; margin-top: .1rem; }
+    .info-label {
+      font-size: .6rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--mauve);
+      margin-bottom: .2rem;
+    }
+    .info-val {
+      font-size: .85rem;
+      line-height: 1.5;
+    }
+    .info-val a { color: var(--plum); }
+
+    /* ── Powered by ──────────────────────────────── */
+    .powered {
+      text-align: center;
+      padding: .6rem 0 .2rem;
+      font-size: .52rem;
+      letter-spacing: .09em;
+      color: var(--mauve);
+      opacity: .6;
+    }
+    .powered a { color: inherit; text-decoration: none; }
+
+    /* ── Print: constancia ───────────────────────── */
+    @media print {
+      body { background: white; }
+      #app, .hub-nav, .hub-header { display: none !important; }
+      #print-constancia {
+        display: flex !important;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+    #print-constancia { display: none; }
+    .cert-wrap {
+      width: 700px;
+      min-height: 490px;
+      border: 2px solid #2A0F25;
+      padding: 3rem;
+      text-align: center;
+      font-family: 'Gill Sans', Calibri, 'Segoe UI', sans-serif;
+      position: relative;
+    }
+    .cert-inner-border {
+      position: absolute;
+      inset: 10px;
+      border: 1px solid rgba(42,15,37,.2);
+    }
+    .cert-ornamento {
+      font-size: .55rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: #8F7383;
+      margin-bottom: .8rem;
+    }
+    .cert-h {
+      font-family: Georgia, serif;
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #2A0F25;
+      margin-bottom: .6rem;
+    }
+    .cert-para {
+      font-size: .8rem;
+      color: #8F7383;
+      margin-bottom: 1.2rem;
+    }
+    .cert-nombre-print {
+      font-family: Georgia, serif;
+      font-size: 2rem;
+      font-weight: 400;
+      color: #2A0F25;
+      border-bottom: 1px solid rgba(42,15,37,.25);
+      display: inline-block;
+      padding-bottom: .5rem;
+      margin-bottom: 1.2rem;
+    }
+    .cert-evento-print {
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      font-style: italic;
+      color: #4a3545;
+      margin-bottom: .3rem;
+    }
+    .cert-fecha-print {
+      font-size: .72rem;
+      color: #8F7383;
+      margin-bottom: 2rem;
+    }
+    .cert-firmas {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      margin-top: 2rem;
+    }
+    .cert-firma { text-align: center; }
+    .cert-firma-linea {
+      width: 140px;
+      height: 1px;
+      background: rgba(42,15,37,.3);
+      margin: 0 auto .4rem;
+    }
+    .cert-firma-nombre { font-size: .7rem; color: #2A0F25; }
+    .cert-firma-rol { font-size: .6rem; color: #8F7383; }
+    .cert-sello {
+      margin-top: 1.4rem;
+      font-size: .5rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #C6A56A;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Carga -->
+<div id="pantallaCarga">
+  <span class="marca">Reinventa</span>
+  <span class="sub">by Mary Méndez</span>
+  <div class="spinner"></div>
+</div>
+
+<!-- Login (sin ?id=) -->
+<div id="pantallaLogin" style="display:none;position:fixed;inset:0;background:var(--sand);z-index:98;display:none;align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="background:var(--cream);max-width:360px;width:100%;box-shadow:0 4px 40px rgba(42,15,37,.12);overflow:hidden;">
+    <div style="background:var(--plum);padding:1.8rem 2rem 1.4rem;text-align:center;">
+      <span style="font-family:Georgia,serif;font-size:.95rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:.2rem;">Reinventa</span>
+      <span style="font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-40);">by Mary Méndez</span>
+    </div>
+    <div style="height:2px;background:var(--gold);opacity:.45;"></div>
+    <div style="padding:1.6rem;">
+      <p style="font-family:Georgia,serif;font-size:1rem;margin-bottom:.3rem;">Tu espacio del taller</p>
+      <p style="font-size:.78rem;color:var(--mauve);line-height:1.5;margin-bottom:1.1rem;">Ingresa el código que recibiste en tu correo o WhatsApp.</p>
+      <label style="font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mauve);display:block;margin-bottom:.4rem;">Código de acceso</label>
+      <input id="login-codigo" type="text" placeholder="RNV-001" style="width:100%;border:1px solid var(--plum-10);background:white;padding:.75rem .9rem;font-size:.95rem;font-family:inherit;color:var(--plum);text-transform:uppercase;letter-spacing:.05em;outline:none;" onkeydown="if(event.key==='Enter')accederConCodigo()">
+      <button onclick="accederConCodigo()" style="width:100%;background:var(--plum);color:var(--cream);border:none;padding:.9rem;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-family:inherit;cursor:pointer;margin-top:.7rem;">Acceder</button>
+      <p id="login-error" style="font-size:.72rem;color:#b44;text-align:center;margin-top:.5rem;display:none;">Código no encontrado. Revisa tu correo o WhatsApp.</p>
+      <div style="border-top:1px solid var(--plum-10);margin-top:1.2rem;padding-top:1rem;text-align:center;">
+        <a href="/admin" style="font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mauve);text-decoration:none;">Acceso administrador →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Error -->
+<div id="pantallaError" style="display:none;position:fixed;inset:0;background:var(--sand);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem;z-index:99;">
+  <h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.3rem;margin-bottom:.6rem;">Acceso no válido</h2>
+  <p style="font-size:.9rem;color:var(--mauve);" id="mensajeError">No se encontró este registro.</p>
+  <a href="/hub" style="margin-top:1rem;font-size:.75rem;color:var(--mauve);">← Volver al inicio</a>
+</div>
+
+<!-- App principal -->
+<div id="app">
+
+  <div class="hub-header">
+    <div class="hub-header-inner">
+      <div>
+        <span class="hub-marca">Reinventa</span>
+        <span class="hub-sub">by Mary Méndez</span>
+      </div>
+      <div class="hub-avatar" id="avatarInicial">—</div>
+    </div>
+    <div class="hub-header-divider"></div>
+  </div>
+
+  <!-- INICIO -->
+  <div class="tab-content active" id="tab-inicio">
+
+    <div class="bienvenida">
+      <p class="bienvenida-label">Bienvenida a tu espacio</p>
+      <p class="bienvenida-nombre" id="nombreBienvenida">—</p>
+      <span class="bienvenida-fase" id="faseBienvenida">—</span>
+    </div>
+
+    <div class="status-grid">
+      <div class="status-chip" id="chipCheckin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 12l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="2"/>
+        </svg>
+        <div>
+          <span class="chip-label">Check-in</span>
+          <span class="chip-val" id="chipCheckinVal">Pendiente</span>
+        </div>
+      </div>
+      <div class="status-chip" id="chipEncuesta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+        </svg>
+        <div>
+          <span class="chip-label">Encuesta</span>
+          <span class="chip-val" id="chipEncuestaVal">Pendiente</span>
+        </div>
+      </div>
+    </div>
+
+    <span class="section-label">El evento</span>
+    <div class="evento-mini">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
+      <div>
+        <p class="ev-titulo">Lo que tu imagen comunica</p>
+        <p class="ev-dato">Sábado 15 de agosto de 2026<br>10:00 – 12:00 am<br>The University Club of Mexico</p>
+      </div>
+    </div>
+
+    <div id="cta-encuesta-previa" style="display:none;background:var(--cream);border-radius:2px;padding:1.1rem 1.3rem;margin-bottom:.9rem;border-left:3px solid var(--gold);">
+      <p style="font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.3rem;">Antes del taller</p>
+      <p style="font-family:Georgia,serif;font-size:.95rem;margin-bottom:.25rem;">Completa tu encuesta previa</p>
+      <p style="font-size:.78rem;color:var(--mauve);line-height:1.5;margin-bottom:.7rem;">Ayuda a Mary a personalizar el taller respondiendo unas preguntas sobre tu imagen y propósito.</p>
+      <button class="btn-primary" style="margin-top:0;" onclick="abrirEncuestaPrevia()">Completar encuesta</button>
+    </div>
+    <div id="cta-encuesta-lista" style="display:none;background:var(--cream);border-radius:2px;padding:.9rem 1.3rem;margin-bottom:.9rem;align-items:center;gap:.7rem;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a9e6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <p style="font-size:.82rem;color:var(--plum);">Encuesta previa completada — gracias.</p>
+    </div>
+
+    <div class="powered">
+      Plataforma desarrollada por <a href="https://www.innermap.mx" target="_blank" rel="noopener">Innermap</a>
+    </div>
+
+  </div>
+
+  <!-- AGENDA -->
+  <div class="tab-content" id="tab-agenda">
+    <span class="section-label">Programa del día</span>
+    <div class="card">
+      <div class="agenda-item">
+        <span class="agenda-hora">9:45</span>
+        <div>
+          <p class="agenda-titulo">Registro y bienvenida</p>
+          <p class="agenda-desc">Llegada, check-in y café de bienvenida.</p>
+        </div>
+      </div>
+      <div class="agenda-item">
+        <span class="agenda-hora">10:00</span>
+        <div>
+          <p class="agenda-titulo">Apertura — ¿Qué comunica tu imagen?</p>
+          <p class="agenda-desc">Mary introduce los fundamentos de la comunicación no verbal y cómo la imagen define percepciones antes de hablar.</p>
+        </div>
+      </div>
+      <div class="agenda-item">
+        <span class="agenda-hora">10:30</span>
+        <div>
+          <p class="agenda-titulo">Arquetipos de estilo</p>
+          <p class="agenda-desc">Descubre tu arquetipo de imagen personal y cómo usarlo a tu favor en diferentes contextos.</p>
+        </div>
+      </div>
+      <div class="agenda-item">
+        <span class="agenda-hora">11:00</span>
+        <div>
+          <p class="agenda-titulo">Dinámica práctica</p>
+          <p class="agenda-desc">Ejercicio grupal de análisis y retroalimentación con Mary.</p>
+        </div>
+      </div>
+      <div class="agenda-item">
+        <span class="agenda-hora">11:30</span>
+        <div>
+          <p class="agenda-titulo">Cierre — Tu plan de acción</p>
+          <p class="agenda-desc">Herramientas concretas para llevar a casa y seguir transformando tu imagen.</p>
+        </div>
+      </div>
+      <div class="agenda-item">
+        <span class="agenda-hora">12:00</span>
+        <div>
+          <p class="agenda-titulo">Networking y preguntas</p>
+          <p class="agenda-desc">Espacio abierto para conectar con las demás participantes.</p>
+        </div>
+      </div>
+    </div>
+    <a href="https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7" target="_blank" rel="noopener" class="btn-outline">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      Ver ubicación en Maps
+    </a>
+  </div>
+
+  <!-- RECURSOS -->
+  <div class="tab-content" id="tab-recursos">
+    <!-- contenido dinámico según estado -->
+    <div id="recursos-inner"></div>
+  </div>
+
+  <!-- INFO -->
+  <div class="tab-content" id="tab-info">
+    <span class="section-label">Sobre Mary Méndez</span>
+    <div class="card" style="margin-bottom:1.1rem;">
+      <p style="font-size:.85rem;line-height:1.65;color:#4a3545;margin-bottom:.8rem;">Consultora de imagen y liderazgo con más de 15 años acompañando a mujeres y líderes a comunicar con autenticidad quiénes son.</p>
+      <a href="https://reinventabymarymendez.com.mx" target="_blank" rel="noopener" class="btn-outline" style="margin-top:0;">
+        reinventabymarymendez.com.mx →
+      </a>
+    </div>
+    <span class="section-label">Sede del evento</span>
+    <div class="card">
+      <div class="info-fila">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        <div>
+          <p class="info-label">Dirección</p>
+          <p class="info-val">Av. Paseo de la Reforma 150<br>Col. Juárez, CDMX</p>
+        </div>
+      </div>
+      <div class="info-fila">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <div>
+          <p class="info-label">Fecha y hora</p>
+          <p class="info-val">Sábado 15 de agosto de 2026<br>10:00 – 12:00 am</p>
+        </div>
+      </div>
+    </div>
+    <span class="section-label">Organización</span>
+    <div class="card">
+      <div class="info-fila">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        <div>
+          <p class="info-label">Producción del evento</p>
+          <p class="info-val"><a href="https://www.alumbrastudios.com" target="_blank" rel="noopener">Alumbra Studios</a></p>
+        </div>
+      </div>
+    </div>
+    <div class="powered">
+      Plataforma desarrollada por <a href="https://www.innermap.mx" target="_blank" rel="noopener">Innermap</a>
+    </div>
+  </div>
+
+  <nav class="hub-nav">
+    <button class="nav-btn active" data-tab="inicio" onclick="mostrarTab('inicio', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Inicio</span>
+    </button>
+    <button class="nav-btn" data-tab="agenda" onclick="mostrarTab('agenda', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <span>Agenda</span>
+    </button>
+    <button class="nav-btn" data-tab="recursos" onclick="mostrarTab('recursos', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span>Recursos</span>
+    </button>
+    <button class="nav-btn" data-tab="info" onclick="mostrarTab('info', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span>Info</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Overlay: encuesta previa al evento -->
+<div id="overlay-previa" style="display:none;position:fixed;inset:0;background:var(--sand);z-index:200;overflow-y:auto;padding-bottom:2rem;">
+  <div style="background:var(--plum);padding:1rem 1.4rem;display:flex;align-items:center;gap:.8rem;position:sticky;top:0;z-index:1;">
+    <button onclick="cerrarEncuestaPrevia()" style="background:none;border:none;color:var(--gold-40);cursor:pointer;padding:.2rem;flex-shrink:0;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div>
+      <span style="font-family:Georgia,serif;font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);display:block;">Encuesta previa</span>
+      <span style="font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-40);">Imagen y propósito</span>
+    </div>
+  </div>
+
+  <div style="max-width:480px;margin:0 auto;padding:1.4rem 1.2rem;">
+
+    <p style="font-size:.78rem;color:var(--mauve);line-height:1.6;margin-bottom:1.4rem;background:var(--cream);padding:1rem 1.1rem;border-radius:2px;">Este ejercicio es un espacio seguro. Responde con total honestidad para que Mary pueda acompañarte mejor durante el taller.</p>
+
+    <!-- Sección 1 -->
+    <span style="font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:.9rem;">Sección 1 — Imagen y propósito</span>
+
+    <div class="card">
+      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.3rem;">1. Satisfacción personal</p>
+      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Qué tan satisfecha te sientes hoy con tu imagen en general frente al espejo?</p>
+      <div style="display:flex;align-items:center;gap:.7rem;">
+        <span style="font-size:.62rem;color:var(--mauve);">1</span>
+        <input type="range" id="q-satisfaccion" min="1" max="10" value="5" style="flex:1;accent-color:var(--gold);" oninput="document.getElementById('v-satisfaccion').textContent=this.value">
+        <span style="font-size:.62rem;color:var(--mauve);">10</span>
+        <span id="v-satisfaccion" style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);min-width:24px;text-align:right;">5</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.3rem;">2. Coherencia y autenticidad</p>
+      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Qué tanto sientes que la ropa que usas realmente representa quién eres por dentro?</p>
+      <div style="display:flex;align-items:center;gap:.7rem;">
+        <span style="font-size:.62rem;color:var(--mauve);">1</span>
+        <input type="range" id="q-coherencia" min="1" max="10" value="5" style="flex:1;accent-color:var(--gold);" oninput="document.getElementById('v-coherencia').textContent=this.value">
+        <span style="font-size:.62rem;color:var(--mauve);">10</span>
+        <span id="v-coherencia" style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);min-width:24px;text-align:right;">5</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.3rem;">3. Confianza y practicidad diaria</p>
+      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Qué tanta seguridad y comodidad te da tu closet al momento de decidir qué ponerte cada mañana?</p>
+      <div style="display:flex;align-items:center;gap:.7rem;">
+        <span style="font-size:.62rem;color:var(--mauve);">1</span>
+        <input type="range" id="q-confianza" min="1" max="10" value="5" style="flex:1;accent-color:var(--gold);" oninput="document.getElementById('v-confianza').textContent=this.value">
+        <span style="font-size:.62rem;color:var(--mauve);">10</span>
+        <span id="v-confianza" style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);min-width:24px;text-align:right;">5</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.3rem;">4. Proyección y liderazgo</p>
+      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Qué tanta autoridad, presencia y credibilidad sientes que transmite tu imagen en tu entorno?</p>
+      <div style="display:flex;align-items:center;gap:.7rem;">
+        <span style="font-size:.62rem;color:var(--mauve);">1</span>
+        <input type="range" id="q-proyeccion" min="1" max="10" value="5" style="flex:1;accent-color:var(--gold);" oninput="document.getElementById('v-proyeccion').textContent=this.value">
+        <span style="font-size:.62rem;color:var(--mauve);">10</span>
+        <span id="v-proyeccion" style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);min-width:24px;text-align:right;">5</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.8rem;">5. Tu motivación principal</p>
+      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.9rem;">¿Cuál es el motivo número uno que te trajo a este taller? <em>(Elige solo una)</em></p>
+      <div style="display:flex;flex-direction:column;gap:.5rem;" id="motiv-opts">
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="motivacion" value="Meta profesional" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Meta profesional — quiero proyectar mayor liderazgo, seguridad y credibilidad en mi trabajo.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="motivacion" value="Bienestar personal" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Bienestar personal — quiero dejar de batallar con mi closet y sentirme cómoda, segura y auténtica.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="motivacion" value="Etapa de transición" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Etapa de transición — estoy viviendo un cambio y busco una nueva versión de mí.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="motivacion" value="otra" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;" onchange="document.getElementById('motiv-otra').style.display='block'"> Otra razón
+        </label>
+        <input id="motiv-otra" type="text" placeholder="¿Cuál?" style="display:none;padding:.65rem .9rem;border:1px solid var(--plum-10);border-radius:2px;font-family:inherit;font-size:.8rem;color:var(--plum);background:white;margin-top:.2rem;">
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.35rem;">6. Tu expectativa</p>
+      <p style="font-size:.75rem;color:var(--mauve);line-height:1.5;margin-bottom:.7rem;">En una sola frase, ¿qué te gustarías llevarte al terminar este taller?</p>
+      <textarea id="q-expectativa" class="enc-ta" placeholder="Al terminar el taller quiero..."></textarea>
+    </div>
+
+    <!-- Sección 2 -->
+    <span style="font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);display:block;margin:.4rem 0 .9rem;">Sección 2 — Características naturales</span>
+    <p style="font-size:.75rem;color:var(--mauve);line-height:1.6;margin-bottom:1rem;background:var(--cream);padding:1rem 1.1rem;border-radius:2px;">Observa tus rasgos con luz natural (cerca de una ventana). Esta información es completamente confidencial.</p>
+
+    <div class="card">
+      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.8rem;">1. ¿Cómo describirías tu tono de piel?</p>
+      <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="piel" value="Muy clara o rosada" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Muy clara o rosada — me quemo con facilidad, casi nunca me bronceo.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="piel" value="Clara, beige o marfil" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Clara, beige o marfil — me quemo un poco pero luego tomo tono dorado.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="piel" value="Morena clara o mate" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Morena clara o mate — me bronceo con facilidad y rara vez me quemo.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="piel" value="Morena oscura o negra" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Morena oscura o negra.
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.8rem;">2. ¿Cuál es tu color de cabello natural?</p>
+      <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="cabello" value="Negro o castaño muy oscuro" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Negro o castaño muy oscuro.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="cabello" value="Castaño medio o claro" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Castaño medio o claro — bajo el sol puede verse ligeramente dorado.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="cabello" value="Rubio" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Rubio — con destellos amarillos o miel.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="cabello" value="Pelirrojo" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Pelirrojo — tonos con base naranja o roja natural.
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-family:Georgia,serif;font-size:.92rem;margin-bottom:.8rem;">3. ¿De qué color son tus ojos?</p>
+      <div style="display:flex;flex-direction:column;gap:.5rem;">
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="ojos" value="Café oscuro o negro" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Café oscuro o negro — tono muy profundo, casi no se distingue la pupila.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="ojos" value="Café claro, miel o avellana" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Café claro, miel o avellana — a veces con destellos verdes o amarillos.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="ojos" value="Verdes o azules intensos" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Verdes o azules intensos — contrastan mucho con el rostro.
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:.7rem;padding:.75rem .9rem;background:white;border-radius:2px;cursor:pointer;font-size:.8rem;line-height:1.45;">
+          <input type="radio" name="ojos" value="Grises, azules suaves o verdes aceituna" style="margin-top:.15rem;accent-color:var(--gold);flex-shrink:0;"> Grises, azules suaves o verdes aceituna — claros pero de tono suave.
+        </label>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-enviar-previa" onclick="enviarEncuestaPrevia()" style="margin-top:.4rem;">Enviar encuesta</button>
+    <p id="msg-previa" style="font-size:.72rem;color:var(--mauve);text-align:center;margin-top:.6rem;display:none;"></p>
+
+  </div>
+</div>
+
+<!-- Constancia imprimible (solo visible en @media print) -->
+<div id="print-constancia">
+  <div class="cert-wrap">
+    <div class="cert-inner-border"></div>
+    <p class="cert-ornamento">✦ &nbsp; &nbsp; &nbsp; &nbsp; ✦</p>
+    <h2 class="cert-h">Constancia de asistencia</h2>
+    <p class="cert-para">Se otorga la presente constancia a</p>
+    <p class="cert-nombre-print" id="certNombre">—</p>
+    <p class="cert-evento-print">Taller — Lo que tu imagen comunica</p>
+    <p class="cert-fecha-print">REINVENTA by Mary Méndez &nbsp;·&nbsp; 15 de agosto de 2026<br>The University Club of Mexico · Ciudad de México</p>
+    <div class="cert-firmas">
+      <div class="cert-firma">
+        <div class="cert-firma-linea"></div>
+        <p class="cert-firma-nombre">Mary Méndez</p>
+        <p class="cert-firma-rol">Consultora de imagen</p>
+      </div>
+      <div class="cert-firma">
+        <div class="cert-firma-linea"></div>
+        <p class="cert-firma-nombre">Alumbra Studios</p>
+        <p class="cert-firma-rol">Organización del evento</p>
+      </div>
+    </div>
+    <p class="cert-sello">REINVENTA by Mary Méndez &nbsp;·&nbsp; reinventabymarymendez.com.mx</p>
+  </div>
+</div>
+
+<script>
+var perfil = null;
+var calificacionSeleccionada = 0;
+
+/* ── Utilidades ─────────────────────────────────── */
+function mostrarApp() {
+  document.getElementById('pantallaCarga').style.opacity = '0';
+  setTimeout(function() {
+    document.getElementById('pantallaCarga').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  }, 350);
+}
+
+function mostrarError(msg) {
+  document.getElementById('pantallaCarga').style.display = 'none';
+  var el = document.getElementById('pantallaError');
+  el.style.display = 'flex';
+  document.getElementById('mensajeError').textContent = msg || 'No se encontró este registro.';
+}
+
+function mostrarTab(nombre, btn) {
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tab-' + nombre).classList.add('active');
+  btn.classList.add('active');
+  if (nombre === 'recursos') renderRecursos();
+}
+
+function iniciales(nombre) {
+  if (!nombre) return '—';
+  var partes = nombre.trim().split(' ').filter(Boolean);
+  if (partes.length === 1) return partes[0][0].toUpperCase();
+  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+}
+
+/* ── Íconos SVG inline ──────────────────────────── */
+var iconCheck = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:#4a9e6a"><polyline points="20 6 9 17 4 12"/></svg>';
+var iconLock  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--mauve);opacity:.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>';
+var iconBook  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--gold)"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>';
+var iconHanger = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--gold)"><path d="M20.38 18.57l-9-5.14a1 1 0 00-1 0L2 18"/><path d="M12 3a3 3 0 00-3 3v.08a3 3 0 003 2.92 3 3 0 003-2.92V6a3 3 0 00-3-3z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>';
+var iconDl    = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+var iconPrint = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>';
+var iconStar  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;color:var(--mauve);opacity:.35"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+
+/* ── Render de sección Recursos ─────────────────── */
+function renderRecursos() {
+  if (!perfil) return;
+  var el = document.getElementById('recursos-inner');
+
+  if (!perfil.asistio) {
+    el.innerHTML =
+      '<div class="lock-banner">'
+      + '<div class="lock-icon">' + iconLock + '</div>'
+      + '<p class="lock-title">Tus recursos del taller</p>'
+      + '<p class="lock-sub">Completa los dos pasos para desbloquear tus guías y constancia.</p>'
+      + '<div class="pasos">'
+      + '<div class="paso paso-pending">' + iconStar + '<span class="paso-text">Haz check-in el día del evento</span></div>'
+      + '<div class="paso paso-pending">' + iconStar + '<span class="paso-text">Completa la encuesta de satisfacción</span></div>'
+      + '</div></div>';
+    return;
+  }
+
+  if (!perfil.encuesta) {
+    el.innerHTML =
+      '<div class="lock-banner" style="text-align:left;padding:1.2rem 1.3rem;">'
+      + '<p class="lock-title" style="margin-bottom:.2rem;">¡Ya hiciste check-in!</p>'
+      + '<p class="lock-sub" style="margin-bottom:.8rem;">Completa la encuesta para desbloquear tus guías y constancia.</p>'
+      + '<div class="pasos" style="margin-top:0;">'
+      + '<div class="paso paso-done">' + iconCheck + '<span class="paso-text">Check-in completado</span></div>'
+      + '<div class="paso paso-pending">' + iconStar + '<span class="paso-text">Completa la encuesta de satisfacción</span></div>'
+      + '</div></div>'
+      + renderEncuestaHTML();
+    bindEstrellas();
+    return;
+  }
+
+  // Todo desbloqueado
+  el.innerHTML =
+    '<div class="pasos" style="margin-bottom:1rem;">'
+    + '<div class="paso paso-done">' + iconCheck + '<span class="paso-text">Check-in completado</span></div>'
+    + '<div class="paso paso-done">' + iconCheck + '<span class="paso-text">Encuesta completada — gracias</span></div>'
+    + '</div>'
+    + renderGuiasHTML()
+    + renderConstanciaHTML();
+}
+
+function renderEncuestaHTML() {
+  return '<div class="card" style="margin-top:.8rem;">'
+    + '<p class="enc-titulo">¿Cómo estuvo el taller?</p>'
+    + '<p class="enc-sub">Tu retroalimentación ayuda a Mary a seguir mejorando.</p>'
+    + '<span class="campo-label" style="margin-top:0;">Calificación general</span>'
+    + '<div class="estrellas" id="estrellas">'
+    + '<span class="estrella" data-val="1">★</span>'
+    + '<span class="estrella" data-val="2">★</span>'
+    + '<span class="estrella" data-val="3">★</span>'
+    + '<span class="estrella" data-val="4">★</span>'
+    + '<span class="estrella" data-val="5">★</span>'
+    + '</div>'
+    + '<span class="campo-label">Comentarios o sugerencias</span>'
+    + '<textarea class="enc-ta" id="enc-comentario" placeholder="Fue una experiencia increíble..."></textarea>'
+    + '<button class="btn-primary" id="btn-encuesta" onclick="enviarEncuesta()">'
+    + iconDl + ' Enviar y desbloquear recursos</button>'
+    + '<p id="enc-msg" style="font-size:.72rem;color:var(--mauve);text-align:center;margin-top:.6rem;display:none;"></p>'
+    + '</div>';
+}
+
+function renderGuiasHTML() {
+  var prox = '<div style="display:inline-block;background:rgba(198,165,106,.15);border:1px solid var(--gold-40);padding:.2rem .6rem;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:.6rem;">Próximamente</div>';
+  return '<span class="section-label">Guías del taller</span>'
+    + '<div class="guia-card">'
+    + '<div class="guia-header">' + iconBook
+    + '<div><span class="guia-header-titulo">Guía de compras inteligentes</span>'
+    + '<span class="guia-header-sub">por Mary Méndez · PDF</span></div></div>'
+    + '<div class="guia-body"><p class="guia-desc">Aprende a identificar piezas clave, construir un guardarropa cápsula y comprar con intención y estrategia.</p>'
+    + prox + '</div></div>'
+    + '<div class="guia-card">'
+    + '<div class="guia-header">' + iconHanger
+    + '<div><span class="guia-header-titulo">Guía de estilos y sus esenciales</span>'
+    + '<span class="guia-header-sub">por Mary Méndez · PDF</span></div></div>'
+    + '<div class="guia-body"><p class="guia-desc">Descubre tu arquetipo de imagen personal, las prendas esenciales para cada estilo y cómo adaptarlas a tu vida.</p>'
+    + prox + '</div></div>';
+}
+
+function renderConstanciaHTML() {
+  return '<span class="section-label">Constancia de asistencia</span>'
+    + '<div class="constancia-card">'
+    + '<p class="constancia-eyebrow">Constancia de asistencia</p>'
+    + '<p class="constancia-titulo">Lo que tu imagen comunica</p>'
+    + '<p class="constancia-evento">REINVENTA by Mary Méndez &middot; 15 agosto 2026</p>'
+    + '<p class="constancia-nombre">' + (perfil.nombre || '—') + '</p>'
+    + '<p class="constancia-fecha">The University Club of Mexico &middot; Ciudad de México</p>'
+    + '<button class="constancia-btn" onclick="imprimirConstancia()">'
+    + iconPrint + ' Imprimir / Guardar como PDF</button>'
+    + '</div>';
+}
+
+function bindEstrellas() {
+  var estrellas = document.querySelectorAll('.estrella');
+  estrellas.forEach(function(s) {
+    s.addEventListener('click', function() {
+      calificacionSeleccionada = parseInt(this.getAttribute('data-val'));
+      estrellas.forEach(function(e) {
+        e.classList.toggle('on', parseInt(e.getAttribute('data-val')) <= calificacionSeleccionada);
+      });
+    });
+  });
+}
+
+function enviarEncuesta() {
+  var btn = document.getElementById('btn-encuesta');
+  var msg = document.getElementById('enc-msg');
+  var comentario = document.getElementById('enc-comentario').value;
+
+  if (!calificacionSeleccionada) {
+    msg.textContent = 'Por favor selecciona una calificación.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  btn.textContent = 'Enviando…';
+  btn.disabled = true;
+
+  fetch('/api/encuesta', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: perfil.id,
+      calificacion: calificacionSeleccionada,
+      comentario: comentario
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.result === 'success' || data.result === 'ya_enviada') {
+      perfil.encuesta = true;
+      renderRecursos();
+    } else {
+      msg.textContent = data.error || 'Ocurrió un error. Intenta de nuevo.';
+      msg.style.display = 'block';
+      btn.textContent = 'Enviar y desbloquear recursos';
+      btn.disabled = false;
+    }
+  })
+  .catch(function() {
+    msg.textContent = 'Error de conexión. Intenta de nuevo.';
+    msg.style.display = 'block';
+    btn.textContent = 'Enviar y desbloquear recursos';
+    btn.disabled = false;
+  });
+}
+
+function imprimirConstancia() {
+  document.getElementById('certNombre').textContent = perfil.nombre || '—';
+  window.print();
+}
+
+/* ── Encuesta previa ─────────────────────────────── */
+function abrirEncuestaPrevia() {
+  document.getElementById('overlay-previa').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function cerrarEncuestaPrevia() {
+  document.getElementById('overlay-previa').style.display = 'none';
+}
+
+function enviarEncuestaPrevia() {
+  var btn = document.getElementById('btn-enviar-previa');
+  var msg = document.getElementById('msg-previa');
+
+  var motivRadio = document.querySelector('input[name="motivacion"]:checked');
+  var motivacion = motivRadio ? motivRadio.value : '';
+  if (motivacion === 'otra') {
+    motivacion = document.getElementById('motiv-otra').value.trim() || 'Otra razón';
+  }
+
+  if (!motivacion) {
+    msg.textContent = 'Por favor selecciona tu motivación principal.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  btn.textContent = 'Enviando…';
+  btn.disabled = true;
+  msg.style.display = 'none';
+
+  fetch('/api/encuesta-previa', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id:           perfil.id,
+      satisfaccion: document.getElementById('q-satisfaccion').value,
+      coherencia:   document.getElementById('q-coherencia').value,
+      confianza:    document.getElementById('q-confianza').value,
+      proyeccion:   document.getElementById('q-proyeccion').value,
+      motivacion:   motivacion,
+      expectativa:  document.getElementById('q-expectativa').value,
+      piel:         (document.querySelector('input[name="piel"]:checked') || {}).value || '',
+      cabello:      (document.querySelector('input[name="cabello"]:checked') || {}).value || '',
+      ojos:         (document.querySelector('input[name="ojos"]:checked') || {}).value || ''
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.result === 'success' || data.result === 'ya_enviada') {
+      perfil.encuestaPrevia = true;
+      cerrarEncuestaPrevia();
+      document.getElementById('cta-encuesta-previa').style.display = 'none';
+      var lista = document.getElementById('cta-encuesta-lista');
+      lista.style.display = 'flex';
+    } else {
+      msg.textContent = data.error || 'Ocurrió un error. Intenta de nuevo.';
+      msg.style.display = 'block';
+      btn.textContent = 'Enviar encuesta';
+      btn.disabled = false;
+    }
+  })
+  .catch(function() {
+    msg.textContent = 'Error de conexión. Intenta de nuevo.';
+    msg.style.display = 'block';
+    btn.textContent = 'Enviar encuesta';
+    btn.disabled = false;
+  });
+}
+
+/* ── Poblar interfaz ────────────────────────────── */
+function poblarUI(p) {
+  perfil = p;
+  document.getElementById('nombreBienvenida').textContent = p.nombre || '—';
+  document.getElementById('faseBienvenida').textContent = p.fase || '—';
+  document.getElementById('avatarInicial').textContent = iniciales(p.nombre);
+
+  var chipCI = document.getElementById('chipCheckin');
+  document.getElementById('chipCheckinVal').textContent = p.asistio ? 'Completado' : 'Pendiente';
+  chipCI.classList.toggle('chip-ok', !!p.asistio);
+  chipCI.classList.toggle('chip-pending', !p.asistio);
+
+  var chipEn = document.getElementById('chipEncuesta');
+  document.getElementById('chipEncuestaVal').textContent = p.encuesta ? 'Completada' : 'Pendiente';
+  chipEn.classList.toggle('chip-ok', !!p.encuesta);
+  chipEn.classList.toggle('chip-pending', !p.encuesta);
+
+  // Encuesta previa
+  if (p.encuestaPrevia) {
+    document.getElementById('cta-encuesta-lista').style.display = 'flex';
+  } else {
+    document.getElementById('cta-encuesta-previa').style.display = 'block';
+  }
+}
+
+/* ── Login sin ?id= ─────────────────────────────── */
+function accederConCodigo() {
+  var codigo = (document.getElementById('login-codigo').value || '').trim().toUpperCase();
+  if (!codigo) return;
+  var err = document.getElementById('login-error');
+  err.style.display = 'none';
+  document.getElementById('pantallaLogin').style.display = 'none';
+  document.getElementById('pantallaCarga').style.display = 'flex';
+
+  fetch('/api/hub?id=' + encodeURIComponent(codigo))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        document.getElementById('pantallaCarga').style.display = 'none';
+        document.getElementById('pantallaLogin').style.display = 'flex';
+        err.style.display = 'block';
+      } else {
+        history.replaceState(null, '', '/hub?id=' + encodeURIComponent(codigo));
+        poblarUI(data);
+        mostrarApp();
+      }
+    })
+    .catch(function() {
+      document.getElementById('pantallaCarga').style.display = 'none';
+      document.getElementById('pantallaLogin').style.display = 'flex';
+      err.textContent = 'Error de conexión. Intenta de nuevo.';
+      err.style.display = 'block';
+    });
+}
+
+/* ── Init ───────────────────────────────────────── */
+var params = new URLSearchParams(window.location.search);
+var id = params.get('id');
+
+if (!id) {
+  document.getElementById('pantallaCarga').style.display = 'none';
+  document.getElementById('pantallaLogin').style.display = 'flex';
+} else {
+  fetch('/api/hub?id=' + encodeURIComponent(id))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        mostrarError(data.error);
+      } else {
+        poblarUI(data);
+        mostrarApp();
+      }
+    })
+    .catch(function() {
+      mostrarError('Error de conexión. Intenta recargar la página.');
+    });
+}
+</script>
+</body>
+</html>

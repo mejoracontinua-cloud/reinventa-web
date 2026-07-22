@@ -4,7 +4,15 @@
     { "source": "/reservar", "destination": "/api/reservar" },
     { "source": "/aviso-de-privacidad", "destination": "/aviso-de-privacidad.html" },
     { "source": "/reservar.html", "destination": "/reservar.html" },
-    { "source": "/api/fase", "destination": "/api/fase" }
+    { "source": "/api/fase", "destination": "/api/fase" },
+    { "source": "/entrada", "destination": "/entrada.html" },
+    { "source": "/api/entrada", "destination": "/api/entrada" },
+    { "source": "/hub", "destination": "/hub.html" },
+    { "source": "/api/hub", "destination": "/api/hub" },
+    { "source": "/api/encuesta", "destination": "/api/encuesta" },
+    { "source": "/api/encuesta-previa", "destination": "/api/encuesta-previa" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/api/admin", "destination": "/api/admin" }
   ],
   "headers": [
     {

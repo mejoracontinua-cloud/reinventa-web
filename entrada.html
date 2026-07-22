@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro de entrada — REINVENTA</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #E8E2DB;
+      font-family: 'Gill Sans', Calibri, 'Segoe UI', sans-serif;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: #EFE9E2;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 4px 40px rgba(42,15,37,.15);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .header {
+      background: #2A0F25;
+      padding: 1.8rem 2rem 1.4rem;
+    }
+
+    .header .marca {
+      font-family: Georgia, serif;
+      font-size: .95rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: #C6A56A;
+      display: block;
+      margin-bottom: .2rem;
+    }
+
+    .header .sub {
+      font-size: .58rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(198,165,106,.5);
+    }
+
+    .divider { height: 2px; background: #C6A56A; opacity: .45; }
+
+    .body { padding: 2rem 2rem 2.2rem; }
+
+    /* Estado: cargando */
+    .estado-cargando .icono { font-size: 2rem; margin-bottom: 1rem; opacity: .4; }
+    .estado-cargando p { font-size: .88rem; color: #8F7383; }
+
+    /* Estado: confirmado */
+    .estado-ok { display: none; }
+    .estado-ok .check {
+      width: 64px; height: 64px;
+      background: #2A0F25;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.2rem;
+    }
+    .estado-ok .check svg { width: 32px; height: 32px; }
+    .estado-ok .etiqueta {
+      font-size: .6rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #C6A56A;
+      margin-bottom: .6rem;
+    }
+    .estado-ok .nombre {
+      font-family: Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 400;
+      color: #2A0F25;
+      line-height: 1.2;
+      margin-bottom: .4rem;
+    }
+    .estado-ok .fase {
+      font-size: .78rem;
+      color: #8F7383;
+      font-style: italic;
+      margin-bottom: 1.4rem;
+    }
+    .badge-entrada {
+      display: inline-block;
+      background: rgba(42,15,37,.08);
+      border-left: 2px solid #C6A56A;
+      padding: .4rem .9rem;
+      font-size: .65rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #2A0F25;
+    }
+
+    /* Estado: ya registrado */
+    .estado-ya { display: none; }
+    .estado-ya .icono-ya {
+      font-size: 2.4rem;
+      margin-bottom: .8rem;
+    }
+    .estado-ya h2 {
+      font-family: Georgia, serif;
+      font-size: 1.2rem;
+      color: #2A0F25;
+      margin-bottom: .5rem;
+    }
+    .estado-ya p { font-size: .85rem; color: #8F7383; }
+
+    /* Estado: error */
+    .estado-error { display: none; }
+    .estado-error h2 {
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      color: #2A0F25;
+      margin-bottom: .5rem;
+    }
+    .estado-error p { font-size: .85rem; color: #8F7383; }
+
+    .footer {
+      background: #2A0F25;
+      padding: .9rem 1.5rem;
+    }
+    .footer p {
+      font-size: .6rem;
+      letter-spacing: .07em;
+      color: rgba(198,165,106,.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="marca">Reinventa</span>
+      <span class="sub">by Mary Méndez</span>
+    </div>
+    <div class="divider"></div>
+
+    <div class="body">
+
+      <!-- Cargando -->
+      <div class="estado-cargando" id="estadoCargando">
+        <div class="icono">⟳</div>
+        <p>Verificando registro…</p>
+      </div>
+
+      <!-- Confirmado -->
+      <div class="estado-ok" id="estadoOk">
+        <div class="check">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polyline points="6,17 13,24 26,9" stroke="#C6A56A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="etiqueta">Asistencia confirmada</p>
+        <p class="nombre" id="nombreAsistente">—</p>
+        <p class="fase" id="faseAsistente">—</p>
+        <div class="badge-entrada">✦ &nbsp;Entrada registrada</div>
+      </div>
+
+      <!-- Ya registrado -->
+      <div class="estado-ya" id="estadoYa">
+        <div class="icono-ya">✓</div>
+        <h2 id="nombreYa">—</h2>
+        <p>Ya estaba registrada la entrada de esta persona.</p>
+      </div>
+
+      <!-- Error -->
+      <div class="estado-error" id="estadoError">
+        <h2>QR no válido</h2>
+        <p id="mensajeError">No se encontró este registro. Verifica el QR.</p>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <p>REINVENTA by Mary Méndez &middot; 15 agosto 2026</p>
+    </div>
+  </div>
+
+  <script>
+    function mostrar(id) {
+      ['estadoCargando','estadoOk','estadoYa','estadoError'].forEach(function(e) {
+        document.getElementById(e).style.display = 'none';
+      });
+      document.getElementById(id).style.display = 'block';
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    var id = params.get('id');
+
+    if (!id) {
+      mostrar('estadoError');
+      document.getElementById('mensajeError').textContent = 'No se proporcionó un ID de registro.';
+    } else {
+      fetch('/api/entrada?id=' + encodeURIComponent(id))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error) {
+            mostrar('estadoError');
+            document.getElementById('mensajeError').textContent = data.error;
+          } else if (data.yaRegistrado) {
+            mostrar('estadoYa');
+            document.getElementById('nombreYa').textContent = data.nombre;
+          } else {
+            mostrar('estadoOk');
+            document.getElementById('nombreAsistente').textContent = data.nombre;
+            document.getElementById('faseAsistente').textContent = data.fase;
+          }
+        })
+        .catch(function() {
+          mostrar('estadoError');
+          document.getElementById('mensajeError').textContent = 'Error de conexión. Intenta de nuevo.';
+        });
+    }
+  </script>
+</body>
+</html>
