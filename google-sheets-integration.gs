@@ -141,6 +141,7 @@ function handleStripeWebhook(event) {
     tel = sheet.getRange(existingRow, 4).getValue();
     var contacto = sheet.getRange(existingRow, 5).getValue();
     if (!yaPago) {
+      var nombreFinal = nombre || sheet.getRange(existingRow, 2).getValue();
       if (nombre) sheet.getRange(existingRow, 2).setValue(nombre);
       sheet.getRange(existingRow, 7).setValue(fase);
       sheet.getRange(existingRow, 8).setValue(monto);
@@ -148,16 +149,22 @@ function handleStripeWebhook(event) {
       sheet.getRange(existingRow, 10).setValue('✓');
       sheet.getRange(existingRow, 11).setValue(stripeId);
       sheet.getRange(existingRow, 12).setValue('landing + stripe');
-      sincronizarComunicaciones(correo, nombre || sheet.getRange(existingRow, 2).getValue(), tel, contacto);
-      actualizarAsistencia(correo, nombre || sheet.getRange(existingRow, 2).getValue(), fase);
+      actualizarAsistencia(correo, nombreFinal, fase);
+      var idNuevo = obtenerIdAsistente(correo);
+      sincronizarComunicaciones(correo, nombreFinal, tel, contacto, idNuevo);
+      enviarCorreoConfirmacion(nombreFinal, correo, fase, idNuevo);
+      marcarCorreoEnviado(correo, 7);
     }
   } else {
     sheet.appendRow([
       new Date(), nombre, correo, '', '', '', fase, monto, fecha, '✓', stripeId, 'stripe directo',
       '', '', '', '', ''
     ]);
-    sincronizarComunicaciones(correo, nombre, '', '');
     actualizarAsistencia(correo, nombre, fase);
+    var idNuevo = obtenerIdAsistente(correo);
+    sincronizarComunicaciones(correo, nombre, '', '', idNuevo);
+    enviarCorreoConfirmacion(nombre, correo, fase, idNuevo);
+    marcarCorreoEnviado(correo, 7);
   }
 
   var totalPagos = contarPagosSheet(sheet);
@@ -175,7 +182,7 @@ function handleStripeWebhook(event) {
 }
 
 /* ── Sincronizar fila en Comunicaciones ──────────────────────── */
-function sincronizarComunicaciones(correo, nombre, telefono, contacto) {
+function sincronizarComunicaciones(correo, nombre, telefono, contacto, idUnico) {
   var sheet = getComunicacionesSheet();
   var fila  = findRowByEmailInSheet(sheet, correo);
 
@@ -183,7 +190,6 @@ function sincronizarComunicaciones(correo, nombre, telefono, contacto) {
     sheet.appendRow([correo, nombre, telefono, contacto, '', '', '', '', '', '', '', '', '', '', '', '']);
     fila = sheet.getLastRow();
   } else {
-    // Actualizar datos de contacto si llegaron vacíos antes
     if (!sheet.getRange(fila, 3).getValue() && telefono) sheet.getRange(fila, 3).setValue(telefono);
     if (!sheet.getRange(fila, 4).getValue() && contacto) sheet.getRange(fila, 4).setValue(contacto);
   }
@@ -191,7 +197,10 @@ function sincronizarComunicaciones(correo, nombre, telefono, contacto) {
   // Generar botón WA confirmación si no existe
   var yaLink = sheet.getRange(fila, 5).getValue();
   if (!yaLink) {
-    generarBotonWA(sheet, fila, nombre, telefono, generateWhatsAppLinkConfirmacion, 5, 6, 'Enviar WhatsApp');
+    var id = idUnico || '';
+    generarBotonWA(sheet, fila, nombre, telefono,
+      function(n, t) { return generateWhatsAppLinkConfirmacion(n, t, id); },
+      5, 6, 'Enviar WhatsApp');
   }
 }
 
@@ -455,15 +464,18 @@ function generarBotonWA(sheet, fila, nombre, telefono, generadorFn, colLink, col
 }
 
 /* ── WhatsApp: mensajes por campaña ─────────────────────────── */
-function generateWhatsAppLinkConfirmacion(nombre, telefono) {
+function generateWhatsAppLinkConfirmacion(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
-  var p  = nombre ? nombre.trim().split(' ')[0] : 'participante';
-  var e  = encodeURIComponent;
-  var NL = '%0A';
+  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e      = encodeURIComponent;
+  var NL     = '%0A';
+  var hubUrl = idUnico
+    ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
+    : 'https://reinventabymarymendez.com.mx/hub';
   var msg =
-    e('*REINVENTA by Mary Mendez*') + NL + NL +
-    e('Hola, ' + p + '. Tu lugar está confirmado.') + NL + NL +
+    e('*REINVENTA by Mary Méndez*') + NL + NL +
+    e('Hola, ' + p + '. Tu lugar está confirmado. 🤍') + NL + NL +
     e('*Lo que tu imagen comunica*') + NL +
     e('- Sábado 15 de agosto') + NL +
     e('- 10:00 a 12:00 am') + NL +
@@ -471,11 +483,17 @@ function generateWhatsAppLinkConfirmacion(nombre, telefono) {
     e('- Av. Reforma 150, Juárez, CDMX') + NL + NL +
     e('*Cómo llegar:*') + NL +
     e('https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
-    e('*Conoce más sobre Mary:*') + NL +
-    e('https://reinventabymarymendez.com.mx') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*Tu espacio personal del evento:*') + NL +
+    e(hubUrl) + NL + NL +
+    e('Aquí encontrarás tu pase de entrada con código QR, la agenda del día y los recursos del taller.') + NL + NL +
+    e('⭐ *Una cosa importante:*') + NL +
+    e('Dentro de tu espacio hay una encuesta breve que te pedimos contestar _antes del evento_. Mary la revisa personalmente para preparar materiales y recomendaciones a la medida de cada asistente. Entre más detallada seas, más personalizada será tu experiencia ese día.') + NL + NL +
+    e('No toma más de 5 minutos y hace una gran diferencia. 🙏') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
     e('Nos da mucho gusto tenerte. Mary estará encantada de acompañarte.') + NL + NL +
     e('_Con cariño,_') + NL +
-    e('_Reinventa by Mary Mendez_') + NL + NL +
+    e('_Reinventa by Mary Méndez_') + NL + NL +
     e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
     e('- - - - - - - - - - - - -') + NL +
     e('_Organizado integralmente por_') + NL +
@@ -672,13 +690,16 @@ function _detallesEvento() {
     + '</div>';
 }
 
-function enviarCorreoConfirmacion(nombre, correo, fase) {
+function enviarCorreoConfirmacion(nombre, correo, fase, idUnico) {
   var p = nombre ? nombre.split(' ')[0] : 'Hola';
   var calLink = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
     + '&text=Taller+de+imagen+y+liderazgo+%E2%80%94+REINVENTA'
     + '&dates=20260815T160000Z/20260815T180000Z'
     + '&details=Taller+Lo+que+tu+imagen+comunica+%7C+REINVENTA+by+Mary+M%C3%A9ndez'
     + '&location=The+University+Club+of+Mexico%2C+Av.+Paseo+de+la+Reforma+150%2C+Ju%C3%A1rez%2C+CDMX';
+  var hubUrl = idUnico
+    ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
+    : 'https://reinventabymarymendez.com.mx/hub';
 
   var html = _headerCorreo()
     + '<div style="padding:2.2rem 2.6rem 2rem;">'
@@ -687,6 +708,14 @@ function enviarCorreoConfirmacion(nombre, correo, fase) {
     + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Nos da mucho gusto tenerte en el taller. Mary estará encantada de acompañarte en este proceso. Guarda la fecha en tu calendario para que no se te pase ningún detalle.</p>'
     + _detallesEvento()
     + '<a href="' + calLink + '" style="display:block;background:#2A0F25;color:#EFE9E2;text-align:center;padding:.9rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.6rem;">📅 &nbsp;Agregar a Google Calendar</a>'
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .6rem;">Tu espacio personal del evento</p>'
+    + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Aquí encontrarás tu pase de entrada con código QR, la agenda del día y los recursos del taller.</p>'
+    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem;font-weight:600;">Acceder a mi espacio →</a>'
+    + '<div style="border-top:1px solid rgba(42,15,37,.1);padding-top:.9rem;">'
+    + '<p style="font-size:.78rem;color:#2A0F25;font-weight:600;margin:0 0 .3rem;">⭐ Una cosa importante</p>'
+    + '<p style="font-size:.8rem;color:#4a3545;line-height:1.6;margin:0;">Dentro de tu espacio hay una encuesta breve que te pedimos contestar <strong>antes del evento</strong>. Mary la revisa personalmente para preparar materiales y recomendaciones a la medida de cada asistente. No toma más de 5 minutos y hace una gran diferencia.</p>'
+    + '</div></div>'
     + _firmaCorreo()
     + '</div>'
     + _footerCorreo(correo);
@@ -955,6 +984,24 @@ function migrarDatosExistentes() {
     migrados++;
   }
   Logger.log('Migrados: ' + migrados);
+}
+
+/* ── Helpers de confirmación ─────────────────────────────────── */
+function obtenerIdAsistente(correo) {
+  var sheet = getAsistenciaSheet();
+  var data  = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if ((data[i][2] || '').toLowerCase().trim() === correo.toLowerCase().trim()) {
+      return data[i][0] || '';
+    }
+  }
+  return '';
+}
+
+function marcarCorreoEnviado(correo, col) {
+  var sheet = getComunicacionesSheet();
+  var fila  = findRowByEmailInSheet(sheet, correo);
+  if (fila) sheet.getRange(fila, col).setValue('Sí');
 }
 
 /* ── Helpers ─────────────────────────────────────────────────── */
