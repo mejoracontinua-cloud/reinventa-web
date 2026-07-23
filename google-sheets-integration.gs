@@ -152,8 +152,6 @@ function handleStripeWebhook(event) {
       actualizarAsistencia(correo, nombreFinal, fase);
       var idNuevo = obtenerIdAsistente(correo);
       sincronizarComunicaciones(correo, nombreFinal, tel, contacto, idNuevo);
-      enviarCorreoConfirmacion(nombreFinal, correo, fase, idNuevo);
-      marcarCorreoEnviado(correo, 7);
     }
   } else {
     sheet.appendRow([
@@ -163,8 +161,6 @@ function handleStripeWebhook(event) {
     actualizarAsistencia(correo, nombre, fase);
     var idNuevo = obtenerIdAsistente(correo);
     sincronizarComunicaciones(correo, nombre, '', '', idNuevo);
-    enviarCorreoConfirmacion(nombre, correo, fase, idNuevo);
-    marcarCorreoEnviado(correo, 7);
   }
 
   var totalPagos = contarPagosSheet(sheet);
