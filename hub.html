@@ -510,6 +510,9 @@
     .tl-hora { font-size: .68rem; color: var(--gold); letter-spacing: .05em; margin-bottom: .2rem; }
     .tl-titulo { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.1rem; margin-bottom: .2rem; }
     .tl-desc { font-size: .75rem; color: var(--ink-dim); line-height: 1.5; max-width: 520px; }
+    .tl-quote { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: .9rem; color: var(--ink-dim); line-height: 1.5; }
+    .tl-objetivo { font-size: .68rem; letter-spacing: .04em; color: var(--gold); margin-top: .6rem; }
+    .tl-list { font-size: .75rem; color: var(--ink-dim); line-height: 1.6; padding-left: 1.1rem; margin: .35rem 0; }
 
     /* ── RECURSOS ───────────────────────── */
     .lock-card { padding: 1.8rem 1.4rem; text-align: center; margin-bottom: .9rem; }
@@ -983,66 +986,96 @@
 
       <p class="section-eyebrow" style="margin-top:1.2rem;">Minuto a minuto</p>
       <div class="timeline">
+
+        <!-- 9:45 – 10:00 -->
         <div class="tl-item">
           <div class="tl-medal card-plum">
             <svg viewBox="0 0 24 24" fill="none" stroke="#C6A56A" stroke-width="1.6" stroke-linecap="round"><path d="M17 8h1a3 3 0 010 6h-1"/><path d="M3 8h14v6a4 4 0 01-4 4H7a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
           </div>
           <div class="tl-card card">
-            <div class="tl-hora">9:45 AM</div>
-            <div class="tl-titulo">Registro y café de bienvenida</div>
-            <div class="tl-desc">Llegada y check-in en la entrada.</div>
+            <div class="tl-hora">9:45 – 10:00 AM</div>
+            <div class="tl-titulo">Bienvenida y registro</div>
+            <div class="tl-desc" style="margin-bottom:.6rem;">Café de bienvenida · Check-in · Entrega de material · Drapeado para identificar tu estación de color.</div>
+            <div class="tl-quote">"Comenzamos a conocerte incluso antes de iniciar el taller."</div>
           </div>
         </div>
+
+        <!-- 10:00 – 10:10 -->
         <div class="tl-item">
           <div class="tl-medal" style="background:var(--gold);">
             <svg viewBox="0 0 24 24" fill="none" stroke="#2A0F25" stroke-width="1.6" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
           </div>
           <div class="tl-card card">
-            <div class="tl-hora">10:00 AM</div>
-            <div class="tl-titulo">Apertura — ¿Qué comunica tu imagen?</div>
-            <div class="tl-desc">Mary introduce los fundamentos de la comunicación no verbal y cómo la imagen define percepciones antes de hablar.</div>
+            <div class="tl-hora">10:00 – 10:10 AM</div>
+            <div class="tl-titulo">Tu imagen habla antes que tú</div>
+            <div class="tl-desc">Una introducción para entender por qué la imagen personal influye en la forma en que los demás nos perciben y cómo pequeñas decisiones pueden comunicar seguridad, cercanía o profesionalismo.</div>
+            <div class="tl-objetivo">Objetivo: comprender el impacto de la primera impresión.</div>
           </div>
         </div>
+
+        <!-- 10:10 – 10:40 -->
         <div class="tl-item">
           <div class="tl-medal card-plum">
             <svg viewBox="0 0 24 24" fill="none" stroke="#C6A56A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="14.5 9.5 12 15 9.5 14.5 12 9"/></svg>
           </div>
           <div class="tl-card card">
-            <div class="tl-hora">10:30 AM</div>
-            <div class="tl-titulo">Arquetipos de estilo</div>
-            <div class="tl-desc">Descubre tu arquetipo de imagen personal y cómo usarlo a tu favor en diferentes contextos.</div>
+            <div class="tl-hora">10:10 – 10:40 AM</div>
+            <div class="tl-titulo">Conócete antes de comprar</div>
+            <div class="tl-desc" style="margin-bottom:.6rem;">Antes de hablar de tendencias, es importante entender tu propia estructura. Trabajaremos en:</div>
+            <ul class="tl-list">
+              <li>Identificar tu tipo de figura.</li>
+              <li>Reconocer la forma de tu rostro.</li>
+              <li>Comprender cómo los detalles y accesorios pueden crear mayor armonía.</li>
+            </ul>
+            <div class="tl-objetivo">Objetivo: aprender a observarte con una nueva perspectiva.</div>
           </div>
         </div>
+
+        <!-- 10:40 – 11:05 -->
         <div class="tl-item">
           <div class="tl-medal" style="background:var(--gold);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#2A0F25" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2A0F25" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="4"/></svg>
           </div>
           <div class="tl-card card">
-            <div class="tl-hora">11:00 AM</div>
-            <div class="tl-titulo">Dinámica práctica</div>
-            <div class="tl-desc">Ejercicio grupal de análisis y retroalimentación con Mary.</div>
+            <div class="tl-hora">10:40 – 11:05 AM</div>
+            <div class="tl-titulo">Descubre los 7 estilos universales</div>
+            <div class="tl-desc">Conocerás las características de cada estilo y reflexionarás sobre cuál conecta mejor con tu personalidad, tus actividades y la imagen que deseas proyectar.</div>
+            <div class="tl-objetivo">Objetivo: comenzar a construir una imagen con mayor intención.</div>
           </div>
         </div>
+
+        <!-- 11:05 – 11:35 -->
         <div class="tl-item">
           <div class="tl-medal card-plum">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#C6A56A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="4"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C6A56A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
           </div>
           <div class="tl-card card">
-            <div class="tl-hora">11:30 AM</div>
-            <div class="tl-titulo">Cierre — Tu plan de acción</div>
-            <div class="tl-desc">Herramientas concretas para llevar a casa y seguir transformando tu imagen.</div>
+            <div class="tl-hora">11:05 – 11:35 AM</div>
+            <div class="tl-titulo">Dinámica práctica con Mary</div>
+            <div class="tl-quote" style="margin-bottom:.6rem;">"¿Tu outfit está en armonía?"</div>
+            <div class="tl-desc">A través de ejemplos y ejercicios grupales, analizaremos cómo aplicar los conceptos vistos durante el taller a casos reales.</div>
+            <div class="tl-objetivo">Objetivo: llevar la teoría a la práctica.</div>
           </div>
         </div>
+
+        <!-- 11:35 – 12:00 -->
         <div class="tl-item">
           <div class="tl-medal" style="background:var(--gold);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#2A0F25" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2A0F25" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="4"/></svg>
           </div>
           <div class="tl-card card">
-            <div class="tl-hora">12:00 PM</div>
-            <div class="tl-titulo">Networking y preguntas</div>
-            <div class="tl-desc">Espacio abierto para conectar con las demás participantes.</div>
+            <div class="tl-hora">11:35 – 12:00 PM</div>
+            <div class="tl-titulo">Tu siguiente paso</div>
+            <div class="tl-desc" style="margin-bottom:.6rem;">Para cerrar, reuniremos los principales aprendizajes y compartiremos recomendaciones para comenzar a aplicar lo aprendido desde casa.</div>
+            <ul class="tl-list">
+              <li>Auditoría básica de guardarropa.</li>
+              <li>Compras con mayor intención.</li>
+              <li>Primeros pasos para seguir desarrollando tu imagen personal.</li>
+            </ul>
+            <div class="tl-objetivo">Objetivo: que salgas con un plan sencillo y accionable.</div>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -1179,10 +1212,10 @@ function renderCalendar() {
 
 function renderAgendaPreview() {
   var items = [
-    { hora:'9:45', titulo:'Registro y café' },
-    { hora:'10:00', titulo:'Apertura — Imagen' },
-    { hora:'10:30', titulo:'Arquetipos de estilo' },
-    { hora:'11:00', titulo:'Dinámica práctica' }
+    { hora:'9:45', titulo:'Bienvenida y registro' },
+    { hora:'10:00', titulo:'Tu imagen habla antes que tú' },
+    { hora:'10:10', titulo:'Conócete antes de comprar' },
+    { hora:'10:40', titulo:'Los 7 estilos universales' }
   ];
   var html = '';
   items.forEach(function(a, i){
