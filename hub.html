@@ -1214,21 +1214,33 @@ function renderCalendar() {
 }
 
 function renderAgendaPreview() {
+  var GOLD = '#C6A56A', PLUM = '#2A0F25';
   var items = [
-    { hora:'9:45',  titulo:'Bienvenida y registro' },
-    { hora:'10:00', titulo:'Tu imagen habla antes que tú' },
-    { hora:'10:10', titulo:'Conócete antes de comprar' },
-    { hora:'10:40', titulo:'Descubre los 7 estilos universales' },
-    { hora:'11:05', titulo:'Dinámica práctica con Mary' },
-    { hora:'11:35', titulo:'Tu siguiente paso' }
+    { hora:'9:45',  titulo:'Bienvenida y registro',              icon:'<path d="M17 8h1a3 3 0 010 6h-1"/><path d="M3 8h14v6a4 4 0 01-4 4H7a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/>' },
+    { hora:'10:00', titulo:'Tu imagen habla antes que tú',       icon:'<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="19" x2="12" y2="22"/>' },
+    { hora:'10:10', titulo:'Conócete antes de comprar',          icon:'<circle cx="12" cy="12" r="9"/><polygon points="14.5 9.5 12 15 9.5 14.5 12 9"/>' },
+    { hora:'10:40', titulo:'Los 7 estilos universales',          icon:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="4"/>' },
+    { hora:'11:05', titulo:'Dinámica práctica con Mary',         icon:'<path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>' },
+    { hora:'11:35', titulo:'Tu siguiente paso',                  icon:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="4"/>' }
   ];
-  var html = '';
-  items.forEach(function(a, i){
-    html += '<div style="display:flex;gap:.7rem;padding:.55rem 0;' + (i<items.length-1 ? 'border-bottom:1px solid rgba(198,165,106,.18);' : '') + '">'
-      + '<div style="font-size:.68rem;color:var(--gold);min-width:36px;">' + a.hora + '</div>'
-      + '<div style="font-size:.72rem;color:var(--ink-dim);line-height:1.35;">' + a.titulo + '</div>'
+  var html = '<div style="position:relative;padding-left:44px;">'
+    + '<div style="position:absolute;left:17px;top:4px;bottom:4px;width:1px;background:rgba(198,165,106,.25);"></div>';
+  items.forEach(function(a, i) {
+    var dark = i % 2 === 0;
+    var medalBg  = dark ? PLUM : GOLD;
+    var medalClr = dark ? GOLD : PLUM;
+    var cardBg   = dark ? 'rgba(42,15,37,.05)' : 'rgba(198,165,106,.07)';
+    html += '<div style="position:relative;margin-bottom:.55rem;">'
+      + '<div style="position:absolute;left:-44px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:' + medalBg + ';display:flex;align-items:center;justify-content:center;">'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="' + medalClr + '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + a.icon + '</svg>'
+      + '</div>'
+      + '<div style="background:' + cardBg + ';border-radius:3px;padding:.5rem .7rem;display:flex;align-items:center;gap:.6rem;">'
+      + '<span style="font-size:.62rem;color:var(--gold);min-width:32px;flex-shrink:0;">' + a.hora + '</span>'
+      + '<span style="font-size:.7rem;color:var(--ink-dim);line-height:1.35;">' + a.titulo + '</span>'
+      + '</div>'
       + '</div>';
   });
+  html += '</div>';
   document.getElementById('agendaPreview').innerHTML = html;
 }
 
