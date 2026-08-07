@@ -470,34 +470,31 @@ function generateWhatsAppLinkConfirmacion(nombre, telefono, idUnico) {
     ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
     : 'https://reinventabymarymendez.com.mx/hub';
   var msg =
-    e('*REINVENTA by Mary Méndez*') + NL +
-    e('Pago confirmado · Taller de imagen personal') + NL + NL +
-    e('Tu lugar está reservado, ' + p + '. 🤍') + NL +
-    e('Nos da mucho gusto tenerte en el taller. Mary estará encantada de acompañarte en este proceso.') + NL + NL +
-    e('━━━━━━━━━━━━━━━━━━') + NL +
-    e('📋 *Detalles del evento*') + NL +
-    e('━━━━━━━━━━━━━━━━━━') + NL + NL +
-    e('*Lo que tu imagen comunica*') + NL + NL +
-    e('📅  Sábado 15 de agosto de 2026') + NL +
-    e('     10:00 – 12:00 pm') + NL + NL +
-    e('📍  The University Club of Mexico') + NL +
-    e('     Av. Paseo de la Reforma 150, Juárez, CDMX') + NL + NL +
-    e('🗺️  Cómo llegar:') + NL +
+    e('*REINVENTA by Mary Méndez*') + NL + NL +
+    e('Hola, ' + p + '. Tu lugar está confirmado.') + NL + NL +
+    e('*Lo que tu imagen comunica*') + NL +
+    e('- Sábado 15 de agosto de 2026') + NL +
+    e('- 10:00 a 12:00 pm') + NL +
+    e('- The University Club of Mexico') + NL +
+    e('- Av. Paseo de la Reforma 150, Juárez, CDMX') + NL + NL +
+    e('*Cómo llegar:*') + NL +
     e('https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
-    e('━━━━━━━━━━━━━━━━━━') + NL +
-    e('✨ *Tu espacio personal del evento*') + NL +
-    e('━━━━━━━━━━━━━━━━━━') + NL + NL +
-    e('Aquí encontrarás tu pase de entrada con código QR, la agenda del día y los recursos del taller.') + NL + NL +
-    e('👉  Acceder a mi espacio:') + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*Tu espacio personal del evento:*') + NL +
     e(hubUrl) + NL + NL +
-    e('━━━━━━━━━━━━━━━━━━') + NL +
-    e('⭐ *Una cosa importante*') + NL +
-    e('━━━━━━━━━━━━━━━━━━') + NL + NL +
-    e('Dentro de tu espacio hay una encuesta breve que te pedimos contestar _antes del evento_. Mary la revisa personalmente para preparar materiales y recomendaciones a la medida de cada asistente. No toma más de 5 minutos y hace una gran diferencia. 🙏') + NL + NL +
-    e('━━━━━━━━━━━━━━━━━━') + NL + NL +
+    e('Aquí encontrarás tu pase de entrada con código QR, la agenda del día y los recursos del taller.') + NL + NL +
+    e('*Una cosa importante:*') + NL +
+    e('Dentro de tu espacio hay una encuesta breve que te pedimos contestar _antes del evento_. Mary la revisa personalmente para preparar materiales y recomendaciones a la medida de cada asistente. Entre más detallada seas, más personalizada será tu experiencia ese día.') + NL + NL +
+    e('No toma más de 5 minutos y hace una gran diferencia.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('Nos da mucho gusto tenerte. Mary estará encantada de acompañarte.') + NL + NL +
     e('_Con cariño,_') + NL +
     e('_Reinventa by Mary Méndez_') + NL + NL +
-    e('_Este es un mensaje informativo, por favor no respondas a este chat._');
+    e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL +
+    e('_Organizado integralmente por_') + NL +
+    e('*Alumbra Studios*') + NL +
+    e('https://www.alumbrastudios.com');
   return 'https://wa.me/' + numero + '?text=' + msg;
 }
 
