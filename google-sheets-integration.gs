@@ -484,7 +484,7 @@ function generateWhatsAppLinkConfirmacion(nombre, telefono, idUnico) {
     e(hubUrl) + NL + NL +
     e('Aquí encontrarás tu pase de entrada con código QR, la agenda del día y los recursos del taller.') + NL + NL +
     e('- - - - - - - - - - - - -') + NL + NL +
-    e('*POR FAVOR LEE ESTO ANTES DE CERRAR* 🙏') + NL + NL +
+    e('*POR FAVOR LEE ESTO ANTES DE CERRAR*') + NL + NL +
     e('Dentro de tu espacio hay una *encuesta previa* que Mary necesita que contestes _antes del taller_.') + NL + NL +
     e('Mary lee personalmente cada respuesta para preparar los materiales, los ejemplos y las recomendaciones específicas para cada asistente. Si no la contestas antes del evento, Mary no podrá personalizar tu experiencia ese día.') + NL + NL +
     e('No toma más de 5 minutos. Por favor, hazlo hoy mismo.') + NL + NL +
@@ -1042,4 +1042,37 @@ function contarFaseSheet(sheet, fase) {
   var n = 0;
   for (var i = 1; i < data.length; i++) { if (data[i][9] === '✓' && data[i][6] === fase) n++; }
   return n;
+}
+
+/* ── Menú REINVENTA ──────────────────────────────────────────── */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('REINVENTA')
+    .addItem('Regenerar links WA sin ID', 'regenerarLinksWASinId')
+    .addToUi();
+}
+
+/* Regenera el link de WhatsApp de confirmación para filas en
+   Comunicaciones cuyo link actual NO contiene ?id=              */
+function regenerarLinksWASinId() {
+  var sheet = getComunicacionesSheet();
+  var data  = sheet.getDataRange().getValues();
+  var count = 0;
+  for (var i = 1; i < data.length; i++) {
+    var correo   = (data[i][0] || '').toString().trim();
+    var nombre   = (data[i][1] || '').toString().trim();
+    var telefono = (data[i][2] || '').toString().trim();
+    var linkActual = (data[i][4] || '').toString();
+    if (!correo || !telefono) continue;
+    if (linkActual.indexOf('?id=') !== -1) continue; // ya tiene ID, saltar
+    var id = obtenerIdAsistente(correo);
+    if (!id) continue; // sin ID en Asistencia, saltar
+    var nuevoLink = generateWhatsAppLinkConfirmacion(nombre, telefono, id);
+    if (nuevoLink) {
+      sheet.getRange(i + 1, 5).setValue(nuevoLink);
+      sheet.getRange(i + 1, 5).setFormula('=HYPERLINK("' + nuevoLink + '","Enviar WhatsApp")');
+      count++;
+    }
+  }
+  SpreadsheetApp.getUi().alert('Listo. Se actualizaron ' + count + ' link(s) con su ID personalizado.');
 }
