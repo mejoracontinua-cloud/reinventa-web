@@ -483,15 +483,18 @@ function generateWhatsAppLinkConfirmacion(nombre, telefono, idUnico) {
     e('*Tu espacio personal del evento:*') + NL +
     e(hubUrl) + NL + NL +
     e('Aquí encontrarás tu pase de entrada con código QR, la agenda del día y los recursos del taller.') + NL + NL +
-    e('*Una cosa importante:*') + NL +
-    e('Dentro de tu espacio hay una encuesta breve que te pedimos contestar _antes del evento_. Mary la revisa personalmente para preparar materiales y recomendaciones a la medida de cada asistente. Entre más detallada seas, más personalizada será tu experiencia ese día.') + NL + NL +
-    e('No toma más de 5 minutos y hace una gran diferencia.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*POR FAVOR LEE ESTO ANTES DE CERRAR* 🙏') + NL + NL +
+    e('Dentro de tu espacio hay una *encuesta previa* que Mary necesita que contestes _antes del taller_.') + NL + NL +
+    e('Mary lee personalmente cada respuesta para preparar los materiales, los ejemplos y las recomendaciones específicas para cada asistente. Si no la contestas antes del evento, Mary no podrá personalizar tu experiencia ese día.') + NL + NL +
+    e('No toma más de 5 minutos. Por favor, hazlo hoy mismo.') + NL + NL +
     e('- - - - - - - - - - - - -') + NL + NL +
     e('Nos da mucho gusto tenerte. Mary estará encantada de acompañarte.') + NL + NL +
     e('_Con cariño,_') + NL +
     e('_Reinventa by Mary Méndez_') + NL + NL +
     e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
     e('- - - - - - - - - - - - -') + NL +
+    (idUnico ? e('_Tu código de acceso: *' + idUnico + '*_') + NL : '') +
     e('_Organizado integralmente por_') + NL +
     e('*Alumbra Studios*') + NL +
     e('https://www.alumbrastudios.com');
