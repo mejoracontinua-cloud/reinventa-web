@@ -674,12 +674,12 @@ function probarCorreoBienvenidaAcompanante() {
 /* ── Evento & Métricas ──────────────────────────────────── */
 function renderEventoDashboard() {
   var AGENDA = [
-    { hora: '09:45', fin: '10:00', titulo: 'Bienvenida y registro',        desc: 'Café de bienvenida · Check-in · Entrega de material' },
-    { hora: '10:00', fin: '10:10', titulo: 'Tu imagen habla antes que tú', desc: 'Apertura con Mary. Por qué tu imagen importa más de lo que crees.' },
-    { hora: '10:10', fin: '10:40', titulo: 'Conócete antes de comprar',    desc: 'Colorimetría personal, contrastes y silueta. Ejercicio práctico con drapeado.' },
-    { hora: '10:40', fin: '11:05', titulo: 'Los 7 estilos universales',    desc: 'Arquetipos de estilo: cómo identificar el tuyo y combinarlo con tu marca personal.' },
-    { hora: '11:05', fin: '11:35', titulo: 'Dinámica práctica con Mary',   desc: 'Ejercicio en vivo: armado de looks con piezas clave. Participación del grupo.' },
-    { hora: '11:35', fin: '12:00', titulo: 'Tu siguiente paso',            desc: 'Cierre, compromisos personales, preguntas y fotografía grupal.' }
+    { hora: '09:45', fin: '10:00', titulo: 'Bienvenida y registro',        desc: 'Café · Check-in · Material' },
+    { hora: '10:00', fin: '10:10', titulo: 'Tu imagen habla antes que tú', desc: 'Apertura con Mary' },
+    { hora: '10:10', fin: '10:40', titulo: 'Conócete antes de comprar',    desc: 'Colorimetría · silueta · drapeado' },
+    { hora: '10:40', fin: '11:05', titulo: 'Los 7 estilos universales',    desc: 'Identifica tu arquetipo' },
+    { hora: '11:05', fin: '11:35', titulo: 'Dinámica práctica con Mary',   desc: 'Armado de looks en vivo' },
+    { hora: '11:35', fin: '12:00', titulo: 'Tu siguiente paso',            desc: 'Cierre y fotografía grupal' }
   ];
 
   var el = document.getElementById('evento-inner');
@@ -688,218 +688,233 @@ function renderEventoDashboard() {
   var checkin = d.filter(function(a){return a.asistio;}).length;
   var previa  = datos ? datos.encuestasPrevia.length : 0;
   var post    = d.filter(function(a){return a.encuesta;}).length;
+  var CUPO    = 40;
 
   var eventoTs = new Date('2026-08-15T10:00:00').getTime();
   var esHoy    = (function(){ var n=new Date(); return n.getFullYear()===2026 && n.getMonth()===7 && n.getDate()===15; })();
 
-  function toMins(hhmm) { var p=hhmm.split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
-  function pad(n) { return n < 10 ? '0'+n : ''+n; }
+  function toMins(hhmm){ var p=hhmm.split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
+  function pad(n){ return n<10?'0'+n:''+n; }
 
-  // ── Reloj / countdown live
+  // ── Live tick
   if (!window._relojEvento) {
     window._relojEvento = setInterval(function(){
-      // Countdown
-      var cdEl = document.getElementById('ev-countdown');
-      if (cdEl) {
-        var df = eventoTs - Date.now();
-        if (df > 0) {
-          var dd=Math.floor(df/86400000), hh=Math.floor((df%86400000)/3600000),
-              mm=Math.floor((df%3600000)/60000), ss=Math.floor((df%60000)/1000);
-          document.getElementById('ev-cd-dd').textContent = pad(dd);
-          document.getElementById('ev-cd-hh').textContent = pad(hh);
-          document.getElementById('ev-cd-mm').textContent = pad(mm);
-          document.getElementById('ev-cd-ss').textContent = pad(ss);
-        } else {
-          cdEl.innerHTML = '<div style="font-family:Georgia,serif;font-size:2rem;color:var(--gold);letter-spacing:.05em;">¡El evento es HOY!</div>';
-        }
+      var df=eventoTs-Date.now();
+      if (df>0) {
+        var e=document.getElementById('ev-cd');
+        if(e) e.innerHTML=
+          cdNum(pad(Math.floor(df/86400000)),'días')+sep()+
+          cdNum(pad(Math.floor((df%86400000)/3600000)),'horas')+sep()+
+          cdNum(pad(Math.floor((df%3600000)/60000)),'min')+sep()+
+          cdNum(pad(Math.floor((df%60000)/1000)),'seg');
       }
-      // Reloj
-      var clEl = document.getElementById('ev-clock');
-      if (clEl) clEl.textContent = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-      // Agenda highlight
-      var mins = new Date().getHours()*60+new Date().getMinutes();
-      document.querySelectorAll('.ev-agenda-row').forEach(function(b){
-        var ini=parseInt(b.dataset.ini), fin=parseInt(b.dataset.fin);
-        if (mins>=ini && mins<fin) {
-          b.setAttribute('data-active','1');
-        } else {
-          b.removeAttribute('data-active');
-        }
+      var cl=document.getElementById('ev-clock');
+      if(cl) cl.textContent=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      var mins=new Date().getHours()*60+new Date().getMinutes();
+      document.querySelectorAll('.eva-row').forEach(function(b){
+        var a=mins>=parseInt(b.dataset.ini)&&mins<parseInt(b.dataset.fin);
+        b.style.borderLeftColor=a?'#C6A56A':'transparent';
+        b.style.background=a?'rgba(198,165,106,.07)':'';
+        b.querySelector('.eva-hora').style.color=a?'#C6A56A':'#8F7383';
       });
     }, 1000);
   }
 
-  // ── Countdown HTML
-  var df0 = eventoTs - Date.now();
-  var dd0=Math.max(0,Math.floor(df0/86400000)), hh0=Math.max(0,Math.floor((df0%86400000)/3600000)),
-      mm0=Math.max(0,Math.floor((df0%3600000)/60000)), ss0=Math.max(0,Math.floor((df0%60000)/1000));
-
-  function cdBox(id,n,label){
-    return '<div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;">'
-      +'<div style="background:rgba(255,255,255,.06);border:1px solid rgba(198,165,106,.2);padding:.9rem 1.3rem;min-width:4.5rem;text-align:center;">'
-      +'<span id="'+id+'" style="font-family:Georgia,serif;font-size:2.4rem;color:var(--gold);letter-spacing:.04em;display:block;line-height:1;">'+pad(n)+'</span>'
+  function sep(){ return '<span style="font-family:Georgia,serif;font-size:2rem;color:rgba(198,165,106,.3);align-self:center;padding-bottom:.5rem;">:</span>'; }
+  function cdNum(val,label){
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:.5rem;">'
+      +'<div style="background:rgba(255,255,255,.05);border:1px solid rgba(198,165,106,.18);min-width:72px;padding:1rem .5rem;text-align:center;">'
+      +'<span style="font-family:Georgia,serif;font-size:2.6rem;color:#C6A56A;letter-spacing:.03em;line-height:1;">'+val+'</span>'
       +'</div>'
-      +'<span style="font-size:.45rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(198,165,106,.45);">'+label+'</span>'
+      +'<span style="font-size:.42rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(198,165,106,.4);">'+label+'</span>'
       +'</div>';
   }
 
-  var countdownHtml = df0 > 0
-    ? '<div id="ev-countdown" style="display:flex;align-items:flex-end;gap:1rem;justify-content:center;padding:2.4rem 1rem 2rem;">'
-        +cdBox('ev-cd-dd',dd0,'días')
-        +'<div style="font-family:Georgia,serif;font-size:2rem;color:rgba(198,165,106,.35);padding-bottom:1.7rem;line-height:1;">:</div>'
-        +cdBox('ev-cd-hh',hh0,'horas')
-        +'<div style="font-family:Georgia,serif;font-size:2rem;color:rgba(198,165,106,.35);padding-bottom:1.7rem;line-height:1;">:</div>'
-        +cdBox('ev-cd-mm',mm0,'min')
-        +'<div style="font-family:Georgia,serif;font-size:2rem;color:rgba(198,165,106,.35);padding-bottom:1.7rem;line-height:1;">:</div>'
-        +cdBox('ev-cd-ss',ss0,'seg')
+  // Initial values
+  var df0=eventoTs-Date.now();
+  var heroBody = df0>0
+    ? '<div id="ev-cd" style="display:flex;align-items:flex-end;gap:.8rem;justify-content:center;padding:2.2rem 1rem 1.6rem;">'
+        +cdNum(pad(Math.floor(df0/86400000)),'días')+sep()
+        +cdNum(pad(Math.floor((df0%86400000)/3600000)),'horas')+sep()
+        +cdNum(pad(Math.floor((df0%3600000)/60000)),'min')+sep()
+        +cdNum(pad(Math.floor((df0%60000)/1000)),'seg')
         +'</div>'
-        +'<div style="font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(198,165,106,.4);text-align:center;padding-bottom:2rem;">para el evento · 15 agosto 2026 · 10:00 am · CDMX</div>'
-    : '<div id="ev-countdown" style="padding:2rem;text-align:center;"><div style="font-family:Georgia,serif;font-size:2rem;color:var(--gold);">¡El evento es HOY!</div></div>';
+        +'<div style="font-size:.44rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(198,165,106,.35);text-align:center;padding-bottom:1.8rem;">para el evento · 15 agosto 2026 · 10:00 am · CDMX</div>'
+    : '<div style="padding:2rem;text-align:center;">'
+        +(esHoy
+          ? '<div id="ev-clock" style="font-family:Georgia,serif;font-size:3.5rem;color:#C6A56A;letter-spacing:.04em;">'+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</div>'
+            +'<div style="font-size:.44rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(198,165,106,.4);margin-top:.5rem;">hora actual</div>'
+          : '<div style="font-family:Georgia,serif;font-size:1.6rem;color:#C6A56A;">Evento finalizado</div>')
+        +'</div>';
 
-  // ── Stats cards
-  function statCard(n, label, pct) {
-    return '<div style="background:var(--cream);padding:1.2rem 1rem;display:flex;flex-direction:column;gap:.6rem;">'
-      +'<div style="font-family:Georgia,serif;font-size:2.2rem;color:var(--plum);line-height:1;">'+n+'</div>'
-      +'<div style="font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mauve);">'+label+'</div>'
-      +(pct !== undefined
-        ? '<div style="height:2px;background:var(--plum-10);">'
-          +'<div style="height:100%;width:'+pct+'%;background:var(--gold);transition:width .6s;"></div></div>'
-        : '')
-      +'</div>';
-  }
+  // Sparkle dots (puro CSS, no SVG externo)
+  var sparks = [[8,15],[92,20],[15,70],[85,60],[50,10],[20,45],[75,80],[40,88],[65,30]].map(function(p){
+    return '<div style="position:absolute;left:'+p[0]+'%;top:'+p[1]+'%;width:'+(Math.random()<.5?3:2)+'px;height:'+(Math.random()<.5?3:2)+'px;border-radius:50%;background:rgba(198,165,106,'+(0.15+Math.random()*.25)+');"></div>';
+  }).join('');
 
-  var pCheckin = total ? Math.round(checkin/total*100) : 0;
-  var pPrevia  = total ? Math.round(previa/total*100)  : 0;
-  var pPost    = total ? Math.round(post/total*100)    : 0;
-
-  var statsHtml = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:1.2rem;">'
-    +statCard(total,  'Registradas', 100)
-    +statCard(previa, 'Enc. previa', pPrevia)
-    +statCard(checkin,'Check-in',    pCheckin)
-    +statCard(post,   'Enc. post',   pPost)
+  var heroHtml = '<div style="background:#1C0B1A;margin-bottom:1.2rem;position:relative;overflow:hidden;">'
+    +sparks
+    +'<div style="position:relative;z-index:1;">'
+      +'<div style="padding:1.3rem 1.6rem;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid rgba(198,165,106,.1);">'
+        +'<div>'
+          +'<div style="font-size:.42rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(198,165,106,.4);margin-bottom:.3rem;">Reinventa por Mary Méndez</div>'
+          +'<div style="font-family:Georgia,serif;font-size:1.2rem;color:#EFE9E2;">Lo que tu imagen comunica</div>'
+        +'</div>'
+        +(df0>0
+          ? '<div style="font-size:.42rem;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(198,165,106,.3);color:rgba(198,165,106,.7);padding:.3rem .8rem;margin-top:.2rem;">Próximo evento</div>'
+          : (esHoy ? '<div style="font-size:.42rem;letter-spacing:.12em;text-transform:uppercase;border:1px solid #C6A56A;color:#C6A56A;padding:.3rem .8rem;">HOY</div>' : ''))
+      +'</div>'
+      +heroBody
+    +'</div>'
     +'</div>';
 
-  // ── Reloj del día
-  var clockHtml = esHoy
-    ? '<div style="background:var(--plum);padding:1.4rem;text-align:center;margin-bottom:1rem;">'
-      +'<div id="ev-clock" style="font-family:Georgia,serif;font-size:3rem;color:var(--gold);letter-spacing:.04em;">'
-      +new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
-      +'</div>'
-      +'<div style="font-size:.45rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(198,165,106,.4);margin-top:.3rem;">hora actual</div>'
-      +'</div>'
-    : '';
+  // ── Donut SVG helper
+  function donut(pct, color, r) {
+    r = r||15.9;
+    var circ=2*Math.PI*r, dash=pct/100*circ;
+    return '<svg viewBox="0 0 36 36" style="width:90px;height:90px;display:block;transform:rotate(-90deg);">'
+      +'<circle cx="18" cy="18" r="'+r+'" fill="none" stroke="rgba(42,15,37,.1)" stroke-width="3.5"/>'
+      +'<circle cx="18" cy="18" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="3.5"'
+      +' stroke-dasharray="'+dash.toFixed(1)+' '+circ.toFixed(1)+'" stroke-linecap="round"/>'
+      +'</svg>';
+  }
 
-  // ── Agenda (siempre visible, solo resaltada el día del evento)
-  var agendaRows = AGENDA.map(function(b, i){
-    return '<div class="ev-agenda-row" data-ini="'+toMins(b.hora)+'" data-fin="'+toMins(b.fin)+'" '
-      +'style="display:grid;grid-template-columns:3.5rem 1fr;gap:.8rem 1.2rem;padding:1rem 1.2rem;border-bottom:1px solid var(--plum-10);border-left:3px solid transparent;transition:background .3s,border-color .3s;">'
-      +'<div style="font-family:Georgia,serif;font-size:.95rem;color:var(--mauve);padding-top:.1rem;">'+b.hora+'</div>'
+  // ── Progreso de registros
+  var pctTotal = CUPO ? Math.round(total/CUPO*100) : 0;
+  var progCard = '<div style="background:var(--cream);padding:1.3rem 1.4rem;">'
+    +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:1.1rem;">Progreso de registros</div>'
+    +'<div style="display:flex;align-items:center;gap:1.2rem;margin-bottom:1rem;">'
+      +'<div style="position:relative;flex-shrink:0;">'
+        +donut(pctTotal,'#C6A56A')
+        +'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">'
+          +'<div style="font-family:Georgia,serif;font-size:1.1rem;color:var(--plum);line-height:1;">'+total+'</div>'
+          +'<div style="font-size:.38rem;color:var(--mauve);letter-spacing:.06em;">de '+CUPO+'</div>'
+        +'</div>'
+      +'</div>'
       +'<div>'
-        +'<div style="font-size:.85rem;font-weight:600;color:var(--plum);margin-bottom:.2rem;">'+b.titulo+'</div>'
-        +'<div style="font-size:.72rem;color:var(--mauve);line-height:1.5;">'+b.desc+'</div>'
+        +'<div style="font-family:Georgia,serif;font-size:2rem;color:var(--plum);line-height:1;">'+pctTotal+'<span style="font-size:1rem;">%</span></div>'
+        +'<div style="font-size:.68rem;color:var(--mauve);margin-top:.2rem;">del cupo total</div>'
+        +(pctTotal>=100 ? '<div style="font-size:.6rem;color:#C6A56A;margin-top:.4rem;">¡Cupo lleno!</div>' : '')
+      +'</div>'
+    +'</div>'
+    +'<div style="height:3px;background:var(--plum-10);border-radius:2px;overflow:hidden;">'
+      +'<div style="height:100%;width:'+pctTotal+'%;background:#C6A56A;transition:width .6s;"></div>'
+    +'</div>'
+    +'</div>';
+
+  // ── Por fase
+  var fases={};
+  d.forEach(function(a){ var f=a.fase||'Sin fase'; fases[f]=(fases[f]||0)+1; });
+  var faseRows = Object.keys(fases).map(function(f){
+    var n=fases[f], pf=total?Math.round(n/total*100):0;
+    return '<div style="margin-bottom:.8rem;">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:.3rem;">'
+        +'<span style="font-size:.72rem;color:var(--plum);">'+f+'</span>'
+        +'<span style="font-family:Georgia,serif;font-size:.85rem;color:var(--plum);">'+n+'<span style="font-size:.55rem;color:var(--mauve);margin-left:.2rem;">'+pf+'%</span></span>'
+      +'</div>'
+      +'<div style="height:3px;background:var(--plum-10);border-radius:2px;overflow:hidden;">'
+        +'<div style="height:100%;width:'+pf+'%;background:#C6A56A;"></div>'
+      +'</div></div>';
+  }).join('')+(Object.keys(fases).length===0?'<div style="font-size:.72rem;color:var(--mauve);">Sin datos</div>':'')
+    +'<div style="border-top:1px solid var(--plum-10);margin-top:.6rem;padding-top:.6rem;display:flex;justify-content:space-between;">'
+    +'<span style="font-size:.68rem;color:var(--mauve);">Total de registros</span>'
+    +'<span style="font-family:Georgia,serif;font-size:.9rem;font-weight:600;color:var(--plum);">'+total+'</span>'
+    +'</div>';
+
+  var faseCard = '<div style="background:var(--cream);padding:1.3rem 1.4rem;">'
+    +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:1.1rem;">Por fase de compra</div>'
+    +faseRows+'</div>';
+
+  // ── Composición
+  var acomp = d.filter(function(a){ return (a.nombre||'').toLowerCase().startsWith('acompañante de'); }).length;
+  var compCard = '<div style="background:var(--cream);padding:1.3rem 1.4rem;">'
+    +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:1.1rem;">Composición de asistentes</div>'
+    +'<div style="display:flex;align-items:flex-start;gap:1.2rem;margin-bottom:1rem;">'
+      +'<div style="position:relative;flex-shrink:0;">'
+        +donut(total?(total-acomp)/total*100:0,'#2A0F25')
+        +'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">'
+          +'<div style="font-family:Georgia,serif;font-size:.9rem;color:var(--plum);">'+(total-acomp)+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="flex:1;">'
+        +'<div style="margin-bottom:.7rem;">'
+          +'<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem;">'
+            +'<div style="width:8px;height:8px;background:#2A0F25;border-radius:2px;flex-shrink:0;"></div>'
+            +'<span style="font-size:.7rem;color:var(--plum);">Compradores</span>'
+          +'</div>'
+          +'<div style="font-family:Georgia,serif;font-size:1.4rem;color:var(--plum);padding-left:1.1rem;">'+(total-acomp)+'</div>'
+        +'</div>'
+        +'<div>'
+          +'<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem;">'
+            +'<div style="width:8px;height:8px;background:#C6A56A;border-radius:2px;flex-shrink:0;"></div>'
+            +'<span style="font-size:.7rem;color:var(--plum);">Acompañantes</span>'
+          +'</div>'
+          +'<div style="font-family:Georgia,serif;font-size:1.4rem;color:var(--plum);padding-left:1.1rem;">'+acomp+'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +'</div>';
+
+  // ── Agenda
+  var mins0 = new Date().getHours()*60+new Date().getMinutes();
+  var agendaRows = AGENDA.map(function(b){
+    var activo = esHoy && mins0>=toMins(b.hora) && mins0<toMins(b.fin);
+    return '<div class="eva-row" data-ini="'+toMins(b.hora)+'" data-fin="'+toMins(b.fin)+'" '
+      +'style="display:flex;gap:1rem;padding:.8rem 1rem;border-bottom:1px solid var(--plum-10);border-left:3px solid '+(activo?'#C6A56A':'transparent')+';background:'+(activo?'rgba(198,165,106,.07)':'')+';transition:all .3s;">'
+      +'<div class="eva-hora" style="font-family:Georgia,serif;font-size:.85rem;color:'+(activo?'#C6A56A':'#8F7383')+';flex-shrink:0;width:2.8rem;">'+b.hora+'</div>'
+      +'<div>'
+        +'<div style="font-size:.78rem;font-weight:600;color:var(--plum);margin-bottom:.15rem;">'+b.titulo+'</div>'
+        +'<div style="font-size:.65rem;color:var(--mauve);">'+b.desc+'</div>'
       +'</div>'
       +'</div>';
   }).join('');
 
-  var agendaHtml = '<div style="background:var(--cream);margin-bottom:1.2rem;">'
-    +'<div style="padding:.7rem 1.2rem;border-bottom:1px solid var(--plum-10);display:flex;align-items:center;justify-content:space-between;">'
-      +'<span style="font-size:.48rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mauve);">Agenda — Sábado 15 de agosto 2026</span>'
-      +(esHoy ? '<span style="font-size:.55rem;color:var(--gold);letter-spacing:.06em;">EN CURSO</span>' : '')
+  var agendaCard = '<div style="background:var(--cream);">'
+    +'<div style="padding:.8rem 1rem;border-bottom:1px solid var(--plum-10);display:flex;align-items:center;justify-content:space-between;">'
+      +'<span style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);">Agenda del día</span>'
+      +(esHoy?'<span style="font-size:.5rem;letter-spacing:.08em;text-transform:uppercase;color:#C6A56A;">En curso</span>':'<span style="font-size:.5rem;color:var(--mauve);">Sáb 15 agosto 2026</span>')
     +'</div>'
-    +agendaRows
-    +'</div>';
+    +agendaRows+'</div>';
 
-  // ── Métricas
-  var metricasHtml = '';
-  if (total > 0) {
-    var fases = {};
-    d.forEach(function(a){ var f=a.fase||'Sin fase'; fases[f]=(fases[f]||0)+1; });
-    var acomp = d.filter(function(a){ return (a.nombre||'').toLowerCase().startsWith('acompañante de'); }).length;
-
-    function barra(label, n, tot, hex) {
-      var pct = tot ? Math.round(n/tot*100) : 0;
-      return '<div style="margin-bottom:.9rem;">'
-        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.35rem;">'
-          +'<span style="font-size:.78rem;color:var(--plum);">'+label+'</span>'
-          +'<span style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);">'+n
-            +'<span style="font-size:.6rem;color:var(--mauve);margin-left:.3rem;">'+pct+'%</span></span>'
-        +'</div>'
-        +'<div style="height:4px;background:var(--plum-10);border-radius:2px;overflow:hidden;">'
-          +'<div style="height:100%;width:'+pct+'%;background:'+hex+';transition:width .5s;border-radius:2px;"></div>'
-        +'</div></div>';
-    }
-
-    var fasesRows = Object.keys(fases).map(function(f){
-      var pf = Math.round(fases[f]/total*100);
-      return '<div style="display:flex;align-items:center;gap:.8rem;padding:.5rem 0;border-bottom:1px solid var(--plum-10);">'
-        +'<div style="flex:1;font-size:.78rem;color:var(--plum);">'+f+'</div>'
-        +'<div style="width:80px;height:3px;background:var(--plum-10);border-radius:2px;overflow:hidden;">'
-          +'<div style="height:100%;width:'+pf+'%;background:var(--gold);"></div></div>'
-        +'<div style="font-family:Georgia,serif;font-size:.9rem;color:var(--plum);min-width:1.5rem;text-align:right;">'+fases[f]+'</div>'
-        +'</div>';
-    }).join('');
-
-    metricasHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">'
-      // Embudo
-      +'<div style="background:var(--cream);padding:1.3rem 1.4rem;">'
-        +'<div style="font-size:.48rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mauve);margin-bottom:1.1rem;">Embudo del evento</div>'
-        +barra('Registradas', total, total, '#C6A56A')
-        +barra('Encuesta previa', previa, total, '#9a7d4a')
-        +barra('Check-in', checkin, total, '#2A0F25')
-        +barra('Encuesta post', post, total, '#5c3b56')
+  // ── Estado general
+  function statusRow(label, val, ok) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid var(--plum-10);">'
+      +'<span style="font-size:.75rem;color:var(--plum);">'+label+'</span>'
+      +'<span style="font-size:.55rem;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .6rem;background:'+(ok?'#e8f5ee':'rgba(42,15,37,.06)')+';color:'+(ok?'#2d7a4f':'#8F7383')+';">'+val+'</span>'
+      +'</div>';
+  }
+  function progressRow(label, n, tot) {
+    var pct = tot?Math.round(n/tot*100):0;
+    return '<div style="padding:.55rem 0;border-bottom:1px solid var(--plum-10);">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:.3rem;">'
+        +'<span style="font-size:.75rem;color:var(--plum);">'+label+'</span>'
+        +'<span style="font-size:.7rem;color:var(--mauve);">'+n+' / '+tot+'</span>'
       +'</div>'
-      // Desglose
-      +'<div style="display:flex;flex-direction:column;gap:.8rem;">'
-        +'<div style="background:var(--cream);padding:1.3rem 1.4rem;flex:1;">'
-          +'<div style="font-size:.48rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mauve);margin-bottom:.9rem;">Por fase de compra</div>'
-          +fasesRows
-        +'</div>'
-        +'<div style="background:var(--cream);padding:1rem 1.4rem;">'
-          +'<div style="font-size:.48rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mauve);margin-bottom:.7rem;">Composición</div>'
-          +'<div style="display:flex;gap:1.5rem;">'
-            +'<div><div style="font-family:Georgia,serif;font-size:1.6rem;color:var(--plum);">'+(total-acomp)+'</div>'
-              +'<div style="font-size:.48rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mauve);">Compradores</div></div>'
-            +'<div><div style="font-family:Georgia,serif;font-size:1.6rem;color:var(--plum);">'+acomp+'</div>'
-              +'<div style="font-size:.48rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mauve);">Acompañantes</div></div>'
-          +'</div>'
-        +'</div>'
-      +'</div>'
-    +'</div>';
+      +'<div style="height:2px;background:var(--plum-10);">'
+        +'<div style="height:100%;width:'+pct+'%;background:#C6A56A;transition:width .5s;"></div>'
+      +'</div></div>';
   }
 
-  // ── CSS para agenda row activa
-  if (!document.getElementById('ev-style')) {
-    var s = document.createElement('style');
-    s.id = 'ev-style';
-    s.textContent = '.ev-agenda-row[data-active]{background:rgba(198,165,106,.07)!important;border-left-color:#C6A56A!important;} .ev-agenda-row[data-active] .ev-hora{color:var(--plum)!important;}';
-    document.head.appendChild(s);
-  }
+  var estadoCard = '<div style="background:var(--cream);padding:1.1rem 1.3rem;height:100%;box-sizing:border-box;">'
+    +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:.9rem;">Estado general</div>'
+    +progressRow('Encuesta previa completada', previa, total)
+    +progressRow('Check-in el día del evento', checkin, total)
+    +progressRow('Encuesta post completada', post, total)
+    +'<div style="margin-top:1rem;">'
+    +statusRow('Cupo disponible', (CUPO-total)+' lugares', CUPO-total>0)
+    +statusRow('Acompañantes sin correo', d.filter(function(a){ return (a.nombre||'').toLowerCase().startsWith('acompañante de') && !a.correo; }).length+' personas', d.filter(function(a){ return (a.nombre||'').toLowerCase().startsWith('acompañante de') && !a.correo; }).length===0)
+    +statusRow('Sin encuesta previa', (total-previa)+' personas', total-previa===0)
+    +'</div>'
+    +'</div>';
 
-  // ── Render
   el.innerHTML =
-    // Hero: plum card con countdown o reloj
-    '<div style="background:var(--plum);margin-bottom:1.2rem;">'
-      +'<div style="padding:1.2rem 1.4rem;border-bottom:1px solid rgba(198,165,106,.12);display:flex;align-items:center;justify-content:space-between;">'
-        +'<div>'
-          +'<div style="font-size:.48rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(198,165,106,.45);">REINVENTA por Mary Méndez</div>'
-          +'<div style="font-family:Georgia,serif;font-size:1.05rem;color:var(--gold);margin-top:.2rem;">Lo que tu imagen comunica</div>'
-        +'</div>'
-        +(esHoy
-          ? '<div style="font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(198,165,106,.4);padding:.3rem .7rem;">HOY</div>'
-          : '<div style="font-size:.72rem;color:rgba(198,165,106,.6);">15 · 08 · 2026</div>')
-      +'</div>'
-      +countdownHtml
-      +(esHoy ? '<div id="ev-clock" style="font-family:Georgia,serif;font-size:3rem;color:var(--gold);text-align:center;padding:.5rem 1rem 1.8rem;letter-spacing:.04em;">'+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</div><div style="font-size:.45rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(198,165,106,.4);text-align:center;padding-bottom:1.6rem;">hora actual</div>' : '')
+    heroHtml
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;margin-bottom:.8rem;">'
+      +progCard+faseCard+compCard
     +'</div>'
-
-    // Stats
-    +statsHtml
-
-    // Agenda
-    +agendaHtml
-
-    // Métricas
-    +metricasHtml;
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">'
+      +agendaCard+estadoCard
+    +'</div>';
 }
 
 /* ── Correo de prueba ────────────────────────────────────── */
