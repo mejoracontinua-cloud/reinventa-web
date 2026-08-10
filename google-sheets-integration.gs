@@ -1538,11 +1538,23 @@ function adminEstadoCorreos() {
     if (checkinSet[correo]) conCheckin++;
   }
 
+  // Estado de triggers guardado en PropertiesService (no requiere scope extra)
+  var props = PropertiesService.getScriptProperties();
+  var trigRec = props.getProperty('trigger_recordatorio') === 'true';
+  var trigAgr = props.getProperty('trigger_agradecimiento') === 'true';
+
+  // Confirmación: col G (índice 6) = 'Sí' cuando se envió bienvenida
+  var confEnv = 0;
+  for (var k = 1; k < cData.length; k++) {
+    if ((cData[k][6]||'').toString() === 'Sí') confEnv++;
+  }
+
   return jsOk({
     total: total,
-    recordatorio:   { enviados: recEnv,  pendientes: total - recEnv },
-    qr:             { enviados: qrEnv,   pendientes: total - qrEnv },
-    agradecimiento: { enviados: agrEnv,  pendientes: conCheckin - agrEnv, conCheckin: conCheckin }
+    confirmacion:   { enviados: confEnv, pendientes: total - confEnv },
+    recordatorio:   { enviados: recEnv,  pendientes: total - recEnv,  programado: trigRec, fecha: 'Vie 14 ago 2026 · 12:00 pm' },
+    qr:             { enviados: qrEnv,   pendientes: total - qrEnv,   programado: true,    fecha: 'Sáb 15 ago 2026 · 8:00 am' },
+    agradecimiento: { enviados: agrEnv,  pendientes: conCheckin - agrEnv, conCheckin: conCheckin, programado: trigAgr, fecha: 'Lun 17 ago 2026 · 10:00 am' }
   });
 }
 
@@ -1581,14 +1593,13 @@ function adminEnviarRecordatorioMasivo() {
 }
 
 function adminProgramarRecordatorio() {
-  // Limpiar triggers previos
   ScriptApp.getProjectTriggers().forEach(function(t){
     if (t.getHandlerFunction() === 'triggerRecordatorioMasivo') ScriptApp.deleteTrigger(t);
   });
-  // Viernes 14 agosto 2026 a las 12:00 pm (America/Mexico_City = UTC-6)
   ScriptApp.newTrigger('triggerRecordatorioMasivo')
-    .timeBased().at(new Date('2026-08-14T12:00:00')).create();
-  return jsOk({ programado: true, fecha: 'Viernes 14 agosto 2026 · 12:00 pm' });
+    .timeBased().at(new Date('2026-08-14T18:00:00')).create(); // UTC = 12pm Mexico City (UTC-6)
+  PropertiesService.getScriptProperties().setProperty('trigger_recordatorio', 'true');
+  return jsOk({ programado: true, fecha: 'Vie 14 ago 2026 · 12:00 pm' });
 }
 
 function adminCancelarRecordatorio() {
@@ -1596,6 +1607,7 @@ function adminCancelarRecordatorio() {
   ScriptApp.getProjectTriggers().forEach(function(t){
     if (t.getHandlerFunction() === 'triggerRecordatorioMasivo') { ScriptApp.deleteTrigger(t); n++; }
   });
+  PropertiesService.getScriptProperties().deleteProperty('trigger_recordatorio');
   return jsOk({ cancelado: true, eliminados: n });
 }
 
@@ -1640,10 +1652,10 @@ function adminProgramarAgradecimiento() {
   ScriptApp.getProjectTriggers().forEach(function(t){
     if (t.getHandlerFunction() === 'triggerAgradecimientoMasivo') ScriptApp.deleteTrigger(t);
   });
-  // Lunes 17 agosto 2026 a las 10:00 am
   ScriptApp.newTrigger('triggerAgradecimientoMasivo')
-    .timeBased().at(new Date('2026-08-17T10:00:00')).create();
-  return jsOk({ programado: true, fecha: 'Lunes 17 agosto 2026 · 10:00 am' });
+    .timeBased().at(new Date('2026-08-17T16:00:00')).create(); // UTC = 10am Mexico City (UTC-6)
+  PropertiesService.getScriptProperties().setProperty('trigger_agradecimiento', 'true');
+  return jsOk({ programado: true, fecha: 'Lun 17 ago 2026 · 10:00 am' });
 }
 
 function adminCancelarAgradecimiento() {
@@ -1651,6 +1663,7 @@ function adminCancelarAgradecimiento() {
   ScriptApp.getProjectTriggers().forEach(function(t){
     if (t.getHandlerFunction() === 'triggerAgradecimientoMasivo') { ScriptApp.deleteTrigger(t); n++; }
   });
+  PropertiesService.getScriptProperties().deleteProperty('trigger_agradecimiento');
   return jsOk({ cancelado: true, eliminados: n });
 }
 
