@@ -973,25 +973,13 @@ function procesarQR(url) {
   }
   var id = match[1];
   if (qrAnimFrame) { cancelAnimationFrame(qrAnimFrame); qrAnimFrame = null; }
-  document.getElementById('qr-status').textContent = 'Detectado: ' + id + ' — registrando…';
-  document.getElementById('qr-status').className = 'qr-status';
-  adminAction({ sub: 'checkin', id: id }, function(data) {
-    if (data.error === 'encuesta_previa_pendiente') {
-      document.getElementById('qr-status').textContent = '⚠ ' + (data.nombre || id) + ' — encuesta previa pendiente, no puede hacer check-in.';
-      document.getElementById('qr-status').className = 'qr-status err';
-    } else if (data.error) {
-      document.getElementById('qr-status').textContent = 'Error: ' + data.error;
-      document.getElementById('qr-status').className = 'qr-status err';
-    } else if (data.yaRegistrado) {
-      document.getElementById('qr-status').textContent = '✓ ' + (data.nombre || id) + ' — ya tenía check-in registrado.';
-      document.getElementById('qr-status').className = 'qr-status ok';
-    } else {
-      document.getElementById('qr-status').textContent = '✓ Bienvenida, ' + (data.nombre || id) + '!';
-      document.getElementById('qr-status').className = 'qr-status ok';
-      actualizarDatos();
-    }
-    setTimeout(function() { cerrarQRScanner(); }, 2500);
-  });
+  document.getElementById('qr-status').textContent = 'QR detectado: ' + id;
+  document.getElementById('qr-status').className = 'qr-status ok';
+  // Cerrar QR y abrir modal de confirmación (igual que check-in manual)
+  setTimeout(function() {
+    cerrarQRScanner();
+    hacerCheckin(id, null);
+  }, 600);
 }
 
 function renderCardsPrevia() {
