@@ -1311,6 +1311,7 @@ function sincronizarRegistrosFaltantes() {
 function handleAdminAction(data) {
   var sub = data.sub || '';
 
+  if (sub === 'test_email')             return adminTestEmail();
   if (sub === 'checkin')                return adminCheckin(data.id);
   if (sub === 'update_correo')          return adminUpdateCorreo(data.id, data.correo_nuevo);
   if (sub === 'registrar_acompanante')  return adminRegistrarAcompanante(data.id, data.nombre_nuevo, data.correo_nuevo);
@@ -1456,6 +1457,11 @@ function enviarCorreoBienvenidaAcompanante(nombre, correo, fase, idUnico) {
 
   MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
     subject: 'Tu lugar en el taller está confirmado — REINVENTA', htmlBody: html });
+}
+
+function adminTestEmail() {
+  enviarCorreoConfirmacion('Valeria García (PRUEBA)', 'mejoracontinua@caceca.org', 'Early Bird', 'RNV-001');
+  return jsOk({ result: 'ok' });
 }
 
 function jsOk(obj)  { return ContentService.createTextOutput(JSON.stringify(obj || {result:'ok'})).setMimeType(ContentService.MimeType.JSON); }
