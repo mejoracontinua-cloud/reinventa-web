@@ -126,6 +126,12 @@ function handleStripeWebhook(event) {
   if      (monto == '1300.00') fase = 'Early Bird';
   else if (monto == '1500.00') fase = 'Preventa';
   else if (monto == '1700.00') fase = 'Últimos lugares';
+  else if (monto == '2600.00') fase = 'Early Bird x2';
+  else if (monto == '3000.00') fase = 'Preventa x2';
+  else if (monto == '3400.00') fase = 'Últimos lugares x2';
+  else if (monto == '3900.00') fase = 'Early Bird x3';
+  else if (monto == '4500.00') fase = 'Preventa x3';
+  else if (monto == '5100.00') fase = 'Últimos lugares x3';
 
   var sheet = getSheet();
 

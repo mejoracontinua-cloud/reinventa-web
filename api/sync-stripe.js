@@ -4,8 +4,8 @@
  * Después de usarla puedes avisarme y la eliminamos.
  */
 
-const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzw2YuhsQXtnwF8btABlqeolGykBs6KPkLXFP4RUG0FU34sBX2Kli3CBSnu2AxfJXtqBQ/exec';
-const MONTOS_TALLER = [130000, 150000, 170000];
+const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxY1AuqgR3sonF2MhxsphCVWHQr5pTJg-Qs_xmEHEFnTaK4Q6y_ivFXrhfHUW69or7ymA/exec';
+const MONTOS_TALLER = [130000, 150000, 170000, 260000, 300000, 340000, 390000, 450000, 510000]; // incluye x2 y x3 lugares
 
 module.exports = async function handler(req, res) {
   const key = process.env.STRIPE_SECRET_KEY;
