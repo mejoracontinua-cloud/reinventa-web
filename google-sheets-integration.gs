@@ -1226,8 +1226,16 @@ function onOpen() {
     .addItem('Sincronizar registros faltantes', 'sincronizarRegistrosFaltantes')
     .addItem('Regenerar links WA sin ID', 'regenerarLinksWASinId')
     .addSeparator()
-    .addItem('Programar envío QR automático (8am, 15 ago)', 'programarEnvioQR8AM')
+    .addItem('Enviar recordatorio masivo ahora', 'adminEnviarRecordatorioMasivo')
+    .addItem('Programar recordatorio automático (vie 14 ago 12pm)', 'adminProgramarRecordatorio')
+    .addItem('Cancelar recordatorio automático', 'adminCancelarRecordatorio')
+    .addSeparator()
+    .addItem('Programar envío QR automático (sáb 15 ago 8am)', 'programarEnvioQR8AM')
     .addItem('Cancelar envío QR automático', 'cancelarEnvioQR')
+    .addSeparator()
+    .addItem('Enviar agradecimiento masivo ahora (con check-in)', 'adminEnviarAgradecimientoMasivo')
+    .addItem('Programar agradecimiento automático (lun 17 ago 10am)', 'adminProgramarAgradecimiento')
+    .addItem('Cancelar agradecimiento automático', 'adminCancelarAgradecimiento')
     .addToUi();
 }
 
@@ -1317,14 +1325,22 @@ function sincronizarRegistrosFaltantes() {
 function handleAdminAction(data) {
   var sub = data.sub || '';
 
-  if (sub === 'test_email')             return adminTestEmail();
-  if (sub === 'checkin')                return adminCheckin(data.id);
-  if (sub === 'update_correo')          return adminUpdateCorreo(data.id, data.correo_nuevo);
-  if (sub === 'registrar_acompanante')  return adminRegistrarAcompanante(data.id, data.nombre_nuevo, data.correo_nuevo);
-  if (sub === 'enviar_bienvenida')      return adminEnviarBienvenida(data.id);
-  if (sub === 'update_nombre')          return adminUpdateNombre(data.id, data.nombre_nuevo);
-  if (sub === 'registro_manual')        return adminRegistroManual(data.nombre, data.correo, data.telefono, data.fase);
-  if (sub === 'test_email_acompanante') return adminTestEmailAcompanante();
+  if (sub === 'test_email')                  return adminTestEmail();
+  if (sub === 'checkin')                     return adminCheckin(data.id);
+  if (sub === 'update_correo')               return adminUpdateCorreo(data.id, data.correo_nuevo);
+  if (sub === 'registrar_acompanante')       return adminRegistrarAcompanante(data.id, data.nombre_nuevo, data.correo_nuevo);
+  if (sub === 'enviar_bienvenida')           return adminEnviarBienvenida(data.id);
+  if (sub === 'update_nombre')               return adminUpdateNombre(data.id, data.nombre_nuevo);
+  if (sub === 'registro_manual')             return adminRegistroManual(data.nombre, data.correo, data.telefono, data.fase);
+  if (sub === 'test_email_acompanante')      return adminTestEmailAcompanante();
+  if (sub === 'estado_correos')              return adminEstadoCorreos();
+  if (sub === 'programar_recordatorio')      return adminProgramarRecordatorio();
+  if (sub === 'cancelar_recordatorio')       return adminCancelarRecordatorio();
+  if (sub === 'enviar_recordatorio_masivo')  return adminEnviarRecordatorioMasivo();
+  if (sub === 'programar_agradecimiento')    return adminProgramarAgradecimiento();
+  if (sub === 'cancelar_agradecimiento')     return adminCancelarAgradecimiento();
+  if (sub === 'enviar_agradecimiento_masivo')return adminEnviarAgradecimientoMasivo();
+  if (sub === 'enviar_qr_masivo_gs')        return ContentService.createTextOutput(JSON.stringify(enviarCorreosQRMasivo()||{result:'ok'})).setMimeType(ContentService.MimeType.JSON);
 
   return ContentService.createTextOutput(JSON.stringify({ error: 'Acción desconocida' })).setMimeType(ContentService.MimeType.JSON);
 }
@@ -1495,6 +1511,154 @@ function enviarCorreoBienvenidaAcompanante(nombre, correo, fase, idUnico) {
     subject: '¡Te esperamos este sábado! — Un paso antes de llegar',
     htmlBody: html
   });
+}
+
+/* ── Estado de correos (para el tab Correos del admin) ─────── */
+function adminEstadoCorreos() {
+  var com  = getComunicacionesSheet();
+  var asi  = getAsistenciaSheet();
+  var cData = com.getDataRange().getValues();
+  var aData = asi.getDataRange().getValues();
+
+  // Check-in set por correo
+  var checkinSet = {};
+  for (var i = 1; i < aData.length; i++) {
+    var c = (aData[i][2]||'').toLowerCase().trim();
+    if (c && aData[i][4] === '✓') checkinSet[c] = true;
+  }
+
+  var total = 0, recEnv = 0, qrEnv = 0, agrEnv = 0, conCheckin = 0;
+  for (var j = 1; j < cData.length; j++) {
+    var correo = (cData[j][0]||'').toLowerCase().trim();
+    if (!correo) continue;
+    total++;
+    if ((cData[j][9] ||'').toString() === 'Sí') recEnv++;
+    if ((cData[j][12]||'').toString() === 'Sí') qrEnv++;
+    if ((cData[j][15]||'').toString() === 'Sí') agrEnv++;
+    if (checkinSet[correo]) conCheckin++;
+  }
+
+  // ¿Existe trigger para recordatorio?
+  var hayTrigRec = false, hayTrigAgr = false;
+  ScriptApp.getProjectTriggers().forEach(function(t){
+    if (t.getHandlerFunction() === 'triggerRecordatorioMasivo')  hayTrigRec = true;
+    if (t.getHandlerFunction() === 'triggerAgradecimientoMasivo') hayTrigAgr = true;
+  });
+
+  return jsOk({
+    total: total,
+    recordatorio: { enviados: recEnv, pendientes: total - recEnv, programado: hayTrigRec },
+    qr:           { enviados: qrEnv,  pendientes: total - qrEnv },
+    agradecimiento: { enviados: agrEnv, pendientes: conCheckin - agrEnv, conCheckin: conCheckin, programado: hayTrigAgr }
+  });
+}
+
+/* ── Recordatorio masivo ───────────────────────────────────── */
+// Función ejecutada por el trigger automático
+function triggerRecordatorioMasivo() { adminEnviarRecordatorioMasivo(); }
+
+function adminEnviarRecordatorioMasivo() {
+  var com   = getComunicacionesSheet();
+  var asi   = getAsistenciaSheet();
+  var cData = com.getDataRange().getValues();
+  var aData = asi.getDataRange().getValues();
+
+  var idPorCorreo = {};
+  for (var i = 1; i < aData.length; i++) {
+    var c = (aData[i][2]||'').toLowerCase().trim();
+    if (c) idPorCorreo[c] = aData[i][0];
+  }
+
+  var enviados = 0;
+  for (var j = 1; j < cData.length; j++) {
+    var correo  = (cData[j][0]||'').toLowerCase().trim();
+    var nombre  = cData[j][1] || '';
+    var yaEnv   = (cData[j][9]||'').toString();
+    if (!correo || yaEnv === 'Sí') continue;
+    var id = idPorCorreo[correo] || '';
+    try {
+      enviarCorreoRecordatorio(nombre, correo, id);
+      com.getRange(j+1, 10).setValue('Sí'); // col J
+      enviados++;
+      Utilities.sleep(800);
+    } catch(e) { Logger.log('Error recordatorio ' + correo + ': ' + e); }
+  }
+  Logger.log('Recordatorios enviados: ' + enviados);
+  return jsOk({ enviados: enviados });
+}
+
+function adminProgramarRecordatorio() {
+  // Limpiar triggers previos
+  ScriptApp.getProjectTriggers().forEach(function(t){
+    if (t.getHandlerFunction() === 'triggerRecordatorioMasivo') ScriptApp.deleteTrigger(t);
+  });
+  // Viernes 14 agosto 2026 a las 12:00 pm (America/Mexico_City = UTC-6)
+  ScriptApp.newTrigger('triggerRecordatorioMasivo')
+    .timeBased().at(new Date('2026-08-14T12:00:00')).create();
+  return jsOk({ programado: true, fecha: 'Viernes 14 agosto 2026 · 12:00 pm' });
+}
+
+function adminCancelarRecordatorio() {
+  var n = 0;
+  ScriptApp.getProjectTriggers().forEach(function(t){
+    if (t.getHandlerFunction() === 'triggerRecordatorioMasivo') { ScriptApp.deleteTrigger(t); n++; }
+  });
+  return jsOk({ cancelado: true, eliminados: n });
+}
+
+/* ── Agradecimiento masivo (solo asistentes con check-in) ──── */
+function triggerAgradecimientoMasivo() { adminEnviarAgradecimientoMasivo(); }
+
+function adminEnviarAgradecimientoMasivo() {
+  var com   = getComunicacionesSheet();
+  var asi   = getAsistenciaSheet();
+  var cData = com.getDataRange().getValues();
+  var aData = asi.getDataRange().getValues();
+
+  var idPorCorreo = {}, checkinSet = {};
+  for (var i = 1; i < aData.length; i++) {
+    var c = (aData[i][2]||'').toLowerCase().trim();
+    if (c) {
+      idPorCorreo[c] = aData[i][0];
+      if (aData[i][4] === '✓') checkinSet[c] = true;
+    }
+  }
+
+  var enviados = 0;
+  for (var j = 1; j < cData.length; j++) {
+    var correo = (cData[j][0]||'').toLowerCase().trim();
+    var nombre = cData[j][1] || '';
+    var yaEnv  = (cData[j][15]||'').toString();
+    if (!correo || yaEnv === 'Sí') continue;
+    if (!checkinSet[correo]) continue; // Solo con check-in
+    var id = idPorCorreo[correo] || '';
+    try {
+      enviarCorreoAgradecimiento(nombre, correo, id);
+      com.getRange(j+1, 16).setValue('Sí'); // col P
+      enviados++;
+      Utilities.sleep(800);
+    } catch(e) { Logger.log('Error agradecimiento ' + correo + ': ' + e); }
+  }
+  Logger.log('Agradecimientos enviados: ' + enviados);
+  return jsOk({ enviados: enviados });
+}
+
+function adminProgramarAgradecimiento() {
+  ScriptApp.getProjectTriggers().forEach(function(t){
+    if (t.getHandlerFunction() === 'triggerAgradecimientoMasivo') ScriptApp.deleteTrigger(t);
+  });
+  // Lunes 17 agosto 2026 a las 10:00 am
+  ScriptApp.newTrigger('triggerAgradecimientoMasivo')
+    .timeBased().at(new Date('2026-08-17T10:00:00')).create();
+  return jsOk({ programado: true, fecha: 'Lunes 17 agosto 2026 · 10:00 am' });
+}
+
+function adminCancelarAgradecimiento() {
+  var n = 0;
+  ScriptApp.getProjectTriggers().forEach(function(t){
+    if (t.getHandlerFunction() === 'triggerAgradecimientoMasivo') { ScriptApp.deleteTrigger(t); n++; }
+  });
+  return jsOk({ cancelado: true, eliminados: n });
 }
 
 function adminUpdateNombre(id, nombreNuevo) {

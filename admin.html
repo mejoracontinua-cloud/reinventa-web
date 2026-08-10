@@ -195,6 +195,7 @@
     <div class="admin-tabs">
       <button class="admin-tab on" onclick="switchTab('asistentes', this)">Asistentes</button>
       <button class="admin-tab" onclick="switchTab('evento', this)">Evento &amp; Métricas</button>
+      <button class="admin-tab" onclick="switchTab('correos', this)">Correos</button>
       <button class="admin-tab" onclick="switchTab('previa', this)">Encuesta previa</button>
       <button class="admin-tab" onclick="switchTab('post', this)">Encuesta post</button>
     </div>
@@ -221,6 +222,9 @@
 
     <!-- Tab: Evento & Métricas -->
     <div id="tab-evento" class="tab-pane"><div id="evento-inner"></div></div>
+
+    <!-- Tab: Correos -->
+    <div id="tab-correos" class="tab-pane"><div id="correos-inner"><div style="padding:2rem;text-align:center;color:var(--mauve);font-size:.78rem;">Cargando estado de correos…</div></div></div>
 
     <!-- Tab: Encuesta previa -->
     <div id="tab-previa" class="tab-pane">
@@ -401,6 +405,7 @@ function renderPanel() {
   renderCardsPrevia();
   renderTablaPost();
   renderEventoDashboard();
+  renderCorreos();
 }
 
 function renderTabla() {
@@ -915,6 +920,150 @@ function renderEventoDashboard() {
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">'
       +agendaCard+estadoCard
     +'</div>';
+}
+
+/* ── Tab Correos ─────────────────────────────────────────── */
+function renderCorreos() {
+  var el = document.getElementById('correos-inner');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:1rem 0;text-align:center;color:var(--mauve);font-size:.75rem;">Consultando estado…</div>';
+
+  adminAction({ sub: 'estado_correos' }, function(data) {
+    if (data.error) { el.innerHTML = '<div style="padding:1rem;color:#f87171;">Error: ' + data.error + '</div>'; return; }
+
+    var total = data.total || 0;
+    var rec   = data.recordatorio   || {};
+    var qr    = data.qr             || {};
+    var agr   = data.agradecimiento || {};
+
+    function badge(txt, ok) {
+      return '<span style="font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .7rem;background:'
+        +(ok?'rgba(42,15,37,.85)':'rgba(198,165,106,.12)')+';color:'+(ok?'#C6A56A':'#8F7383')+';border:1px solid '
+        +(ok?'rgba(198,165,106,.4)':'rgba(42,15,37,.12)')+';">'+txt+'</span>';
+    }
+
+    function numPill(n, label, color) {
+      return '<div style="text-align:center;padding:.7rem 1rem;background:var(--cream);">'
+        +'<div style="font-family:Georgia,serif;font-size:1.8rem;color:'+color+';line-height:1;">'+n+'</div>'
+        +'<div style="font-size:.45rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mauve);margin-top:.3rem;">'+label+'</div>'
+        +'</div>';
+    }
+
+    function accionBtn(label, sub, extra, confirmMsg) {
+      var dataAttr = 'data-sub="'+sub+'"'+(extra?' data-extra="'+extra+'"':'');
+      var onclk = confirmMsg
+        ? 'if(!confirm(\''+confirmMsg+'\'))return;'
+        : '';
+      return '<button class="correo-btn" '+dataAttr+' onclick="'+onclk+'correcAccion(this)" style="font-size:.62rem;padding:.45rem .9rem;border:1px solid rgba(198,165,106,.35);background:none;color:var(--gold);cursor:pointer;font-family:inherit;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;">'+label+'</button>';
+    }
+
+    function card(icon, titulo, fechaAuto, stats, prog, btns, nota) {
+      return '<div style="background:var(--cream);overflow:hidden;margin-bottom:.8rem;">'
+        +'<div style="background:var(--plum);padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;">'
+          +'<div style="display:flex;align-items:center;gap:.7rem;">'
+            +'<span style="font-size:1.1rem;">'+icon+'</span>'
+            +'<div>'
+              +'<div style="font-family:Georgia,serif;font-size:.95rem;color:var(--gold);">'+titulo+'</div>'
+              +'<div style="font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(198,165,106,.45);margin-top:.1rem;">'+fechaAuto+'</div>'
+            +'</div>'
+          +'</div>'
+          +prog
+        +'</div>'
+        +'<div style="padding:1rem 1.2rem;">'
+          +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1rem;">'+stats+'</div>'
+          +'<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:'+(nota?'.6rem':'0')+';">'+btns+'</div>'
+          +(nota?'<div style="font-size:.65rem;color:var(--mauve);line-height:1.5;border-top:1px solid var(--plum-10);padding-top:.6rem;">'+nota+'</div>':'')
+        +'</div>'
+        +'</div>';
+    }
+
+    // Barra de progreso compacta para el header de cada card
+    function progBar(n, tot) {
+      var pct = tot ? Math.round(n/tot*100) : 0;
+      return '<div style="text-align:right;">'
+        +'<div style="font-family:Georgia,serif;font-size:1.1rem;color:var(--gold);">'+pct+'<span style="font-size:.6rem;color:rgba(198,165,106,.5);">%</span></div>'
+        +'<div style="font-size:.42rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.4);">enviados</div>'
+        +'</div>';
+    }
+
+    var html =
+      // Encabezado informativo
+      '<div style="background:var(--plum);padding:1rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">'
+      +'<div>'
+        +'<div style="font-size:.48rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(198,165,106,.5);">Estado de comunicaciones</div>'
+        +'<div style="font-family:Georgia,serif;font-size:.9rem;color:var(--gold);margin-top:.2rem;">'+total+' personas en la lista</div>'
+      +'</div>'
+      +'<button onclick="renderCorreos()" style="font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(198,165,106,.3);background:none;color:rgba(198,165,106,.6);padding:.3rem .7rem;cursor:pointer;font-family:inherit;">↻ Actualizar</button>'
+      +'</div>'
+
+      // Card 1: Recordatorio
+      + card('📝', 'Correo de recordatorio',
+          'Automático: vie 14 agosto · 12:00 pm · ' + badge(rec.programado?'Programado':'Sin programar', rec.programado),
+          numPill(rec.enviados||0,'Enviados','var(--plum)')
+            +numPill(rec.pendientes||0,'Pendientes','#9a7d4a')
+            +numPill(total,'Total','var(--mauve)'),
+          progBar(rec.enviados||0, total),
+          accionBtn('Programar (vie 14, 12pm)', 'programar_recordatorio', '', '¿Programar envío automático del recordatorio para el viernes 14 de agosto a las 12pm?')
+            +accionBtn('Cancelar programación', 'cancelar_recordatorio', '', '¿Cancelar el envío automático del recordatorio?')
+            +accionBtn('Enviar ahora a pendientes', 'enviar_recordatorio_masivo', '', '¿Enviar el correo de recordatorio a las '+(rec.pendientes||0)+' personas pendientes AHORA?'),
+          'Envía a quien aún no lo recibió. Si llega una persona nueva después del envío masivo, haz clic en "Enviar ahora a pendientes" para que le llegue solo a ella.'
+        )
+
+      // Card 2: QR de entrada
+      + card('🎫', 'Correo QR de entrada',
+          'Automático: sáb 15 agosto · 8:00 am',
+          numPill(qr.enviados||0,'Enviados','var(--plum)')
+            +numPill(qr.pendientes||0,'Pendientes','#9a7d4a')
+            +numPill(total,'Total','var(--mauve)'),
+          progBar(qr.enviados||0, total),
+          accionBtn('Programar (sáb 15, 8am)', 'programar_qr', '', '¿Programar el QR automático para el sábado 15 a las 8am? (esto se gestiona desde Apps Script)')
+            +accionBtn('Enviar QR ahora a pendientes', 'enviar_qr_masivo', '', '¿Enviar el QR a las '+(qr.pendientes||0)+' personas pendientes AHORA?'),
+          'El QR apunta al hub personal de cada asistente. Se puede reenviar individualmente si alguien no lo recibió.'
+        )
+
+      // Card 3: Agradecimiento
+      + card('💛', 'Correo de agradecimiento',
+          'Automático: lun 17 agosto · 10:00 am · ' + badge(agr.programado?'Programado':'Sin programar', agr.programado),
+          numPill(agr.enviados||0,'Enviados','var(--plum)')
+            +numPill(agr.pendientes||0,'Pendientes (con check-in)','#9a7d4a')
+            +numPill(agr.conCheckin||0,'Con check-in','var(--mauve)'),
+          progBar(agr.enviados||0, agr.conCheckin||0),
+          accionBtn('Programar (lun 17, 10am)', 'programar_agradecimiento', '', '¿Programar envío automático del agradecimiento para el lunes 17 de agosto a las 10am?')
+            +accionBtn('Cancelar programación', 'cancelar_agradecimiento', '', '¿Cancelar el envío automático del agradecimiento?')
+            +accionBtn('Enviar ahora a pendientes', 'enviar_agradecimiento_masivo', '', '¿Enviar el agradecimiento a las '+(agr.pendientes||0)+' personas con check-in que aún no lo recibieron?'),
+          'Solo se envía a asistentes que hicieron check-in. Si llega una nueva persona el día del evento, usa "Enviar ahora" después del cierre para que le llegue también.'
+        );
+
+    el.innerHTML = html;
+  });
+}
+
+function correcAccion(btn) {
+  var sub = btn.getAttribute('data-sub');
+  if (!sub) return;
+  btn.disabled = true;
+  var orig = btn.textContent;
+  btn.textContent = '…';
+
+  // QR: programación manual desde Apps Script (trigger ya configurado)
+  if (sub === 'programar_qr') {
+    mostrarToast('El QR ya está programado para el sáb 15 ago a las 8am desde Apps Script. Para reprogramar usa el menú REINVENTA en el Sheet.', 'ok');
+    btn.disabled = false; btn.textContent = orig; return;
+  }
+  if (sub === 'enviar_qr_masivo') { sub = 'enviar_qr_masivo_gs'; }
+
+  adminAction({ sub: sub }, function(data) {
+    btn.disabled = false; btn.textContent = orig;
+    if (data.error) {
+      mostrarToast('Error: ' + data.error, 'err');
+    } else {
+      var msg = data.enviados !== undefined
+        ? '✓ ' + data.enviados + ' correo(s) enviados'
+        : (data.programado ? '✓ Programado correctamente' : (data.cancelado ? '✓ Cancelado' : '✓ Listo'));
+      mostrarToast(msg, 'ok');
+      setTimeout(renderCorreos, 1000);
+    }
+  });
 }
 
 /* ── Correo de prueba ────────────────────────────────────── */
