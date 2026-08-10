@@ -176,6 +176,8 @@
     </div>
     <div style="display:flex;align-items:center;gap:.7rem;">
       <button class="refresh-btn" onclick="enviarCorreoPrueba()" style="font-size:.52rem;border:1px solid rgba(198,165,106,.35);background:none;color:rgba(198,165,106,.7);padding:.3rem .7rem;cursor:pointer;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;" title="Envía el correo de confirmación de prueba a tu correo">✉ Correo prueba</button>
+      <button class="refresh-btn" onclick="probarCorreoBienvenidaAcompanante()" style="font-size:.52rem;border:1px solid rgba(198,165,106,.35);background:none;color:rgba(198,165,106,.7);padding:.3rem .7rem;cursor:pointer;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;" title="Prueba correo de bienvenida de acompañante">✉ Prueba acompañante</button>
+      <button class="refresh-btn" onclick="abrirRegistroManual()" style="font-size:.52rem;border:1px solid rgba(198,165,106,.35);background:none;color:rgba(198,165,106,.7);padding:.3rem .7rem;cursor:pointer;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;">+ Registro manual</button>
       <button class="refresh-btn" onclick="actualizarDatos()">↻ Actualizar</button>
       <span class="badge">Admin</span>
     </div>
@@ -194,6 +196,7 @@
     <!-- Tabs -->
     <div class="admin-tabs">
       <button class="admin-tab on" onclick="switchTab('asistentes', this)">Asistentes</button>
+      <button class="admin-tab" onclick="switchTab('evento', this)">Evento en vivo</button>
       <button class="admin-tab" onclick="switchTab('metricas', this)">Métricas</button>
       <button class="admin-tab" onclick="switchTab('previa', this)">Encuesta previa</button>
       <button class="admin-tab" onclick="switchTab('post', this)">Encuesta post</button>
@@ -219,6 +222,9 @@
       </div>
     </div>
 
+    <!-- Tab: Evento en vivo -->
+    <div id="tab-evento" class="tab-pane"><div id="evento-inner"></div></div>
+
     <!-- Tab: Métricas -->
     <div id="tab-metricas" class="tab-pane">
       <div id="metricas-inner"></div>
@@ -242,6 +248,31 @@
     </div>
 
     <div class="powered">Plataforma desarrollada por <a href="https://www.innermap.mx" target="_blank" rel="noopener">Innermap</a></div>
+  </div>
+</div>
+
+<!-- Modal Registro Manual -->
+<div id="registro-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:400px;">
+    <button class="modal-close" onclick="document.getElementById('registro-modal').style.display='none'">✕</button>
+    <div class="modal-title">Nuevo registro manual</div>
+    <div class="comp-modal-body">
+      <label class="comp-label">Nombre completo *</label>
+      <input id="reg-nombre" class="comp-input" type="text" placeholder="Nombre del asistente">
+      <label class="comp-label">Correo electrónico *</label>
+      <input id="reg-correo" class="comp-input" type="email" placeholder="correo@ejemplo.com">
+      <label class="comp-label">WhatsApp</label>
+      <input id="reg-tel" class="comp-input" type="tel" placeholder="55 1234 5678">
+      <label class="comp-label">Fase</label>
+      <select id="reg-fase" class="comp-input">
+        <option>Early Bird</option>
+        <option selected>Preventa</option>
+        <option>Últimos lugares</option>
+        <option>Cortesía</option>
+      </select>
+      <button class="comp-save-btn" onclick="guardarRegistroManual()">Crear registro y agregar a todas las hojas</button>
+      <div id="reg-status" style="margin-top:.7rem;font-size:.75rem;color:var(--gold);text-align:center;"></div>
+    </div>
   </div>
 </div>
 
@@ -378,6 +409,7 @@ function renderPanel() {
   renderMetricas();
   renderCardsPrevia();
   renderTablaPost();
+  renderEventoDashboard();
 }
 
 function renderMetricas() {
@@ -490,7 +522,7 @@ function renderTabla() {
 
     return '<tr>'
       + '<td style="font-size:.68rem;color:var(--mauve);font-feature-settings:\'tnum\'">' + esc(a.id) + '</td>'
-      + '<td style="font-weight:500">' + esc(a.nombre) + '</td>'
+      + '<td style="font-weight:500"><span class="correo-editable" style="font-weight:500;cursor:pointer;" onclick="editarNombre(this,\'' + esc(a.id) + '\')">' + esc(a.nombre) + '</span></td>'
       + '<td>' + correoCell + '</td>'
       + '<td>' + pill(a.fase || '—', 'no') + '</td>'
       + '<td>' + checkinCell + '</td>'
@@ -627,6 +659,142 @@ function guardarAcompanante() {
       setTimeout(function() { cerrarCompModal(); actualizarDatos(); }, 1500);
     }
   });
+}
+
+/* ── Edición de nombre inline ────────────────────────────── */
+function editarNombre(span, id) {
+  var actual = span.textContent.trim();
+  var input = document.createElement('input');
+  input.type = 'text';
+  input.value = actual;
+  input.className = 'correo-input-inline';
+  input.style.width = '160px';
+  span.parentNode.replaceChild(input, span);
+  input.focus();
+
+  function guardar() {
+    var nuevo = input.value.trim();
+    if (!nuevo || nuevo === actual) {
+      actualizarDatos();
+      return;
+    }
+    adminAction({ sub: 'update_nombre', id: id, nombre_nuevo: nuevo }, function(data) {
+      actualizarDatos();
+    });
+  }
+  input.addEventListener('blur', guardar);
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') { input.blur(); } if (e.key === 'Escape') { actualizarDatos(); } });
+}
+
+/* ── Registro manual ────────────────────────────────────── */
+function abrirRegistroManual() {
+  ['reg-nombre','reg-correo','reg-tel'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('reg-status').textContent = '';
+  document.getElementById('registro-modal').style.display = 'flex';
+  document.getElementById('reg-nombre').focus();
+}
+
+function guardarRegistroManual() {
+  var nombre = document.getElementById('reg-nombre').value.trim();
+  var correo = document.getElementById('reg-correo').value.trim().toLowerCase();
+  var tel    = document.getElementById('reg-tel').value.trim();
+  var fase   = document.getElementById('reg-fase').value;
+  if (!nombre || !correo) { document.getElementById('reg-status').textContent = 'Nombre y correo son obligatorios.'; return; }
+  document.getElementById('reg-status').textContent = 'Guardando…';
+  adminAction({ sub: 'registro_manual', nombre: nombre, correo: correo, telefono: tel, fase: fase }, function(data) {
+    if (data.error) {
+      document.getElementById('reg-status').textContent = 'Error: ' + data.error;
+    } else {
+      document.getElementById('reg-status').textContent = '✓ Registro creado. ID: ' + (data.id || '—');
+      setTimeout(function(){ document.getElementById('registro-modal').style.display='none'; actualizarDatos(); }, 2000);
+    }
+  });
+}
+
+/* ── Prueba correo bienvenida acompañante ────────────────── */
+function probarCorreoBienvenidaAcompanante() {
+  if (!confirm('¿Enviar correo de prueba de bienvenida de acompañante a mejoracontinua@caceca.org?')) return;
+  adminAction({ sub: 'test_email_acompanante' }, function(data) {
+    mostrarToast(data.error ? 'Error: ' + data.error : '✓ Correo de prueba de acompañante enviado', data.error ? 'err' : 'ok');
+  });
+}
+
+/* ── Evento en vivo ─────────────────────────────────────── */
+function renderEventoDashboard() {
+  var AGENDA = [
+    { hora: '09:45', fin: '10:00', titulo: 'Bienvenida y registro',           desc: 'Café de bienvenida · Check-in · Entrega de material' },
+    { hora: '10:00', fin: '10:10', titulo: 'Tu imagen habla antes que tú',    desc: 'Apertura con Mary. Por qué tu imagen importa más de lo que crees.' },
+    { hora: '10:10', fin: '10:40', titulo: 'Conócete antes de comprar',       desc: 'Colorimetría personal, contrastes y silueta. Ejercicio práctico con drapeado.' },
+    { hora: '10:40', fin: '11:05', titulo: 'Los 7 estilos universales',       desc: 'Arquetipos de estilo: cómo identificar el tuyo y combinarlo con tu marca personal.' },
+    { hora: '11:05', fin: '11:35', titulo: 'Dinámica práctica con Mary',      desc: 'Ejercicio en vivo: armado de looks con piezas clave. Participación del grupo.' },
+    { hora: '11:35', fin: '12:00', titulo: 'Tu siguiente paso',               desc: 'Cierre, compromisos personales, preguntas y fotografía grupal.' }
+  ];
+
+  var el = document.getElementById('evento-inner');
+  var total   = datos ? datos.asistentes.length : 0;
+  var checkin = datos ? datos.asistentes.filter(function(a){return a.asistio;}).length : 0;
+  var previa  = datos ? datos.encuestasPrevia.length : 0;
+
+  if (!window._relojEvento) {
+    window._relojEvento = setInterval(function(){
+      var el2 = document.getElementById('evento-hora-live');
+      if (el2) {
+        var now = new Date();
+        el2.textContent = now.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        var mins = now.getHours()*60 + now.getMinutes();
+        document.querySelectorAll('.agenda-bloque').forEach(function(b){
+          var hIni = parseInt(b.dataset.ini);
+          var hFin = parseInt(b.dataset.fin);
+          if (mins >= hIni && mins < hFin) {
+            b.style.borderLeft = '3px solid #C6A56A';
+            b.style.background = 'rgba(198,165,106,.08)';
+          } else {
+            b.style.borderLeft = '3px solid transparent';
+            b.style.background = 'none';
+          }
+        });
+      }
+    }, 1000);
+  }
+
+  function toMins(hhmm) {
+    var p = hhmm.split(':');
+    return parseInt(p[0])*60 + parseInt(p[1]);
+  }
+
+  var agendaHtml = AGENDA.map(function(b){
+    return '<div class="agenda-bloque" style="padding:.9rem 1rem;border-bottom:1px solid var(--plum-10);border-left:3px solid transparent;transition:all .3s;" data-ini="' + toMins(b.hora) + '" data-fin="' + toMins(b.fin) + '">'
+      + '<div style="display:flex;align-items:baseline;gap:.8rem;margin-bottom:.2rem;">'
+      + '<span style="font-family:Georgia,serif;font-size:1rem;color:var(--plum);min-width:3.5rem;">' + b.hora + '</span>'
+      + '<span style="font-size:.82rem;font-weight:600;color:var(--plum);">' + b.titulo + '</span>'
+      + '</div>'
+      + '<div style="padding-left:4.3rem;font-size:.72rem;color:var(--mauve);line-height:1.5;">' + b.desc + '</div>'
+      + '</div>';
+  }).join('');
+
+  el.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.7rem;margin-bottom:1.2rem;">'
+    + '<div style="background:var(--plum);padding:1.2rem 1rem;text-align:center;grid-column:1/-1;">'
+    + '<div id="evento-hora-live" style="font-family:Georgia,serif;font-size:2.8rem;color:var(--gold);letter-spacing:.04em;">--:--:--</div>'
+    + '<div style="font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(198,165,106,.5);margin-top:.2rem;">Hora actual</div>'
+    + '</div>'
+    + '<div style="background:var(--cream);padding:1rem;text-align:center;">'
+    + '<div style="font-family:Georgia,serif;font-size:1.8rem;color:var(--plum);">' + total + '</div>'
+    + '<div style="font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mauve);">Registradas</div></div>'
+    + '<div style="background:var(--cream);padding:1rem;text-align:center;">'
+    + '<div style="font-family:Georgia,serif;font-size:1.8rem;color:var(--plum);">' + checkin + '</div>'
+    + '<div style="font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mauve);">Check-in</div></div>'
+    + '<div style="background:var(--cream);padding:1rem;text-align:center;">'
+    + '<div style="font-family:Georgia,serif;font-size:1.8rem;color:var(--plum);">' + (total-checkin) + '</div>'
+    + '<div style="font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mauve);">Pendientes</div></div>'
+    + '<div style="background:var(--cream);padding:1rem;text-align:center;">'
+    + '<div style="font-family:Georgia,serif;font-size:1.8rem;color:var(--plum);">' + previa + '</div>'
+    + '<div style="font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mauve);">Enc. previa</div></div>'
+    + '</div>'
+    + '<div style="background:var(--cream);margin-bottom:1rem;">'
+    + '<div style="padding:.7rem 1rem;border-bottom:1px solid var(--plum-10);font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mauve);">Agenda del día — 15 agosto 2026</div>'
+    + agendaHtml
+    + '</div>';
 }
 
 /* ── Correo de prueba ────────────────────────────────────── */

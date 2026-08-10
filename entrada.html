@@ -56,6 +56,66 @@
     .estado-cargando .icono { font-size: 2rem; margin-bottom: 1rem; opacity: .4; }
     .estado-cargando p { font-size: .88rem; color: #8F7383; }
 
+    /* Estado: PIN */
+    .estado-pin { display: none; }
+    .estado-pin .persona-nombre {
+      font-family: Georgia, serif;
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: #2A0F25;
+      line-height: 1.2;
+      margin-bottom: .3rem;
+    }
+    .estado-pin .persona-fase {
+      font-size: .75rem;
+      color: #8F7383;
+      font-style: italic;
+      margin-bottom: 1.6rem;
+    }
+    .pin-label {
+      font-size: .52rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #8F7383;
+      display: block;
+      margin-bottom: .5rem;
+      text-align: left;
+    }
+    .pin-input {
+      width: 100%;
+      border: 1px solid rgba(42,15,37,.2);
+      background: #fff;
+      padding: .75rem 1rem;
+      font-size: 1.4rem;
+      font-family: inherit;
+      color: #2A0F25;
+      letter-spacing: .3em;
+      text-align: center;
+      outline: none;
+      margin-bottom: .8rem;
+    }
+    .pin-input:focus { border-color: #C6A56A; }
+    .pin-btn {
+      width: 100%;
+      background: #2A0F25;
+      color: #EFE9E2;
+      border: none;
+      padding: .9rem;
+      font-size: .72rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .pin-btn:hover { background: #3d1536; }
+    .pin-error {
+      font-size: .8rem;
+      color: #b91c1c;
+      margin-top: .6rem;
+      min-height: 1.2em;
+    }
+
     /* Estado: confirmado */
     .estado-ok { display: none; }
     .estado-ok .check {
@@ -149,6 +209,16 @@
         <p>Verificando registro…</p>
       </div>
 
+      <!-- PIN staff -->
+      <div class="estado-pin" id="estadoPin">
+        <p class="persona-nombre" id="pinNombre">—</p>
+        <p class="persona-fase" id="pinFase">—</p>
+        <label class="pin-label" for="pinInput">Código del staff</label>
+        <input id="pinInput" class="pin-input" type="number" inputmode="numeric" maxlength="6" placeholder="••••" onkeydown="if(event.key==='Enter')confirmarPin()">
+        <button class="pin-btn" onclick="confirmarPin()">Confirmar entrada</button>
+        <p class="pin-error" id="pinError"></p>
+      </div>
+
       <!-- Confirmado -->
       <div class="estado-ok" id="estadoOk">
         <div class="check">
@@ -183,8 +253,9 @@
   </div>
 
   <script>
+    var estados = ['estadoCargando','estadoPin','estadoOk','estadoYa','estadoError'];
     function mostrar(id) {
-      ['estadoCargando','estadoOk','estadoYa','estadoError'].forEach(function(e) {
+      estados.forEach(function(e) {
         document.getElementById(e).style.display = 'none';
       });
       document.getElementById(id).style.display = 'block';
@@ -197,10 +268,48 @@
       mostrar('estadoError');
       document.getElementById('mensajeError').textContent = 'No se proporcionó un ID de registro.';
     } else {
-      fetch('/api/entrada?id=' + encodeURIComponent(id))
+      // Step 1: preview fetch — does NOT mark attendance
+      fetch('/api/entrada?id=' + encodeURIComponent(id) + '&preview=1')
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.error) {
+            mostrar('estadoError');
+            document.getElementById('mensajeError').textContent = data.error;
+          } else {
+            mostrar('estadoPin');
+            document.getElementById('pinNombre').textContent = data.nombre || '—';
+            document.getElementById('pinFase').textContent = data.fase || '—';
+            setTimeout(function() {
+              var inp = document.getElementById('pinInput');
+              if (inp) inp.focus();
+            }, 100);
+          }
+        })
+        .catch(function() {
+          mostrar('estadoError');
+          document.getElementById('mensajeError').textContent = 'Error de conexión. Intenta de nuevo.';
+        });
+    }
+
+    function confirmarPin() {
+      var pin = document.getElementById('pinInput').value.trim();
+      document.getElementById('pinError').textContent = '';
+
+      fetch('/api/entrada', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, pin: pin })
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error === 'pin_incorrecto') {
+            document.getElementById('pinError').textContent = 'Código incorrecto.';
+            document.getElementById('pinInput').value = '';
+            document.getElementById('pinInput').focus();
+          } else if (data.error === 'encuesta_previa_pendiente') {
+            mostrar('estadoError');
+            document.getElementById('mensajeError').textContent = 'Esta persona aún no completó la encuesta previa. No puede registrar entrada.';
+          } else if (data.error) {
             mostrar('estadoError');
             document.getElementById('mensajeError').textContent = data.error;
           } else if (data.yaRegistrado) {
@@ -213,8 +322,7 @@
           }
         })
         .catch(function() {
-          mostrar('estadoError');
-          document.getElementById('mensajeError').textContent = 'Error de conexión. Intenta de nuevo.';
+          document.getElementById('pinError').textContent = 'Error de conexión. Intenta de nuevo.';
         });
     }
   </script>

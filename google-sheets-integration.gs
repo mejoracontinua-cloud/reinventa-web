@@ -37,6 +37,7 @@ var SHEET_ASISTENCIA     = 'Asistencia';
 
 var EMAILS_NOTIFICACION = ['mejoracontinua@caceca.org', 'alopez@alumbrastudios.com'];
 var LIMITE_TOTAL        = 40;
+var STAFF_PIN           = '1508';
 
 /* ── Getters de hojas ────────────────────────────────────────── */
 function getSheet()               { return getSheetByName(SHEET_REGISTROS); }
@@ -53,7 +54,7 @@ function getSheetByName(nombre) {
 /* ── doGet ───────────────────────────────────────────────────── */
 function doGet(e) {
   var action = e.parameter.action || '';
-  if (action === 'entrada') return handleEntrada(e.parameter.id || '');
+  if (action === 'entrada') return handleEntrada(e.parameter.id || '', e.parameter.preview === '1');
   if (action === 'hub')     return handleHub(e.parameter.id || '');
   if (action === 'admin')   return handleAdmin();
   return ContentService
@@ -436,7 +437,7 @@ function handleEncuesta(data) {
 }
 
 /* ── Registro de entrada (QR) ────────────────────────────────── */
-function handleEntrada(id) {
+function handleEntrada(id, preview) {
   if (!id) {
     return ContentService
       .createTextOutput(JSON.stringify({ error: 'ID requerido' }))
@@ -451,6 +452,11 @@ function handleEntrada(id) {
       var nombre    = data[i][1];
       var fase      = data[i][3];
       var yaAsistio = data[i][4];
+
+      // Preview mode: return info without marking attendance
+      if (preview) {
+        return ContentService.createTextOutput(JSON.stringify({ nombre: nombre, fase: fase, preview: true })).setMimeType(ContentService.MimeType.JSON);
+      }
 
       if (yaAsistio === '✓') {
         return ContentService
@@ -1316,6 +1322,9 @@ function handleAdminAction(data) {
   if (sub === 'update_correo')          return adminUpdateCorreo(data.id, data.correo_nuevo);
   if (sub === 'registrar_acompanante')  return adminRegistrarAcompanante(data.id, data.nombre_nuevo, data.correo_nuevo);
   if (sub === 'enviar_bienvenida')      return adminEnviarBienvenida(data.id);
+  if (sub === 'update_nombre')          return adminUpdateNombre(data.id, data.nombre_nuevo);
+  if (sub === 'registro_manual')        return adminRegistroManual(data.nombre, data.correo, data.telefono, data.fase);
+  if (sub === 'test_email_acompanante') return adminTestEmailAcompanante();
 
   return ContentService.createTextOutput(JSON.stringify({ error: 'Acción desconocida' })).setMimeType(ContentService.MimeType.JSON);
 }
@@ -1457,6 +1466,48 @@ function enviarCorreoBienvenidaAcompanante(nombre, correo, fase, idUnico) {
 
   MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
     subject: 'Tu lugar en el taller está confirmado — REINVENTA', htmlBody: html });
+}
+
+function adminUpdateNombre(id, nombreNuevo) {
+  if (!id || !nombreNuevo) return jsErr('Faltan datos');
+  var asi = getAsistenciaSheet();
+  var data = asi.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if ((data[i][0]||'').toString().trim() === id) {
+      asi.getRange(i+1,2).setValue(nombreNuevo);
+      var correo = (data[i][2]||'').toLowerCase().trim();
+      if (correo) {
+        var com = getComunicacionesSheet();
+        var fila = findRowByEmailInSheet(com, correo);
+        if (fila) com.getRange(fila,2).setValue(nombreNuevo);
+      }
+      return jsOk({ nombre: nombreNuevo });
+    }
+  }
+  return jsErr('ID no encontrado');
+}
+
+function adminRegistroManual(nombre, correo, telefono, fase) {
+  if (!nombre || !correo) return jsErr('Nombre y correo requeridos');
+  correo = correo.toLowerCase().trim();
+  fase = fase || 'Cortesía';
+
+  var reg = getSheet();
+  reg.appendRow([
+    new Date(), nombre, correo, telefono||'', '', '', fase, '0.00', new Date(), '✓', 'MANUAL-' + new Date().getTime(), 'admin manual',
+    '', '', '', '', ''
+  ]);
+
+  actualizarAsistencia(correo, nombre, fase);
+  var id = obtenerIdAsistente(correo);
+  sincronizarComunicaciones(correo, nombre, telefono||'', '', id);
+
+  return jsOk({ result: 'ok', id: id });
+}
+
+function adminTestEmailAcompanante() {
+  enviarCorreoBienvenidaAcompanante('Valeria García (PRUEBA acompañante)', 'mejoracontinua@caceca.org', 'Early Bird x2', 'RNV-001');
+  return jsOk({ result: 'ok' });
 }
 
 function adminTestEmail() {
