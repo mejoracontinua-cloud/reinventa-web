@@ -195,7 +195,7 @@
     <div class="admin-tabs">
       <button class="admin-tab on" onclick="switchTab('asistentes', this)">Asistentes</button>
       <button class="admin-tab" onclick="switchTab('evento', this)">Evento &amp; Métricas</button>
-      <button class="admin-tab" onclick="switchTab('correos', this)">Correos</button>
+      <button class="admin-tab" onclick="switchTab('correos', this)">Comunicación</button>
       <button class="admin-tab" onclick="switchTab('previa', this)">Encuesta previa</button>
       <button class="admin-tab" onclick="switchTab('post', this)">Encuesta post</button>
     </div>
@@ -223,8 +223,31 @@
     <!-- Tab: Evento & Métricas -->
     <div id="tab-evento" class="tab-pane"><div id="evento-inner"></div></div>
 
-    <!-- Tab: Correos -->
-    <div id="tab-correos" class="tab-pane"><div id="correos-inner"><div style="padding:2rem;text-align:center;color:var(--mauve);font-size:.78rem;">Cargando estado de correos…</div></div></div>
+    <!-- Tab: Comunicación -->
+    <div id="tab-correos" class="tab-pane">
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:0;border-bottom:1px solid rgba(198,165,106,.15);margin-bottom:1.2rem;">
+        <button id="subtab-correo-btn" onclick="switchSubtab('correo')" style="font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;padding:.6rem 1.2rem;border:none;border-bottom:2px solid var(--gold);background:none;color:var(--gold);cursor:pointer;font-family:inherit;">Correo</button>
+        <button id="subtab-whats-btn" onclick="switchSubtab('whats')" style="font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;padding:.6rem 1.2rem;border:none;border-bottom:2px solid transparent;background:none;color:rgba(198,165,106,.4);cursor:pointer;font-family:inherit;">WhatsApp</button>
+      </div>
+      <!-- Sub-pane: Correo -->
+      <div id="subtab-correo">
+        <div id="correos-inner"><div style="padding:2rem 0;text-align:center;color:var(--mauve);font-size:.72rem;">Cargando…</div></div>
+      </div>
+      <!-- Sub-pane: WhatsApp -->
+      <div id="subtab-whats" style="display:none;">
+        <div style="padding:3rem 1rem;text-align:center;">
+          <div style="font-family:Georgia,serif;font-size:1rem;color:var(--gold);margin-bottom:.5rem;">WhatsApp</div>
+          <div style="font-size:.7rem;color:var(--mauve);line-height:1.7;max-width:320px;margin:0 auto;">Próximamente — mensajes automáticos vía WhatsApp Business API para recordatorios y confirmaciones.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drawer de detalle de correo -->
+    <div id="correo-drawer-overlay" onclick="cerrarDrawer()" style="display:none;position:fixed;inset:0;background:rgba(10,4,12,.6);z-index:200;backdrop-filter:blur(2px);"></div>
+    <div id="correo-drawer" style="display:none;position:fixed;top:0;right:0;width:min(560px,100vw);height:100vh;background:#1C0B1A;z-index:201;overflow-y:auto;box-shadow:-4px 0 40px rgba(0,0,0,.5);flex-direction:column;">
+      <div id="correo-drawer-inner" style="padding:1.5rem;"></div>
+    </div>
 
     <!-- Tab: Encuesta previa -->
     <div id="tab-previa" class="tab-pane">
@@ -922,11 +945,190 @@ function renderEventoDashboard() {
     +'</div>';
 }
 
+/* ── Sub-tabs Comunicación ───────────────────────────────── */
+function switchSubtab(tab) {
+  document.getElementById('subtab-correo').style.display = tab === 'correo' ? '' : 'none';
+  document.getElementById('subtab-whats').style.display  = tab === 'whats'  ? '' : 'none';
+  document.getElementById('subtab-correo-btn').style.borderBottomColor = tab === 'correo' ? 'var(--gold)' : 'transparent';
+  document.getElementById('subtab-correo-btn').style.color = tab === 'correo' ? 'var(--gold)' : 'rgba(198,165,106,.4)';
+  document.getElementById('subtab-whats-btn').style.borderBottomColor  = tab === 'whats'  ? 'var(--gold)' : 'transparent';
+  document.getElementById('subtab-whats-btn').style.color  = tab === 'whats'  ? 'var(--gold)' : 'rgba(198,165,106,.4)';
+}
+
+/* ── Drawer de detalle ───────────────────────────────────── */
+var _correoDrawerData = null;
+
+function abrirDrawer(id) {
+  if (!_correosDatos) return;
+  var correo = _correosDatos[id];
+  if (!correo) return;
+  _correoDrawerData = { id: id, correo: correo };
+  renderDrawer(id, 'resumen');
+  document.getElementById('correo-drawer-overlay').style.display = 'block';
+  var d = document.getElementById('correo-drawer');
+  d.style.display = 'flex';
+  requestAnimationFrame(function(){ d.style.transform = 'translateX(0)'; });
+}
+
+function cerrarDrawer() {
+  var d = document.getElementById('correo-drawer');
+  d.style.transform = 'translateX(100%)';
+  setTimeout(function(){
+    d.style.display = 'none';
+    document.getElementById('correo-drawer-overlay').style.display = 'none';
+  }, 220);
+}
+
+function renderDrawer(id, activeTab) {
+  var correo = _correosDatos[id];
+  var c = correo;
+  var total = _correosTotalGlobal || 0;
+  var pct = c.total ? Math.round((c.enviados||0) / c.total * 100) : 0;
+
+  // Badge
+  function badge(tipo) {
+    var cfg = {
+      enviado:   ['Enviado',    '#4ade80', 'rgba(34,197,94,.15)'],
+      programado:['Programado', '#fbbf24', 'rgba(251,191,36,.15)'],
+      pendiente: ['Pendiente',  'rgba(198,165,106,.5)', 'rgba(198,165,106,.08)'],
+      automatico:['Automático', '#a78bfa', 'rgba(139,92,246,.12)'],
+    };
+    var v = cfg[tipo] || cfg.pendiente;
+    return '<span style="font-size:.42rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .65rem;color:'+v[1]+';background:'+v[2]+';border:1px solid '+v[1].replace(')',',0.3)').replace('rgb','rgba')+';font-weight:600;">'+v[0]+'</span>';
+  }
+
+  function kpi(n, label) {
+    return '<div style="background:rgba(198,165,106,.05);border:1px solid rgba(198,165,106,.1);padding:.8rem .6rem;text-align:center;">'
+      +'<div style="font-family:Georgia,serif;font-size:1.6rem;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums;">'+n+'</div>'
+      +'<div style="font-size:.4rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.4);margin-top:.3rem;">'+label+'</div>'
+      +'</div>';
+  }
+
+  function drawerBtn(label, sub, danger, confirmMsg) {
+    var bg = danger ? 'rgba(248,113,113,.08)' : 'rgba(198,165,106,.08)';
+    var col = danger ? '#f87171' : 'var(--gold)';
+    var brd = danger ? 'rgba(248,113,113,.3)' : 'rgba(198,165,106,.3)';
+    var onclick = confirmMsg
+      ? 'if(!confirm(\''+confirmMsg+'\'))return; correcAccionDesdeDrawer(\''+sub+'\',\''+id+'\')'
+      : 'correcAccionDesdeDrawer(\''+sub+'\',\''+id+'\')';
+    return '<button onclick="'+onclick+'" style="font-size:.54rem;padding:.45rem 1rem;border:1px solid '+brd+';background:'+bg+';color:'+col+';cursor:pointer;font-family:inherit;letter-spacing:.07em;text-transform:uppercase;">'+label+'</button>';
+  }
+
+  // Tabs del drawer
+  var drawerTabs = ['resumen','destinatarios','configuracion'];
+  var drawerTabLabels = { resumen:'Resumen', destinatarios:'Destinatarios', configuracion:'Configuración' };
+
+  var tabsHtml = '<div style="display:flex;gap:0;border-bottom:1px solid rgba(198,165,106,.15);margin:1rem 0;">'
+    + drawerTabs.map(function(t){
+        var on = t === activeTab;
+        return '<button onclick="renderDrawer(\''+id+'\',\''+t+'\')" style="font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem 1rem;border:none;border-bottom:2px solid '+(on?'var(--gold)':'transparent')+';background:none;color:'+(on?'var(--gold)':'rgba(198,165,106,.35)')+';cursor:pointer;font-family:inherit;">'+drawerTabLabels[t]+'</button>';
+      }).join('')
+    +'</div>';
+
+  // Contenido por tab
+  var tabContent = '';
+
+  if (activeTab === 'resumen') {
+    var progW = c.total ? Math.min(100, Math.round((c.enviados||0)/c.total*100)) : 0;
+    tabContent =
+      '<div style="font-size:.6rem;color:rgba(198,165,106,.5);line-height:1.7;margin-bottom:1rem;">'+c.descripcion+'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(198,165,106,.1);margin-bottom:1rem;">'
+        +kpi(c.enviados||0,'Enviados')+kpi(c.pendientes||0,'Pendientes')+kpi(c.total,'Total')
+      +'</div>'
+      +'<div style="margin-bottom:1.2rem;">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:.35rem;">'
+          +'<span style="font-size:.42rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(198,165,106,.35);">'+(c.enviados||0)+' / '+c.total+' enviados</span>'
+          +'<span style="font-family:Georgia,serif;font-size:.82rem;color:var(--gold);">'+progW+'%</span>'
+        +'</div>'
+        +'<div style="height:3px;background:rgba(198,165,106,.1);">'
+          +'<div style="height:100%;width:'+progW+'%;background:linear-gradient(90deg,rgba(198,165,106,.5),var(--gold));"></div>'
+        +'</div>'
+      +'</div>'
+      +(c.nota ? '<div style="background:rgba(198,165,106,.05);border:1px solid rgba(198,165,106,.1);padding:.8rem 1rem;font-size:.6rem;color:rgba(198,165,106,.5);line-height:1.6;margin-bottom:1rem;">'+c.nota+'</div>' : '');
+
+  } else if (activeTab === 'destinatarios') {
+    tabContent = '<div style="font-size:.62rem;color:rgba(198,165,106,.35);padding:2rem 0;text-align:center;">La lista detallada de destinatarios está en la hoja <strong style="color:rgba(198,165,106,.6);">Comunicaciones</strong> del Sheet. Aquí se muestra el resumen de estado.</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(198,165,106,.1);">'
+        +kpi(c.enviados||0,'Enviados')+kpi(c.pendientes||0,'Pendientes')+kpi(c.total,'Total')
+      +'</div>';
+
+  } else if (activeTab === 'configuracion') {
+    tabContent = '<div style="display:flex;flex-direction:column;gap:.6rem;">';
+    var rows = [
+      ['Tipo', c.tipo === 'auto' ? 'Automático' : (c.tipo === 'trigger' ? 'Trigger programado' : 'Manual')],
+      ['Fecha', c.fechaLabel || '—'],
+      ['Trigger activo', c.programado ? 'Sí · '+c.fechaLabel : 'No'],
+    ];
+    rows.forEach(function(r){
+      tabContent += '<div style="display:flex;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid rgba(198,165,106,.08);">'
+        +'<span style="font-size:.54rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(198,165,106,.4);">'+r[0]+'</span>'
+        +'<span style="font-size:.6rem;color:var(--gold);">'+r[1]+'</span>'
+        +'</div>';
+    });
+    tabContent += '</div>';
+  }
+
+  // Botones de acción según el tipo de correo
+  var btnsHtml = '';
+  if (id === 'confirmacion') {
+    btnsHtml = drawerBtn('Enviar a pendientes', 'enviar_confirmacion_masivo', false, '¿Enviar confirmación a las '+(c.pendientes||0)+' personas que aún no la tienen?');
+  } else if (id === 'acompanante') {
+    btnsHtml = '<span style="font-size:.54rem;color:rgba(198,165,106,.3);letter-spacing:.06em;">Se envía automáticamente al registrar un acompañante.</span>';
+  } else if (id === 'recordatorio') {
+    if (!c.programado) btnsHtml += drawerBtn('Programar trigger', 'programar_recordatorio', false, '¿Programar el recordatorio para el vie 14 ago a las 12:00 pm?');
+    else btnsHtml += drawerBtn('Cancelar trigger', 'cancelar_recordatorio', true, '¿Cancelar el trigger del recordatorio?');
+    btnsHtml += drawerBtn('Enviar ahora a pendientes', 'enviar_recordatorio_masivo', false, '¿Enviar recordatorio a '+(c.pendientes||0)+' personas?');
+  } else if (id === 'qr') {
+    btnsHtml = drawerBtn('Enviar QR ahora a pendientes', 'enviar_qr_masivo', false, '¿Enviar QR a '+(c.pendientes||0)+' personas?');
+  } else if (id === 'agradecimiento') {
+    if (!c.programado) btnsHtml += drawerBtn('Programar trigger', 'programar_agradecimiento', false, '¿Programar el agradecimiento para el lun 17 ago a las 10:00 am?');
+    else btnsHtml += drawerBtn('Cancelar trigger', 'cancelar_agradecimiento', true, '¿Cancelar el trigger del agradecimiento?');
+    btnsHtml += drawerBtn('Enviar ahora a pendientes', 'enviar_agradecimiento_masivo', false, '¿Enviar agradecimiento a '+(c.pendientes||0)+' asistentes con check-in?');
+  }
+
+  document.getElementById('correo-drawer-inner').innerHTML =
+    // Header del drawer
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.2rem;">'
+      +'<div>'
+        +'<div style="font-size:.42rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(198,165,106,.35);margin-bottom:.4rem;">'+c.fechaLabel+'</div>'
+        +'<div style="font-family:Georgia,serif;font-size:1.1rem;color:var(--gold);margin-bottom:.5rem;">'+c.titulo+'</div>'
+        +badge(c.badgeTipo)
+      +'</div>'
+      +'<button onclick="cerrarDrawer()" style="background:none;border:none;color:rgba(198,165,106,.4);cursor:pointer;font-size:1.1rem;padding:.2rem;line-height:1;">✕</button>'
+    +'</div>'
+
+    // Botones de acción
+    +(btnsHtml ? '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid rgba(198,165,106,.1);">'+btnsHtml+'</div>' : '')
+
+    + tabsHtml
+    + '<div style="padding-top:.2rem;">'+tabContent+'</div>';
+}
+
+function correcAccionDesdeDrawer(sub, id) {
+  if (sub === 'enviar_qr_masivo') sub = 'enviar_qr_masivo_gs';
+  var origBtn = event && event.target;
+  if (origBtn) { origBtn.disabled = true; origBtn.textContent = '…'; }
+  adminAction({ sub: sub }, function(data) {
+    if (origBtn) { origBtn.disabled = false; }
+    if (data.error) {
+      mostrarToast('Error: ' + data.error, 'err');
+    } else {
+      var msg = data.enviados !== undefined ? '✓ '+data.enviados+' enviados'
+        : (data.programado ? '✓ Trigger programado' : (data.cancelado ? '✓ Trigger cancelado' : '✓ Listo'));
+      mostrarToast(msg, 'ok');
+      setTimeout(function(){ renderCorreos(); if (_correoDrawerData) renderDrawer(id, 'resumen'); }, 900);
+    }
+  });
+}
+
+var _correosDatos = null;
+var _correosTotalGlobal = 0;
+
 /* ── Tab Correos ─────────────────────────────────────────── */
 function renderCorreos() {
   var el = document.getElementById('correos-inner');
   if (!el) return;
-  el.innerHTML = '<div style="padding:2.5rem 0;text-align:center;color:var(--mauve);font-size:.72rem;letter-spacing:.1em;">Consultando estado…</div>';
+  el.innerHTML = '<div style="padding:3rem 0;text-align:center;color:var(--mauve);font-size:.72rem;letter-spacing:.1em;">Cargando comunicaciones…</div>';
 
   adminAction({ sub: 'estado_correos' }, function(data) {
     if (data.error) {
@@ -935,184 +1137,155 @@ function renderCorreos() {
     }
 
     var total = data.total || 0;
-    var conf  = data.confirmacion  || {};
-    var rec   = data.recordatorio  || {};
-    var qr    = data.qr            || {};
-    var agr   = data.agradecimiento|| {};
-
+    _correosTotalGlobal = total;
+    var conf = data.confirmacion   || {};
+    var rec  = data.recordatorio   || {};
+    var qr   = data.qr             || {};
+    var agr  = data.agradecimiento || {};
     var confEnv = conf.enviados !== undefined ? conf.enviados : total;
 
-    // Badge de estado
-    function badge(tipo) {
-      // tipo: 'enviado' | 'programado' | 'pendiente' | 'automatico'
-      var cfg = {
-        enviado:   { label: 'Enviado',    bg: 'rgba(34,197,94,.12)',   color: '#4ade80',           border: 'rgba(34,197,94,.3)' },
-        programado:{ label: 'Programado', bg: 'rgba(251,191,36,.1)',   color: '#fbbf24',           border: 'rgba(251,191,36,.3)' },
-        pendiente: { label: 'Pendiente',  bg: 'rgba(198,165,106,.08)', color: 'rgba(198,165,106,.6)', border: 'rgba(198,165,106,.2)' },
-        automatico:{ label: 'Automático', bg: 'rgba(139,92,246,.1)',   color: '#a78bfa',           border: 'rgba(139,92,246,.3)' },
+    // Mapa de datos para el drawer
+    _correosDatos = {
+      confirmacion: {
+        titulo: 'Confirmación de registro',
+        descripcion: 'Se envía automáticamente cuando alguien completa su registro en el evento.',
+        fechaLabel: 'Automático · Al registrarse',
+        tipo: 'auto', programado: false,
+        badgeTipo: confEnv >= total && total > 0 ? 'enviado' : 'automatico',
+        enviados: confEnv, pendientes: total - confEnv, total: total,
+        nota: 'Se dispara en el momento del registro. Si alguien no lo recibió, usa "Enviar a pendientes" para reenviar.'
+      },
+      acompanante: {
+        titulo: 'Bienvenida acompañante',
+        descripcion: 'Se envía cuando se registra a una invitada acompañante. Incluye CTA urgente para la encuesta previa.',
+        fechaLabel: 'Automático · Al registrar acompañante',
+        tipo: 'auto', programado: false,
+        badgeTipo: 'automatico',
+        enviados: '—', pendientes: '—', total: '—',
+        nota: 'No requiere acción manual. Se dispara al guardar los datos del acompañante.'
+      },
+      recordatorio: {
+        titulo: 'Recordatorio del evento',
+        descripcion: 'Recordatorio enviado 1 día antes del taller para asegurar la asistencia.',
+        fechaLabel: 'Vie 14 ago 2026 · 12:00 pm',
+        tipo: 'trigger', programado: rec.programado,
+        badgeTipo: (rec.enviados||0) > 0 ? 'enviado' : (rec.programado ? 'programado' : 'pendiente'),
+        enviados: rec.enviados||0, pendientes: rec.pendientes||0, total: total,
+        nota: 'Si alguien se registra después del envío masivo, usa "Enviar ahora" — solo le llega a quien falta.'
+      },
+      qr: {
+        titulo: 'QR de entrada',
+        descripcion: 'Código QR personal para acceder al evento. Apunta al hub individual de cada asistente.',
+        fechaLabel: 'Sáb 15 ago 2026 · 8:00 am',
+        tipo: 'trigger', programado: true,
+        badgeTipo: (qr.enviados||0) > 0 ? 'enviado' : 'programado',
+        enviados: qr.enviados||0, pendientes: qr.pendientes||0, total: total,
+        nota: 'Trigger configurado en Apps Script. El QR abre el hub personal de cada asistente.'
+      },
+      agradecimiento: {
+        titulo: 'Agradecimiento post-evento',
+        descripcion: 'Correo de cierre enviado solo a asistentes que hicieron check-in el día del evento.',
+        fechaLabel: 'Lun 17 ago 2026 · 10:00 am',
+        tipo: 'trigger', programado: agr.programado,
+        badgeTipo: (agr.enviados||0) > 0 ? 'enviado' : (agr.programado ? 'programado' : 'pendiente'),
+        enviados: agr.enviados||0, pendientes: agr.pendientes||0, total: agr.conCheckin||0,
+        conCheckin: agr.conCheckin||0,
+        nota: 'Solo llega a quienes hicieron check-in. Haz check-in primero si alguien falta, luego usa "Enviar ahora".'
+      }
+    };
+
+    // ── Helpers visuales ────────────────────────────────────────
+    function badgeHtml(tipo) {
+      var m = {
+        enviado:   ['Enviado',    '#4ade80','rgba(34,197,94,.15)'],
+        programado:['Programado', '#fbbf24','rgba(251,191,36,.12)'],
+        pendiente: ['Pendiente',  'rgba(198,165,106,.55)','rgba(198,165,106,.08)'],
+        automatico:['Automático', '#a78bfa','rgba(139,92,246,.12)'],
       };
-      var c = cfg[tipo] || cfg.pendiente;
-      return '<span style="display:inline-block;font-size:.42rem;letter-spacing:.14em;text-transform:uppercase;'
-        +'padding:.18rem .7rem;background:'+c.bg+';color:'+c.color+';border:1px solid '+c.border+';font-weight:600;">'
-        +c.label+'</span>';
+      var v = m[tipo] || m.pendiente;
+      return '<span style="font-size:.38rem;letter-spacing:.12em;text-transform:uppercase;padding:.15rem .55rem;color:'+v[1]+';background:'+v[2]+';border:1px solid '+v[1]+';font-weight:700;white-space:nowrap;">'+v[0]+'</span>';
     }
 
-    // Número de acción con etiqueta
-    function statBox(n, label) {
-      return '<div style="text-align:center;padding:.7rem .5rem;">'
-        +'<div style="font-family:Georgia,serif;font-size:1.5rem;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums;">'+n+'</div>'
-        +'<div style="font-size:.4rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.4);margin-top:.3rem;">'+label+'</div>'
+    function miniBar(n, tot) {
+      var pct = (tot && tot !== '—') ? Math.min(100, Math.round(n/tot*100)) : 0;
+      return '<div style="height:2px;background:rgba(198,165,106,.1);margin:.55rem 0 .3rem;overflow:hidden;">'
+        +'<div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,rgba(198,165,106,.5),var(--gold));"></div>'
         +'</div>';
     }
 
-    // Barra de progreso
-    function progBar(n, tot) {
-      var pct = tot ? Math.min(100, Math.round(n / tot * 100)) : 0;
-      return '<div>'
-        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.3rem;">'
-          +'<span style="font-size:.42rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(198,165,106,.35);">'+n+' / '+tot+' enviados</span>'
-          +'<span style="font-family:Georgia,serif;font-size:.8rem;color:var(--gold);font-variant-numeric:tabular-nums;">'+pct+'%</span>'
+    // ── Card del grid ───────────────────────────────────────────
+    function card(id) {
+      var c = _correosDatos[id];
+      var pct = (c.total && c.total !== '—' && c.enviados !== '—')
+        ? Math.min(100, Math.round(c.enviados / c.total * 100)) : null;
+      var pctLabel = pct !== null ? pct+'%' : '—';
+      var sentLabel = c.enviados !== '—'
+        ? c.enviados+' / '+c.total
+        : 'Automático';
+
+      return '<div onclick="abrirDrawer(\''+id+'\')" style="background:var(--plum);border:1px solid rgba(198,165,106,.12);padding:1.1rem 1.1rem 1rem;cursor:pointer;display:flex;flex-direction:column;gap:.55rem;transition:border-color .15s,background .15s;" onmouseover="this.style.borderColor=\'rgba(198,165,106,.3)\';this.style.background=\'#2d1529\'" onmouseout="this.style.borderColor=\'rgba(198,165,106,.12)\';this.style.background=\'var(--plum)\'">'
+        // Badge + trigger dot
+        +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+          +badgeHtml(c.badgeTipo)
+          +(c.programado ? '<span style="width:6px;height:6px;border-radius:50%;background:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.6);flex-shrink:0;" title="Trigger activo"></span>' : '')
         +'</div>'
-        +'<div style="height:2px;background:rgba(198,165,106,.1);overflow:hidden;">'
-          +'<div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,rgba(198,165,106,.6),var(--gold));transition:width .4s;"></div>'
+        // Título
+        +'<div style="font-family:Georgia,serif;font-size:.88rem;color:var(--gold);line-height:1.3;">'+c.titulo+'</div>'
+        // Fecha
+        +'<div style="font-size:.42rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.4);">'+c.fechaLabel+'</div>'
+        // Barra mini
+        + miniBar(c.enviados === '—' ? 0 : c.enviados, c.total === '—' ? 0 : c.total)
+        // Stats: enviados y %
+        +'<div style="display:flex;align-items:baseline;justify-content:space-between;">'
+          +'<span style="font-size:.58rem;color:rgba(198,165,106,.5);">'+sentLabel+'</span>'
+          +'<span style="font-family:Georgia,serif;font-size:.9rem;color:var(--gold);font-variant-numeric:tabular-nums;">'+pctLabel+'</span>'
         +'</div>'
+        // Ver detalles
+        +'<div style="padding-top:.4rem;border-top:1px solid rgba(198,165,106,.08);font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.4);">Ver detalles →</div>'
         +'</div>';
     }
 
-    // Botón de acción
-    function accionBtn(label, sub, confirmMsg, destructivo) {
-      var onclk = confirmMsg ? 'if(!confirm(\''+confirmMsg+'\'))return;' : '';
-      var col = destructivo ? 'rgba(248,113,113,.7)' : 'var(--gold)';
-      var brd = destructivo ? 'rgba(248,113,113,.3)' : 'rgba(198,165,106,.3)';
-      return '<button data-sub="'+sub+'" onclick="'+onclk+'correcAccion(this)" '
-        +'style="font-size:.54rem;padding:.38rem .9rem;border:1px solid '+brd+';background:none;color:'+col+';'
-        +'cursor:pointer;font-family:inherit;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;"'
-        +' onmouseover="this.style.background=\'rgba(198,165,106,.07)\'" onmouseout="this.style.background=\'none\'">'+label+'</button>';
-    }
+    // ── KPI strip ───────────────────────────────────────────────
+    var totalCorreos = 5;
+    var enviados5 = [confEnv>=total&&total>0,rec.enviados>0,qr.enviados>0,agr.enviados>0].filter(Boolean).length;
+    var programados = [rec.programado, true /*qr*/, agr.programado].filter(Boolean).length;
 
-    // Tarjeta completa
-    function correoCard(opts) {
-      // opts: { titulo, fecha, badgeTipo, enviados, pendientes, totCard, trigger, btns, nota, fechaTrigger }
-      var pct = opts.totCard ? Math.min(100, Math.round(opts.enviados / opts.totCard * 100)) : 0;
-      return '<div style="border:1px solid rgba(198,165,106,.1);overflow:hidden;margin-bottom:.7rem;">'
-
-        // Cabecera
-        +'<div style="background:#1C0B1A;padding:.9rem 1.2rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;">'
-          +'<div style="flex:1;min-width:0;">'
-            +'<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem;">'
-              +badge(opts.badgeTipo)
-              +(opts.trigger
-                ? '<span style="font-size:.42rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(251,191,36,.6);">· Trigger activo · '+opts.fechaTrigger+'</span>'
-                : (opts.fechaTrigger ? '<span style="font-size:.42rem;color:rgba(198,165,106,.3);">· '+opts.fechaTrigger+'</span>' : ''))
-            +'</div>'
-            +'<div style="font-family:Georgia,serif;font-size:.92rem;color:var(--gold);">'+opts.titulo+'</div>'
-            +'<div style="font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.35);margin-top:.2rem;">'+opts.fecha+'</div>'
-          +'</div>'
-          // Porcentaje
-          +'<div style="text-align:right;flex-shrink:0;">'
-            +'<div style="font-family:Georgia,serif;font-size:1.6rem;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums;">'+pct+'<span style="font-size:.55rem;color:rgba(198,165,106,.4);">%</span></div>'
-            +'<div style="font-size:.4rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(198,165,106,.3);margin-top:.15rem;">enviados</div>'
-          +'</div>'
+    var kpiStrip =
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(198,165,106,.1);margin-bottom:1.2rem;border:1px solid rgba(198,165,106,.1);">'
+        +'<div style="background:#1C0B1A;padding:.7rem .5rem;text-align:center;">'
+          +'<div style="font-family:Georgia,serif;font-size:1.3rem;color:var(--gold);line-height:1;">'+total+'</div>'
+          +'<div style="font-size:.38rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.35);margin-top:.25rem;">personas</div>'
         +'</div>'
-
-        // Cuerpo
-        +'<div style="background:var(--plum);padding:.9rem 1.2rem;">'
-          // Stats row
-          +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(198,165,106,.08);margin-bottom:.9rem;">'
-            +statBox(opts.enviados,'Enviados')
-            +statBox(opts.pendientes,'Pendientes')
-            +statBox(opts.totCard,'Total')
-          +'</div>'
-          +progBar(opts.enviados, opts.totCard)
-          +(opts.btns
-            ? '<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.9rem;padding-top:.7rem;border-top:1px solid rgba(198,165,106,.08);">'+opts.btns+'</div>'
-            : '')
-          +(opts.nota
-            ? '<div style="font-size:.6rem;color:rgba(198,165,106,.4);line-height:1.6;margin-top:.7rem;">'+opts.nota+'</div>'
-            : '')
+        +'<div style="background:#1C0B1A;padding:.7rem .5rem;text-align:center;">'
+          +'<div style="font-family:Georgia,serif;font-size:1.3rem;color:#fbbf24;line-height:1;">'+programados+'</div>'
+          +'<div style="font-size:.38rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.35);margin-top:.25rem;">triggers activos</div>'
         +'</div>'
-        +'</div>';
-    }
-
-    // ── KPIs globales ──────────────────────────────────────────
-    var totalEnv = confEnv + (rec.enviados||0) + (qr.enviados||0) + (agr.enviados||0);
-    var totalPosible = total * 3 + (agr.conCheckin||0); // 3 correos por persona + agradecimiento solo check-in
-
-    var kpiHtml =
-      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(198,165,106,.1);margin-bottom:1.2rem;border:1px solid rgba(198,165,106,.1);">'
-        +['Confirmación','Recordatorio','QR de entrada','Agradecimiento'].map(function(t,i){
-          var e = [confEnv, rec.enviados||0, qr.enviados||0, agr.enviados||0][i];
-          var tot = [total, total, total, agr.conCheckin||0][i];
-          var pct = tot ? Math.round(e/tot*100) : 0;
-          return '<div style="background:#1C0B1A;padding:.8rem .6rem;text-align:center;">'
-            +'<div style="font-family:Georgia,serif;font-size:1.4rem;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums;">'+e+'</div>'
-            +'<div style="font-size:.38rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.35);margin:.25rem 0 .1rem;">'+t+'</div>'
-            +'<div style="font-size:.5rem;color:rgba(198,165,106,.45);">'+pct+'%</div>'
-            +'</div>';
-        }).join('')
+        +'<div style="background:#1C0B1A;padding:.7rem .5rem;text-align:center;">'
+          +'<div style="font-family:Georgia,serif;font-size:1.3rem;color:#4ade80;line-height:1;">'+enviados5+'</div>'
+          +'<div style="font-size:.38rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.35);margin-top:.25rem;">flujos enviados</div>'
+        +'</div>'
       +'</div>';
 
     var html =
-      // Header
-      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:.8rem;border-bottom:1px solid rgba(198,165,106,.1);">'
-        +'<div>'
-          +'<div style="font-size:.42rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(198,165,106,.4);">Comunicaciones · REINVENTA 2026</div>'
-          +'<div style="font-family:Georgia,serif;font-size:.95rem;color:var(--gold);margin-top:.2rem;">'+total+' personas en la lista</div>'
-        +'</div>'
-        +'<button onclick="renderCorreos()" style="font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(198,165,106,.2);background:none;color:rgba(198,165,106,.45);padding:.3rem .75rem;cursor:pointer;font-family:inherit;">Actualizar</button>'
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">'
+        +'<div style="font-size:.42rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(198,165,106,.4);">Centro de comunicaciones · REINVENTA 2026</div>'
+        +'<button onclick="renderCorreos()" style="font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(198,165,106,.18);background:none;color:rgba(198,165,106,.4);padding:.28rem .7rem;cursor:pointer;font-family:inherit;">Actualizar</button>'
       +'</div>'
-
-      + kpiHtml
-
-      // 1 — Confirmación
-      + correoCard({
-          titulo: 'Correo de confirmación',
-          fecha: 'Se envía al completar el registro · automático',
-          badgeTipo: confEnv >= total ? 'enviado' : 'automatico',
-          enviados: confEnv, pendientes: total - confEnv, totCard: total,
-          trigger: false, fechaTrigger: '',
-          btns: '',
-          nota: 'Se dispara automáticamente en el momento del registro. No requiere acción manual.'
-        })
-
-      // 2 — Recordatorio
-      + correoCard({
-          titulo: 'Correo de recordatorio',
-          fecha: 'Viernes 14 de agosto de 2026 · 12:00 pm',
-          badgeTipo: rec.enviados > 0 ? 'enviado' : (rec.programado ? 'programado' : 'pendiente'),
-          enviados: rec.enviados||0, pendientes: rec.pendientes||0, totCard: total,
-          trigger: rec.programado, fechaTrigger: rec.programado ? 'Vie 14 ago · 12:00 pm' : 'Sin trigger',
-          btns: accionBtn('Programar trigger', 'programar_recordatorio', '¿Programar el trigger automático para el vie 14 ago a las 12 pm?')
-               +accionBtn('Cancelar trigger', 'cancelar_recordatorio', '¿Cancelar el trigger?', true)
-               +accionBtn('Enviar ahora a pendientes', 'enviar_recordatorio_masivo', '¿Enviar a las '+(rec.pendientes||0)+' personas pendientes?'),
-          nota: 'Si se registra alguien nuevo, usa "Enviar ahora" — solo llega a quien aún no lo tiene.'
-        })
-
-      // 3 — QR
-      + correoCard({
-          titulo: 'Correo QR de entrada',
-          fecha: 'Sábado 15 de agosto de 2026 · 8:00 am',
-          badgeTipo: qr.enviados > 0 ? 'enviado' : 'programado',
-          enviados: qr.enviados||0, pendientes: qr.pendientes||0, totCard: total,
-          trigger: true, fechaTrigger: 'Sáb 15 ago · 8:00 am',
-          btns: accionBtn('Enviar QR ahora a pendientes', 'enviar_qr_masivo', '¿Enviar el QR a las '+(qr.pendientes||0)+' personas pendientes?'),
-          nota: 'Trigger configurado en Apps Script. El QR abre el hub personal de cada asistente.'
-        })
-
-      // 4 — Agradecimiento
-      + correoCard({
-          titulo: 'Correo de agradecimiento',
-          fecha: 'Lunes 17 de agosto de 2026 · 10:00 am · Solo asistentes con check-in',
-          badgeTipo: agr.enviados > 0 ? 'enviado' : (agr.programado ? 'programado' : 'pendiente'),
-          enviados: agr.enviados||0, pendientes: agr.pendientes||0, totCard: agr.conCheckin||0,
-          trigger: agr.programado, fechaTrigger: agr.programado ? 'Lun 17 ago · 10:00 am' : 'Sin trigger',
-          btns: accionBtn('Programar trigger', 'programar_agradecimiento', '¿Programar el trigger automático para el lun 17 ago a las 10 am?')
-               +accionBtn('Cancelar trigger', 'cancelar_agradecimiento', '¿Cancelar el trigger?', true)
-               +accionBtn('Enviar ahora a pendientes', 'enviar_agradecimiento_masivo', '¿Enviar a las '+(agr.pendientes||0)+' asistentes con check-in pendientes?'),
-          nota: 'Solo llega a quienes hicieron check-in. Haz check-in primero si alguien falta, luego usa "Enviar ahora".'
-        });
+      + kpiStrip
+      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;">'
+        + card('confirmacion')
+        + card('acompanante')
+        + card('recordatorio')
+        + card('qr')
+        + card('agradecimiento')
+      +'</div>';
 
     el.innerHTML = html;
+
+    // Estilos del drawer (una sola vez)
+    var d = document.getElementById('correo-drawer');
+    d.style.transform = 'translateX(100%)';
+    d.style.transition = 'transform .22s cubic-bezier(.4,0,.2,1)';
   });
 }
 
@@ -1123,11 +1296,7 @@ function correcAccion(btn) {
   var orig = btn.textContent;
   btn.textContent = '…';
 
-  // QR: programación manual desde Apps Script (trigger ya configurado)
-  if (sub === 'programar_qr') {
-    mostrarToast('El QR ya está programado para el sáb 15 ago a las 8am desde Apps Script. Para reprogramar usa el menú REINVENTA en el Sheet.', 'ok');
-    btn.disabled = false; btn.textContent = orig; return;
-  }
+  if (sub === 'enviar_confirmacion_masivo') { sub = 'enviar_confirmacion_masivo'; }
   if (sub === 'enviar_qr_masivo') { sub = 'enviar_qr_masivo_gs'; }
 
   adminAction({ sub: sub }, function(data) {
