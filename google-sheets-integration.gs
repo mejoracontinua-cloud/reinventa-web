@@ -1538,18 +1538,11 @@ function adminEstadoCorreos() {
     if (checkinSet[correo]) conCheckin++;
   }
 
-  // ¿Existe trigger para recordatorio?
-  var hayTrigRec = false, hayTrigAgr = false;
-  ScriptApp.getProjectTriggers().forEach(function(t){
-    if (t.getHandlerFunction() === 'triggerRecordatorioMasivo')  hayTrigRec = true;
-    if (t.getHandlerFunction() === 'triggerAgradecimientoMasivo') hayTrigAgr = true;
-  });
-
   return jsOk({
     total: total,
-    recordatorio: { enviados: recEnv, pendientes: total - recEnv, programado: hayTrigRec },
-    qr:           { enviados: qrEnv,  pendientes: total - qrEnv },
-    agradecimiento: { enviados: agrEnv, pendientes: conCheckin - agrEnv, conCheckin: conCheckin, programado: hayTrigAgr }
+    recordatorio:   { enviados: recEnv,  pendientes: total - recEnv },
+    qr:             { enviados: qrEnv,   pendientes: total - qrEnv },
+    agradecimiento: { enviados: agrEnv,  pendientes: conCheckin - agrEnv, conCheckin: conCheckin }
   });
 }
 
