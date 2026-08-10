@@ -1452,36 +1452,49 @@ function adminEnviarBienvenida(id) {
 function enviarCorreoBienvenidaAcompanante(nombre, correo, fase, idUnico) {
   var p      = nombre ? nombre.split(' ')[0] : 'Hola';
   var hubUrl = 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico;
-  var calLink = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
-    + '&text=Taller+de+imagen+y+liderazgo+%E2%80%94+REINVENTA'
-    + '&dates=20260815T160000Z/20260815T180000Z'
-    + '&location=The+University+Club+of+Mexico%2C+Av.+Paseo+de+la+Reforma+150%2C+Ju%C3%A1rez%2C+CDMX';
 
   var html = _headerCorreo()
     + '<div style="padding:2.2rem 2.6rem 2rem;">'
-    + '<div style="display:inline-block;background:rgba(42,15,37,.07);border-left:2px solid #C6A56A;padding:.4rem .75rem;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:#2A0F25;margin-bottom:1.4rem;">Tu lugar está confirmado · ' + (fase||'Taller') + '</div>'
-    + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 1rem;">Hola, ' + p + '.<br>Te esperamos el 15 de agosto.</h1>'
-    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Tu lugar en el taller está confirmado. Nos da mucho gusto tenerte. Mary estará encantada de acompañarte en este proceso.</p>'
-    + _detallesEvento()
-    + '<a href="' + calLink + '" style="display:block;background:#2A0F25;color:#EFE9E2;text-align:center;padding:.9rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.6rem;">Agregar a Google Calendar</a>'
-    // Hub y QR
-    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
-    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .6rem;">Tu espacio personal del evento</p>'
-    + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Aquí encontrarás tu código QR de entrada, la agenda del día y los recursos del taller.</p>'
-    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem;font-weight:600;">Acceder a mi espacio →</a>'
+
+    // Chip: invitada especial
+    + '<div style="display:inline-block;background:rgba(198,165,106,.12);border-left:2px solid #C6A56A;padding:.4rem .75rem;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:#2A0F25;margin-bottom:1.4rem;">Invitada especial · REINVENTA</div>'
+
+    // Encabezado
+    + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 1rem;">Hola, ' + p + '.<br>Qué gusto que nos acompañas este sábado.</h1>'
+    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Alguien muy especial reservó un lugar para ti en el taller <em>Lo que tu imagen comunica</em> con Mary Méndez. Estamos felices de tenerte el <strong>sábado 15 de agosto</strong>.</p>'
+
+    // Bloque urgente: encuesta previa (lo más importante)
+    + '<div style="border:2px solid #C6A56A;padding:1.4rem 1.6rem;margin-bottom:1.8rem;background:rgba(198,165,106,.07);">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .5rem;">Antes de llegar — paso obligatorio</p>'
+    + '<p style="font-family:Georgia,serif;font-size:1.1rem;color:#2A0F25;margin:0 0 .8rem;">Contesta la encuesta previa desde tu espacio personal.</p>'
+    + '<p style="font-size:.87rem;color:#4a3545;line-height:1.7;margin:0 0 1rem;">Es una encuesta breve que Mary revisa personalmente para personalizar la experiencia de cada asistente. <strong>Sin contestarla no podrás hacer check-in el día del evento</strong>, así que te pedimos que la completes antes del sábado.</p>'
+    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.9rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-bottom:.6rem;">Ir a mi espacio y contestar la encuesta →</a>'
+    + '<p style="font-size:.7rem;color:#8F7383;text-align:center;margin:0;">Aquí también encontrarás tu QR de entrada y toda la info del día</p>'
     + '</div>'
-    // Encuesta previa — énfasis fuerte
-    + '<div style="border:1px solid #C6A56A;border-left:3px solid #C6A56A;padding:1.2rem 1.4rem;margin-bottom:1.6rem;background:rgba(198,165,106,.06);">'
-    + '<p style="font-size:.75rem;color:#2A0F25;font-weight:700;margin:0 0 .5rem;letter-spacing:.03em;">Antes del evento: encuesta previa</p>'
-    + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Dentro de tu espacio hay una encuesta breve que Mary necesita que contestes <strong>antes del taller</strong>. La revisa personalmente para personalizar los materiales y recomendaciones de cada asistente.</p>'
-    + '<p style="font-size:.82rem;color:#2A0F25;font-weight:600;margin:0;">Importante: sin esta encuesta no podrás hacer check-in el día del evento, ni acceder al material digital posterior.</p>'
+
+    // Detalles del evento (breve)
+    + '<div style="border:1px solid rgba(42,15,37,.1);padding:1.2rem 1.4rem;margin-bottom:1.8rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .8rem;">Detalles del evento</p>'
+    + '<p style="font-size:.88rem;color:#2A0F25;margin:0 0 .3rem;font-weight:600;">Lo que tu imagen comunica — REINVENTA</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;margin:0 0 .25rem;">Sábado 15 de agosto de 2026 · 10:00–12:00 pm</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;margin:0;">The University Club of Mexico<br>Av. Paseo de la Reforma 150, Juárez, CDMX</p>'
     + '</div>'
-    + _firmaCorreo()
+
+    // Cierre cálido
+    + '<p style="font-size:.9rem;line-height:1.7;color:#4a3545;margin:0 0 .5rem;">¡Te esperamos el sábado! Cualquier duda, escríbenos a este correo.</p>'
+    + '<p style="font-size:.9rem;color:#4a3545;margin:0;">Con cariño,</p>'
+    + '<p style="font-family:Georgia,serif;font-size:.95rem;color:#2A0F25;margin:.2rem 0 0;">Mary y el equipo de REINVENTA</p>'
+
     + '</div>'
     + _footerCorreo(correo);
 
-  MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
-    subject: 'Tu lugar en el taller está confirmado — REINVENTA', htmlBody: html });
+  MailApp.sendEmail({
+    to: correo,
+    bcc: 'alopez@alumbrastudios.com',
+    name: 'Reinventa by Mary Méndez',
+    subject: '¡Te esperamos este sábado! — Un paso antes de llegar',
+    htmlBody: html
+  });
 }
 
 function adminUpdateNombre(id, nombreNuevo) {
