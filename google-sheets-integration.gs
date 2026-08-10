@@ -70,6 +70,7 @@ function doPost(e) {
     }
     if (data.action === 'encuesta')        return handleEncuesta(data);
     if (data.action === 'encuesta_previa') return handleEncuestaPrevia(data);
+    if (data.action === 'admin_action')    return handleAdminAction(data);
     return handleFormSubmit(data);
   } catch(err) {
     return ContentService
@@ -455,6 +456,20 @@ function handleEntrada(id) {
         return ContentService
           .createTextOutput(JSON.stringify({ yaRegistrado: true, nombre: nombre }))
           .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      // Gate: requiere encuesta previa
+      var ss2 = SpreadsheetApp.getActiveSpreadsheet();
+      var prevSheet2 = ss2.getSheetByName('Encuesta Previa');
+      var tienePrevia = false;
+      if (prevSheet2) {
+        var prevData2 = prevSheet2.getDataRange().getValues();
+        for (var k = 1; k < prevData2.length; k++) {
+          if ((prevData2[k][0]||'').toString().trim() === id) { tienePrevia = true; break; }
+        }
+      }
+      if (!tienePrevia) {
+        return ContentService.createTextOutput(JSON.stringify({ error: 'encuesta_previa_pendiente', nombre: nombre })).setMimeType(ContentService.MimeType.JSON);
       }
 
       sheet.getRange(i + 1, 5).setValue('✓');
@@ -1291,3 +1306,157 @@ function sincronizarRegistrosFaltantes() {
 
   SpreadsheetApp.getUi().alert('Listo. Se sincronizaron ' + agregados + ' persona(s). Revisa Asistencia para ver los acompañantes agregados.');
 }
+
+/* ── Admin actions (desde panel) ─────────────────────────── */
+function handleAdminAction(data) {
+  var sub = data.sub || '';
+
+  if (sub === 'checkin')                return adminCheckin(data.id);
+  if (sub === 'update_correo')          return adminUpdateCorreo(data.id, data.correo_nuevo);
+  if (sub === 'registrar_acompanante')  return adminRegistrarAcompanante(data.id, data.nombre_nuevo, data.correo_nuevo);
+  if (sub === 'enviar_bienvenida')      return adminEnviarBienvenida(data.id);
+
+  return ContentService.createTextOutput(JSON.stringify({ error: 'Acción desconocida' })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function adminCheckin(id) {
+  if (!id) return jsErr('ID requerido');
+  var sheet = getAsistenciaSheet();
+  var data  = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if ((data[i][0] || '').toString().trim() === id) {
+      if (data[i][4] === '✓') return jsOk({ yaRegistrado: true, nombre: data[i][1] });
+      sheet.getRange(i+1,5).setValue('✓');
+      sheet.getRange(i+1,6).setValue(new Date());
+      return jsOk({ nombre: data[i][1], fase: data[i][3] });
+    }
+  }
+  return jsErr('ID no encontrado');
+}
+
+function adminUpdateCorreo(id, correoNuevo) {
+  if (!id || !correoNuevo) return jsErr('Faltan datos');
+  correoNuevo = correoNuevo.toLowerCase().trim();
+
+  // Actualizar en Asistencia
+  var asi = getAsistenciaSheet();
+  var aData = asi.getDataRange().getValues();
+  var nombre = '';
+  for (var i = 1; i < aData.length; i++) {
+    if ((aData[i][0]||'').toString().trim() === id) {
+      asi.getRange(i+1,3).setValue(correoNuevo);
+      nombre = aData[i][1];
+      break;
+    }
+  }
+
+  // Actualizar o crear en Comunicaciones
+  var com = getComunicacionesSheet();
+  var cData = com.getDataRange().getValues();
+  var filaComm = null;
+  for (var j = 1; j < cData.length; j++) {
+    if ((cData[j][0]||'').toLowerCase().trim() === correoNuevo) { filaComm = j+1; break; }
+  }
+  if (!filaComm) {
+    com.appendRow([correoNuevo, nombre, '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+    filaComm = com.getLastRow();
+  } else {
+    if (!com.getRange(filaComm,2).getValue()) com.getRange(filaComm,2).setValue(nombre);
+  }
+
+  return jsOk({ correo: correoNuevo });
+}
+
+function adminRegistrarAcompanante(id, nombreNuevo, correoNuevo) {
+  if (!id || !correoNuevo) return jsErr('Faltan datos');
+  correoNuevo = correoNuevo.toLowerCase().trim();
+
+  // Actualizar nombre y correo en Asistencia
+  var asi = getAsistenciaSheet();
+  var aData = asi.getDataRange().getValues();
+  var fase = '';
+  var nombreFinal = nombreNuevo || '';
+  for (var i = 1; i < aData.length; i++) {
+    if ((aData[i][0]||'').toString().trim() === id) {
+      if (nombreNuevo) asi.getRange(i+1,2).setValue(nombreNuevo);
+      asi.getRange(i+1,3).setValue(correoNuevo);
+      fase = aData[i][3];
+      break;
+    }
+  }
+
+  // Crear en Comunicaciones
+  var com = getComunicacionesSheet();
+  var fila = findRowByEmailInSheet(com, correoNuevo);
+  if (!fila) {
+    com.appendRow([correoNuevo, nombreFinal, '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+    fila = com.getLastRow();
+  }
+
+  // Enviar correo de bienvenida todo-en-uno
+  enviarCorreoBienvenidaAcompanante(nombreFinal, correoNuevo, fase, id);
+
+  // Marcar correo de confirmación como enviado en Comunicaciones (col G)
+  com.getRange(fila, 7).setValue('Sí');
+
+  return jsOk({ result: 'ok', correo: correoNuevo });
+}
+
+function adminEnviarBienvenida(id) {
+  if (!id) return jsErr('ID requerido');
+  var asi = getAsistenciaSheet();
+  var aData = asi.getDataRange().getValues();
+  for (var i = 1; i < aData.length; i++) {
+    if ((aData[i][0]||'').toString().trim() === id) {
+      var nombre = aData[i][1];
+      var correo = aData[i][2];
+      var fase   = aData[i][3];
+      if (!correo) return jsErr('Sin correo registrado');
+      enviarCorreoBienvenidaAcompanante(nombre, correo, fase, id);
+      var com = getComunicacionesSheet();
+      var fila = findRowByEmailInSheet(com, correo);
+      if (fila) com.getRange(fila,7).setValue('Sí');
+      return jsOk({ result: 'ok' });
+    }
+  }
+  return jsErr('ID no encontrado');
+}
+
+/* Correo único todo-en-uno para acompañantes */
+function enviarCorreoBienvenidaAcompanante(nombre, correo, fase, idUnico) {
+  var p      = nombre ? nombre.split(' ')[0] : 'Hola';
+  var hubUrl = 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico;
+  var calLink = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=Taller+de+imagen+y+liderazgo+%E2%80%94+REINVENTA'
+    + '&dates=20260815T160000Z/20260815T180000Z'
+    + '&location=The+University+Club+of+Mexico%2C+Av.+Paseo+de+la+Reforma+150%2C+Ju%C3%A1rez%2C+CDMX';
+
+  var html = _headerCorreo()
+    + '<div style="padding:2.2rem 2.6rem 2rem;">'
+    + '<div style="display:inline-block;background:rgba(42,15,37,.07);border-left:2px solid #C6A56A;padding:.4rem .75rem;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:#2A0F25;margin-bottom:1.4rem;">Tu lugar está confirmado · ' + (fase||'Taller') + '</div>'
+    + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 1rem;">Hola, ' + p + '.<br>Te esperamos el 15 de agosto.</h1>'
+    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Tu lugar en el taller está confirmado. Nos da mucho gusto tenerte. Mary estará encantada de acompañarte en este proceso.</p>'
+    + _detallesEvento()
+    + '<a href="' + calLink + '" style="display:block;background:#2A0F25;color:#EFE9E2;text-align:center;padding:.9rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.6rem;">Agregar a Google Calendar</a>'
+    // Hub y QR
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .6rem;">Tu espacio personal del evento</p>'
+    + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Aquí encontrarás tu código QR de entrada, la agenda del día y los recursos del taller.</p>'
+    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem;font-weight:600;">Acceder a mi espacio →</a>'
+    + '</div>'
+    // Encuesta previa — énfasis fuerte
+    + '<div style="border:1px solid #C6A56A;border-left:3px solid #C6A56A;padding:1.2rem 1.4rem;margin-bottom:1.6rem;background:rgba(198,165,106,.06);">'
+    + '<p style="font-size:.75rem;color:#2A0F25;font-weight:700;margin:0 0 .5rem;letter-spacing:.03em;">Antes del evento: encuesta previa</p>'
+    + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Dentro de tu espacio hay una encuesta breve que Mary necesita que contestes <strong>antes del taller</strong>. La revisa personalmente para personalizar los materiales y recomendaciones de cada asistente.</p>'
+    + '<p style="font-size:.82rem;color:#2A0F25;font-weight:600;margin:0;">Importante: sin esta encuesta no podrás hacer check-in el día del evento, ni acceder al material digital posterior.</p>'
+    + '</div>'
+    + _firmaCorreo()
+    + '</div>'
+    + _footerCorreo(correo);
+
+  MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
+    subject: 'Tu lugar en el taller está confirmado — REINVENTA', htmlBody: html });
+}
+
+function jsOk(obj)  { return ContentService.createTextOutput(JSON.stringify(obj || {result:'ok'})).setMimeType(ContentService.MimeType.JSON); }
+function jsErr(msg) { return ContentService.createTextOutput(JSON.stringify({error: msg})).setMimeType(ContentService.MimeType.JSON); }

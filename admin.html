@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — REINVENTA</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -68,16 +69,29 @@
     .kpi-fill { height: 100%; background: var(--gold); transition: width .4s; }
 
     /* Filtros */
-    .filter-row { display: flex; gap: .5rem; margin-bottom: .8rem; flex-wrap: wrap; }
+    .filter-row { display: flex; gap: .5rem; margin-bottom: .8rem; flex-wrap: wrap; align-items: center; }
     .filter-btn { padding: .4rem .9rem; font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; font-family: inherit; border: 1px solid var(--plum-10); background: none; color: var(--mauve); cursor: pointer; }
     .filter-btn.on { background: var(--plum); color: var(--gold); border-color: var(--plum); }
     .search-input { flex: 1; min-width: 160px; border: 1px solid var(--plum-10); padding: .4rem .8rem; font-size: .8rem; font-family: inherit; color: var(--plum); background: var(--cream); outline: none; }
     .search-input:focus { border-color: var(--gold); }
 
+    /* Botón QR scanner */
+    .qr-scan-btn { font-size: .65rem; padding: .4rem .9rem; border: 1px solid var(--gold); background: none; color: var(--gold); cursor: pointer; font-family: inherit; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+    .qr-scan-btn:hover { background: rgba(198,165,106,.1); }
+
+    /* Botón actualizar */
+    .refresh-btn { font-size: .52rem; padding: .25rem .7rem; border: 1px solid rgba(198,165,106,.4); background: none; color: var(--gold); cursor: pointer; font-family: inherit; letter-spacing: .08em; text-transform: uppercase; }
+    .refresh-btn:hover { background: rgba(198,165,106,.1); }
+
+    /* Action buttons (checkin, registrar, bienvenida) */
+    .action-btn { font-size: .6rem; padding: .25rem .6rem; border: 1px solid var(--gold); background: none; color: var(--gold); cursor: pointer; font-family: inherit; letter-spacing: .05em; white-space: nowrap; }
+    .action-btn:hover { background: rgba(198,165,106,.12); }
+    .action-btn:disabled { opacity: .4; cursor: not-allowed; }
+
     /* Tabla */
-    .table-wrap { overflow-x: auto; background: var(--cream); }
+    .table-wrap { overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 280px); background: var(--cream); }
     table { width: 100%; border-collapse: collapse; font-size: .78rem; }
-    thead th { background: var(--plum); color: var(--gold); font-size: .52rem; letter-spacing: .12em; text-transform: uppercase; padding: .7rem .9rem; text-align: left; white-space: nowrap; font-weight: 400; }
+    thead th { background: var(--plum); color: var(--gold); font-size: .52rem; letter-spacing: .12em; text-transform: uppercase; padding: .7rem .9rem; text-align: left; white-space: nowrap; font-weight: 400; position: sticky; top: 0; z-index: 5; }
     tbody td { padding: .7rem .9rem; border-bottom: 1px solid var(--plum-10); vertical-align: middle; }
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover td { background: rgba(198,165,106,.05); }
@@ -107,6 +121,31 @@
     .enc-field-val { font-size: .8rem; }
     .score-bar { height: 4px; background: var(--plum-10); margin-top: .25rem; border-radius: 2px; overflow: hidden; }
     .score-fill { height: 100%; background: var(--gold); border-radius: 2px; }
+
+    /* Correo editable inline */
+    .correo-editable { cursor: pointer; border-bottom: 1px dashed var(--mauve); }
+    .correo-editable:hover { border-bottom-color: var(--gold); color: var(--plum); }
+    .correo-input-inline { font-size: .72rem; font-family: inherit; border: 1px solid var(--gold); padding: .15rem .4rem; color: var(--plum); background: #fff; outline: none; width: 180px; }
+
+    /* Modal QR */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 100; display: flex; align-items: center; justify-content: center; }
+    .modal-box { background: var(--plum); border: 1px solid var(--gold); padding: 1.5rem; max-width: 420px; width: 95%; position: relative; }
+    .modal-title { font-family: Georgia, serif; color: var(--gold); font-size: 1rem; letter-spacing: .1em; margin-bottom: 1rem; }
+    .modal-close { position: absolute; top: .7rem; right: .9rem; background: none; border: none; color: var(--gold-40); cursor: pointer; font-size: 1.2rem; }
+    .modal-close:hover { color: var(--gold); }
+    .qr-video-wrap { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; background: #000; }
+    .qr-video-wrap video { width: 100%; height: 100%; object-fit: cover; }
+    .qr-status { margin-top: .8rem; font-size: .8rem; color: var(--cream); text-align: center; min-height: 1.2em; }
+    .qr-status.ok { color: #6ee7a0; }
+    .qr-status.err { color: #f87171; }
+
+    /* Modal acompañante */
+    .comp-modal-body { padding: .5rem 0; }
+    .comp-label { font-size: .52rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-40); display: block; margin: .8rem 0 .3rem; }
+    .comp-input { width: 100%; font-family: inherit; font-size: .85rem; padding: .6rem .8rem; border: 1px solid rgba(198,165,106,.25); background: rgba(42,15,37,.5); color: var(--cream); outline: none; }
+    .comp-input:focus { border-color: var(--gold); }
+    .comp-save-btn { margin-top: 1rem; width: 100%; background: var(--gold); color: var(--plum); border: none; padding: .7rem; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; font-family: inherit; cursor: pointer; }
+    .comp-save-btn:hover { background: #d4b37a; }
   </style>
 </head>
 <body>
@@ -135,7 +174,10 @@
       <span class="marca">Reinventa</span>
       <span style="font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-40);display:block;margin-top:.1rem;">by Mary Méndez · 15 ago 2026</span>
     </div>
-    <span class="badge">Admin</span>
+    <div style="display:flex;align-items:center;gap:.7rem;">
+      <button class="refresh-btn" onclick="actualizarDatos()">↻ Actualizar</button>
+      <span class="badge">Admin</span>
+    </div>
   </div>
 
   <div class="panel-body">
@@ -162,6 +204,7 @@
         <button class="filter-btn on" onclick="setFiltro('todos', this)">Todos</button>
         <button class="filter-btn" onclick="setFiltro('checkin', this)">Con check-in</button>
         <button class="filter-btn" onclick="setFiltro('sin_checkin', this)">Sin check-in</button>
+        <button class="qr-scan-btn" onclick="abrirQRScanner()">⬛ Escanear QR</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -195,11 +238,44 @@
   </div>
 </div>
 
+<!-- Modal QR Scanner -->
+<div id="qr-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <button class="modal-close" onclick="cerrarQRScanner()">✕</button>
+    <div class="modal-title">Escanear QR de entrada</div>
+    <div class="qr-video-wrap">
+      <video id="qr-video" autoplay playsinline muted></video>
+    </div>
+    <div class="qr-status" id="qr-status">Apunta la cámara al código QR del asistente…</div>
+  </div>
+</div>
+
+<!-- Modal Acompañante -->
+<div id="comp-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <button class="modal-close" onclick="cerrarCompModal()">✕</button>
+    <div class="modal-title">Registrar acompañante</div>
+    <div class="comp-modal-body">
+      <label class="comp-label">Nombre completo</label>
+      <input id="comp-nombre" class="comp-input" type="text" placeholder="Nombre del acompañante">
+      <label class="comp-label">Correo electrónico</label>
+      <input id="comp-correo" class="comp-input" type="email" placeholder="correo@ejemplo.com">
+      <button class="comp-save-btn" onclick="guardarAcompanante()">Registrar y enviar bienvenida</button>
+      <div id="comp-status" style="margin-top:.7rem;font-size:.75rem;color:var(--gold);text-align:center;"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 var adminKey = '';
 var datos = null;
 var filtroActual = 'todos';
 var busqueda = '';
+
+// QR scanner state
+var qrStream = null;
+var qrAnimFrame = null;
+var qrPendingId = null; // for companion modal
 
 function entrar() {
   var k = document.getElementById('admin-key').value.trim();
@@ -229,6 +305,16 @@ function entrar() {
       btn.textContent = 'Entrar al panel';
       btn.disabled = false;
     });
+}
+
+function actualizarDatos() {
+  if (!adminKey) return;
+  fetch('/api/admin?key=' + encodeURIComponent(adminKey))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.error) { datos = data; renderPanel(); }
+    })
+    .catch(function() {});
 }
 
 function switchTab(nombre, btn) {
@@ -279,18 +365,41 @@ function renderTabla() {
   var filtrados = d.filter(function(a) {
     if (filtroActual === 'checkin'     && !a.asistio) return false;
     if (filtroActual === 'sin_checkin' &&  a.asistio) return false;
-    if (busqueda && !(a.nombre.toLowerCase().includes(busqueda) || a.correo.toLowerCase().includes(busqueda))) return false;
+    if (busqueda && !((a.nombre||'').toLowerCase().includes(busqueda) || (a.correo||'').toLowerCase().includes(busqueda))) return false;
     return true;
   });
 
   var html = filtrados.map(function(a) {
     var hubUrl = '/hub?id=' + a.id;
+    var esAcompanante = (a.nombre||'').toLowerCase().startsWith('acompañante de');
+    var correoVacio = !a.correo || !a.correo.trim();
+
+    // Correo cell
+    var correoCell;
+    if (correoVacio && esAcompanante) {
+      correoCell = '<span style="color:var(--mauve);font-size:.68rem;font-style:italic">Sin correo</span>'
+        + ' <button class="action-btn" onclick="abrirCompModal(\'' + esc(a.id) + '\')">Registrar</button>';
+    } else if (esAcompanante && a.correo) {
+      correoCell = '<span class="correo-editable" style="color:var(--mauve);font-size:.72rem;" onclick="editarCorreo(this,\'' + esc(a.id) + '\')">' + esc(a.correo) + '</span>'
+        + ' <button class="action-btn" onclick="enviarBienvenida(\'' + esc(a.id) + '\',this)">✉ Bienvenida</button>';
+    } else {
+      correoCell = '<span class="correo-editable" style="color:var(--mauve);font-size:.72rem;" onclick="editarCorreo(this,\'' + esc(a.id) + '\')">' + esc(a.correo||'—') + '</span>';
+    }
+
+    // Check-in cell
+    var checkinCell;
+    if (a.asistio) {
+      checkinCell = pill('✓ ' + (a.fechaEntrada ? fmtHora(a.fechaEntrada) : ''), 'ok');
+    } else {
+      checkinCell = '<button class="action-btn" onclick="hacerCheckin(\'' + esc(a.id) + '\',this)">Check-in</button>';
+    }
+
     return '<tr>'
-      + '<td style="font-size:.68rem;color:var(--mauve);font-feature-settings:\'tnum\'">' + a.id + '</td>'
-      + '<td style="font-weight:500">' + a.nombre + '</td>'
-      + '<td style="color:var(--mauve);font-size:.72rem">' + a.correo + '</td>'
+      + '<td style="font-size:.68rem;color:var(--mauve);font-feature-settings:\'tnum\'">' + esc(a.id) + '</td>'
+      + '<td style="font-weight:500">' + esc(a.nombre) + '</td>'
+      + '<td>' + correoCell + '</td>'
       + '<td>' + pill(a.fase || '—', 'no') + '</td>'
-      + '<td>' + (a.asistio ? pill('✓ ' + (a.fechaEntrada ? fmtHora(a.fechaEntrada) : ''), 'ok') : pill('Pendiente', 'pend')) + '</td>'
+      + '<td>' + checkinCell + '</td>'
       + '<td>' + (previaIds[a.id] ? pill('✓ Enviada', 'ok') : pill('Pendiente', 'pend')) + '</td>'
       + '<td>' + (a.encuesta ? pill('✓ Enviada', 'ok') : pill('Pendiente', 'pend')) + '</td>'
       + '<td><a href="' + hubUrl + '" target="_blank" style="color:var(--gold);font-size:.68rem;text-decoration:none;">Ver →</a></td>'
@@ -300,16 +409,190 @@ function renderTabla() {
   document.getElementById('tbody-asistentes').innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--mauve);padding:1.5rem;">Sin resultados</td></tr>';
 }
 
+function esc(str) {
+  return (str || '').toString()
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+/* ── Check-in manual ─────────────────────────────────────── */
+function hacerCheckin(id, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  adminAction({ sub: 'checkin', id: id }, function(data) {
+    if (data.error && !data.yaRegistrado) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Check-in'; }
+      alert('Error: ' + data.error);
+    } else {
+      actualizarDatos();
+    }
+  });
+}
+
+/* ── Edición de correo inline ────────────────────────────── */
+function editarCorreo(span, id) {
+  var actual = span.textContent.trim();
+  if (actual === '—') actual = '';
+  var input = document.createElement('input');
+  input.type = 'email';
+  input.value = actual;
+  input.className = 'correo-input-inline';
+  span.parentNode.replaceChild(input, span);
+  input.focus();
+
+  function guardar() {
+    var nuevo = input.value.trim().toLowerCase();
+    if (!nuevo || nuevo === actual.toLowerCase()) {
+      actualizarDatos();
+      return;
+    }
+    adminAction({ sub: 'update_correo', id: id, correo_nuevo: nuevo }, function(data) {
+      actualizarDatos();
+    });
+  }
+  input.addEventListener('blur', guardar);
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') { input.blur(); } if (e.key === 'Escape') { actualizarDatos(); } });
+}
+
+/* ── Enviar bienvenida a acompañante con correo ─────────── */
+function enviarBienvenida(id, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  adminAction({ sub: 'enviar_bienvenida', id: id }, function(data) {
+    if (data.error) {
+      if (btn) { btn.disabled = false; btn.textContent = '✉ Bienvenida'; }
+      alert('Error: ' + data.error);
+    } else {
+      if (btn) { btn.textContent = '✓ Enviado'; }
+    }
+  });
+}
+
+/* ── Modal registrar acompañante ─────────────────────────── */
+var compModalId = null;
+function abrirCompModal(id) {
+  compModalId = id;
+  document.getElementById('comp-nombre').value = '';
+  document.getElementById('comp-correo').value = '';
+  document.getElementById('comp-status').textContent = '';
+  document.getElementById('comp-modal').style.display = 'flex';
+  document.getElementById('comp-nombre').focus();
+}
+function cerrarCompModal() {
+  document.getElementById('comp-modal').style.display = 'none';
+  compModalId = null;
+}
+function guardarAcompanante() {
+  var nombre = document.getElementById('comp-nombre').value.trim();
+  var correo = document.getElementById('comp-correo').value.trim().toLowerCase();
+  if (!correo) { document.getElementById('comp-status').textContent = 'El correo es obligatorio.'; return; }
+  document.getElementById('comp-status').textContent = 'Guardando…';
+  adminAction({ sub: 'registrar_acompanante', id: compModalId, nombre_nuevo: nombre, correo_nuevo: correo }, function(data) {
+    if (data.error) {
+      document.getElementById('comp-status').textContent = 'Error: ' + data.error;
+    } else {
+      document.getElementById('comp-status').textContent = '✓ Registrado y correo enviado.';
+      setTimeout(function() { cerrarCompModal(); actualizarDatos(); }, 1500);
+    }
+  });
+}
+
+/* ── API helper ──────────────────────────────────────────── */
+function adminAction(params, cb) {
+  var body = Object.assign({ action: 'admin_action', key: adminKey }, params);
+  fetch('/api/admin-action', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+    .then(function(r) { return r.json(); })
+    .then(cb)
+    .catch(function(err) { cb({ error: err.message }); });
+}
+
+/* ── QR Scanner ──────────────────────────────────────────── */
+function abrirQRScanner() {
+  document.getElementById('qr-modal').style.display = 'flex';
+  document.getElementById('qr-status').textContent = 'Iniciando cámara…';
+  document.getElementById('qr-status').className = 'qr-status';
+  var video = document.getElementById('qr-video');
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(function(stream) {
+      qrStream = stream;
+      video.srcObject = stream;
+      video.play();
+      video.addEventListener('loadedmetadata', function() { escanearFrame(); });
+      document.getElementById('qr-status').textContent = 'Apunta la cámara al código QR…';
+    })
+    .catch(function(err) {
+      document.getElementById('qr-status').textContent = 'No se pudo acceder a la cámara: ' + err.message;
+      document.getElementById('qr-status').className = 'qr-status err';
+    });
+}
+
+function cerrarQRScanner() {
+  if (qrAnimFrame) { cancelAnimationFrame(qrAnimFrame); qrAnimFrame = null; }
+  if (qrStream) { qrStream.getTracks().forEach(function(t) { t.stop(); }); qrStream = null; }
+  var video = document.getElementById('qr-video');
+  video.srcObject = null;
+  document.getElementById('qr-modal').style.display = 'none';
+}
+
+function escanearFrame() {
+  var video = document.getElementById('qr-video');
+  if (!video || !qrStream) return;
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+    qrAnimFrame = requestAnimationFrame(escanearFrame);
+    return;
+  }
+  var canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+  if (code) {
+    var url = code.data;
+    // Extract ID from hub?id=RNV-XXX
+    var match = url.match(/hub\?id=(RNV-[A-Z0-9\-]+)/i);
+    if (match) {
+      var id = match[1];
+      document.getElementById('qr-status').textContent = 'QR detectado: ' + id + ' — registrando…';
+      document.getElementById('qr-status').className = 'qr-status';
+      // Stop scanning
+      if (qrAnimFrame) { cancelAnimationFrame(qrAnimFrame); qrAnimFrame = null; }
+      adminAction({ sub: 'checkin', id: id }, function(data) {
+        if (data.error === 'encuesta_previa_pendiente') {
+          document.getElementById('qr-status').textContent = '⚠ ' + (data.nombre || id) + ' — encuesta previa pendiente.';
+          document.getElementById('qr-status').className = 'qr-status err';
+        } else if (data.error) {
+          document.getElementById('qr-status').textContent = 'Error: ' + data.error;
+          document.getElementById('qr-status').className = 'qr-status err';
+        } else if (data.yaRegistrado) {
+          document.getElementById('qr-status').textContent = '✓ ' + (data.nombre || id) + ' — ya tenía check-in.';
+          document.getElementById('qr-status').className = 'qr-status ok';
+        } else {
+          document.getElementById('qr-status').textContent = '✓ Bienvenid@, ' + (data.nombre || id) + '!';
+          document.getElementById('qr-status').className = 'qr-status ok';
+          actualizarDatos();
+        }
+        setTimeout(function() { cerrarQRScanner(); }, 2000);
+      });
+      return;
+    }
+  }
+  qrAnimFrame = requestAnimationFrame(escanearFrame);
+}
+
 function renderCardsPrevia() {
   var html = datos.encuestasPrevia.map(function(e) {
     return '<div class="enc-card">'
-      + '<p class="enc-card-name">' + e.nombre + ' <span style="font-size:.65rem;color:var(--mauve);font-family:sans-serif">(' + e.correo + ')</span></p>'
+      + '<p class="enc-card-name">' + esc(e.nombre) + ' <span style="font-size:.65rem;color:var(--mauve);font-family:sans-serif">(' + esc(e.correo) + ')</span></p>'
       + campo('Satisfacción personal', e.satisfaccion)
       + campo('Coherencia y autenticidad', e.coherencia)
       + campo('Confianza y practicidad', e.confianza)
       + campo('Proyección y liderazgo', e.proyeccion)
-      + '<div class="enc-field" style="grid-column:1/-1"><div class="enc-field-label">Motivación principal</div><div class="enc-field-val">' + (e.motivacion || '—') + '</div></div>'
-      + '<div class="enc-field" style="grid-column:1/-1"><div class="enc-field-label">Expectativa</div><div class="enc-field-val">' + (e.expectativa || '—') + '</div></div>'
+      + '<div class="enc-field" style="grid-column:1/-1"><div class="enc-field-label">Motivación principal</div><div class="enc-field-val">' + esc(e.motivacion || '—') + '</div></div>'
+      + '<div class="enc-field" style="grid-column:1/-1"><div class="enc-field-label">Expectativa</div><div class="enc-field-val">' + esc(e.expectativa || '—') + '</div></div>'
       + campo2('Tono de piel', e.piel)
       + campo2('Cabello', e.cabello)
       + campo2('Ojos', e.ojos)
@@ -326,15 +609,15 @@ function campo(label, val) {
 }
 
 function campo2(label, val) {
-  return '<div class="enc-field"><div class="enc-field-label">' + label + '</div><div class="enc-field-val">' + (val || '—') + '</div></div>';
+  return '<div class="enc-field"><div class="enc-field-label">' + label + '</div><div class="enc-field-val">' + esc(val || '—') + '</div></div>';
 }
 
 function renderTablaPost() {
   var html = datos.asistentes.filter(function(a) { return a.encuesta && a.calificacion; }).map(function(a) {
     return '<tr>'
-      + '<td style="font-weight:500">' + a.nombre + '</td>'
+      + '<td style="font-weight:500">' + esc(a.nombre) + '</td>'
       + '<td>' + renderEstrellas(a.calificacion) + '</td>'
-      + '<td style="color:var(--mauve)">' + (a.comentario || '—') + '</td>'
+      + '<td style="color:var(--mauve)">' + esc(a.comentario || '—') + '</td>'
       + '<td style="font-size:.68rem;color:var(--mauve)">' + (a.fechaEncuesta ? fmtFecha(a.fechaEncuesta) : '—') + '</td>'
       + '</tr>';
   }).join('');
