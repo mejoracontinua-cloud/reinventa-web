@@ -1083,3 +1083,40 @@ function regenerarLinksWASinId() {
   }
   SpreadsheetApp.getUi().alert('Listo. Se actualizaron ' + count + ' link(s) con su ID personalizado.');
 }
+
+/* ── Sincronizar registros faltantes ─────────────────────────── */
+/* Recorre Registros, y para cada fila con Pagó ✓ que no esté
+   en Asistencia o Comunicaciones, la agrega.
+   Ejecutar manualmente desde el editor de Apps Script.          */
+function sincronizarRegistrosFaltantes() {
+  var sheet    = getSheet();
+  var data     = sheet.getDataRange().getValues();
+  var vistos   = {};
+  var agregados = 0;
+
+  for (var i = 1; i < data.length; i++) {
+    var pago    = (data[i][9] || '').toString().trim();
+    if (pago !== '✓') continue;
+
+    var correo  = (data[i][2] || '').toString().toLowerCase().trim();
+    var nombre  = (data[i][1] || '').toString().trim();
+    var telefono= (data[i][3] || '').toString().trim();
+    var contacto= (data[i][4] || '').toString().trim();
+    var fase    = (data[i][6] || '').toString().trim();
+
+    if (!correo || vistos[correo]) continue;
+    vistos[correo] = true;
+
+    // Asistencia
+    actualizarAsistencia(correo, nombre, fase);
+
+    // Comunicaciones
+    var id = obtenerIdAsistente(correo);
+    sincronizarComunicaciones(correo, nombre, telefono, contacto, id);
+
+    agregados++;
+    Utilities.sleep(300);
+  }
+
+  SpreadsheetApp.getUi().alert('Listo. Se sincronizaron ' + agregados + ' registro(s) faltante(s).');
+}
