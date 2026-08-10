@@ -1335,10 +1335,26 @@ function adminCheckin(id) {
   var data  = sheet.getDataRange().getValues();
   for (var i = 1; i < data.length; i++) {
     if ((data[i][0] || '').toString().trim() === id) {
-      if (data[i][4] === '✓') return jsOk({ yaRegistrado: true, nombre: data[i][1] });
+      var nombre = data[i][1];
+      if (data[i][4] === '✓') return jsOk({ yaRegistrado: true, nombre: nombre });
+
+      // Gate: requiere encuesta previa
+      var ss2 = SpreadsheetApp.getActiveSpreadsheet();
+      var prevSheet = ss2.getSheetByName('Encuesta Previa');
+      var tienePrevia = false;
+      if (prevSheet) {
+        var prevData = prevSheet.getDataRange().getValues();
+        for (var k = 1; k < prevData.length; k++) {
+          if ((prevData[k][0]||'').toString().trim() === id) { tienePrevia = true; break; }
+        }
+      }
+      if (!tienePrevia) {
+        return ContentService.createTextOutput(JSON.stringify({ error: 'encuesta_previa_pendiente', nombre: nombre })).setMimeType(ContentService.MimeType.JSON);
+      }
+
       sheet.getRange(i+1,5).setValue('✓');
       sheet.getRange(i+1,6).setValue(new Date());
-      return jsOk({ nombre: data[i][1], fase: data[i][3] });
+      return jsOk({ nombre: nombre, fase: data[i][3] });
     }
   }
   return jsErr('ID no encontrado');
