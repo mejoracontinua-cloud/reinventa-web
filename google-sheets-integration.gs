@@ -823,7 +823,8 @@ function _enviarCorreosMasivo(fnNombre, colEnviado, label) {
     var yaEnv    = filaComm ? comSheet.getRange(filaComm, colEnviado).getValue() : '';
 
     if (yaEnv !== 'Sí') {
-      if (fnNombre === 'enviarCorreoConfirmacion') enviarCorreoConfirmacion(nombre, correo, fase);
+      var idUnicoCorreo = obtenerIdAsistente(correo);
+      if (fnNombre === 'enviarCorreoConfirmacion') enviarCorreoConfirmacion(nombre, correo, fase, idUnicoCorreo);
       if (fnNombre === 'enviarCorreoRecordatorio') enviarCorreoRecordatorio(nombre, correo);
       if (fnNombre === 'enviarCorreoAgradecimiento') enviarCorreoAgradecimiento(nombre, correo);
       if (filaComm) comSheet.getRange(filaComm, colEnviado).setValue('Sí');
