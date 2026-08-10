@@ -175,6 +175,7 @@
       <span style="font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-40);display:block;margin-top:.1rem;">by Mary Méndez · 15 ago 2026</span>
     </div>
     <div style="display:flex;align-items:center;gap:.7rem;">
+      <button class="refresh-btn" onclick="enviarCorreoPrueba()" style="font-size:.52rem;border:1px solid rgba(198,165,106,.35);background:none;color:rgba(198,165,106,.7);padding:.3rem .7rem;cursor:pointer;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;" title="Envía el correo de confirmación de prueba a tu correo">✉ Correo prueba</button>
       <button class="refresh-btn" onclick="actualizarDatos()">↻ Actualizar</button>
       <span class="badge">Admin</span>
     </div>
@@ -193,6 +194,7 @@
     <!-- Tabs -->
     <div class="admin-tabs">
       <button class="admin-tab on" onclick="switchTab('asistentes', this)">Asistentes</button>
+      <button class="admin-tab" onclick="switchTab('metricas', this)">Métricas</button>
       <button class="admin-tab" onclick="switchTab('previa', this)">Encuesta previa</button>
       <button class="admin-tab" onclick="switchTab('post', this)">Encuesta post</button>
     </div>
@@ -215,6 +217,11 @@
           <tbody id="tbody-asistentes"></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Tab: Métricas -->
+    <div id="tab-metricas" class="tab-pane">
+      <div id="metricas-inner"></div>
     </div>
 
     <!-- Tab: Encuesta previa -->
@@ -247,6 +254,21 @@
       <video id="qr-video" autoplay playsinline muted></video>
     </div>
     <div class="qr-status" id="qr-status">Apunta la cámara al código QR del asistente…</div>
+  </div>
+</div>
+
+<!-- Modal Confirmación check-in -->
+<div id="confirm-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="max-width:340px;">
+    <div class="modal-title">Confirmar check-in</div>
+    <div style="text-align:center;padding:.5rem 0 1.2rem;">
+      <div style="font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mauve);margin-bottom:.4rem;" id="confirm-id-label">—</div>
+      <div style="font-family:Georgia,serif;font-size:1.3rem;color:var(--plum);margin-bottom:.3rem;" id="confirm-nombre">—</div>
+      <div style="font-size:.78rem;color:var(--mauve);" id="confirm-fase">—</div>
+    </div>
+    <p style="font-size:.8rem;color:#4a3545;line-height:1.6;margin-bottom:1.2rem;text-align:center;">¿El staff de REINVENTA validó la identidad de esta persona?</p>
+    <button onclick="confirmarCheckin()" style="width:100%;background:var(--plum);color:var(--gold);border:none;padding:.9rem;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-family:inherit;cursor:pointer;margin-bottom:.5rem;">Sí, confirmar check-in</button>
+    <button onclick="cancelarCheckin()" style="width:100%;background:none;border:1px solid var(--plum-10);color:var(--mauve);padding:.7rem;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-family:inherit;cursor:pointer;">Cancelar</button>
   </div>
 </div>
 
@@ -348,13 +370,85 @@ function renderPanel() {
   document.getElementById('kpi-checkin').textContent  = checkin;
   document.getElementById('kpi-previa').textContent   = previa;
   document.getElementById('kpi-encuesta').textContent = post;
-  document.getElementById('kpi-fill-checkin').style.width  = (total ? checkin/total*100 : 0) + '%';
-  document.getElementById('kpi-fill-previa').style.width   = (total ? previa/total*100 : 0) + '%';
-  document.getElementById('kpi-fill-encuesta').style.width = (total ? post/total*100 : 0) + '%';
+  document.getElementById('kpi-fill-checkin').style.width  = (total ? Math.round(checkin/total*100) : 0) + '%';
+  document.getElementById('kpi-fill-previa').style.width   = (total ? Math.round(previa/total*100) : 0) + '%';
+  document.getElementById('kpi-fill-encuesta').style.width = (total ? Math.round(post/total*100) : 0) + '%';
 
   renderTabla();
+  renderMetricas();
   renderCardsPrevia();
   renderTablaPost();
+}
+
+function renderMetricas() {
+  var d = datos.asistentes;
+  var total   = d.length;
+  if (!total) { document.getElementById('metricas-inner').innerHTML = '<p style="color:var(--mauve);padding:1rem 0;">Sin datos aún.</p>'; return; }
+
+  var checkin = d.filter(function(a){ return a.asistio; }).length;
+  var previa  = datos.encuestasPrevia.length;
+  var post    = d.filter(function(a){ return a.encuesta; }).length;
+
+  // Por fase
+  var fases = {};
+  d.forEach(function(a){
+    var f = a.fase || 'Sin fase';
+    fases[f] = (fases[f]||0) + 1;
+  });
+
+  // Acompañantes vs compradores
+  var acomp = d.filter(function(a){ return (a.nombre||'').toLowerCase().startsWith('acompañante de'); }).length;
+  var compradores = total - acomp;
+
+  function barra(label, n, tot, color) {
+    var pct = tot ? Math.round(n/tot*100) : 0;
+    return '<div style="margin-bottom:1.1rem;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.3rem;">'
+      + '<span style="font-size:.72rem;color:var(--plum);">' + label + '</span>'
+      + '<span style="font-family:Georgia,serif;font-size:1.1rem;color:var(--plum);">' + n + '<span style="font-size:.65rem;color:var(--mauve);font-family:inherit;margin-left:.3rem;">/ ' + tot + ' · ' + pct + '%</span></span>'
+      + '</div>'
+      + '<div style="height:6px;background:var(--plum-10);border-radius:3px;overflow:hidden;">'
+      + '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:3px;transition:width .5s;"></div>'
+      + '</div></div>';
+  }
+
+  var fasesHtml = Object.keys(fases).map(function(f){
+    return '<div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--plum-10);">'
+      + '<span style="font-size:.78rem;color:var(--plum);">' + f + '</span>'
+      + '<span style="font-size:.78rem;font-weight:600;color:var(--plum);">' + fases[f] + '</span>'
+      + '</div>';
+  }).join('');
+
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">'
+
+    // Columna izquierda: embudos
+    + '<div style="background:var(--cream);padding:1.2rem 1.4rem;">'
+    + '<p style="font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mauve);margin-bottom:1rem;">Embudo de participación</p>'
+    + barra('Registradas en sistema', total, total, '#C6A56A')
+    + barra('Encuesta previa completada', previa, total, '#9a7d4a')
+    + barra('Check-in el día del evento', checkin, total, '#2A0F25')
+    + barra('Encuesta post completada', post, total, '#5c3b56')
+    + '</div>'
+
+    // Columna derecha: desglose
+    + '<div style="display:flex;flex-direction:column;gap:1rem;">'
+    + '<div style="background:var(--cream);padding:1.2rem 1.4rem;">'
+    + '<p style="font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mauve);margin-bottom:.8rem;">Por fase de compra</p>'
+    + fasesHtml
+    + '</div>'
+    + '<div style="background:var(--cream);padding:1.2rem 1.4rem;">'
+    + '<p style="font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mauve);margin-bottom:.8rem;">Composición</p>'
+    + '<div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--plum-10);">'
+    + '<span style="font-size:.78rem;color:var(--plum);">Compradores directos</span>'
+    + '<span style="font-size:.78rem;font-weight:600;color:var(--plum);">' + compradores + '</span></div>'
+    + '<div style="display:flex;justify-content:space-between;padding:.4rem 0;">'
+    + '<span style="font-size:.78rem;color:var(--plum);">Acompañantes</span>'
+    + '<span style="font-size:.78rem;font-weight:600;color:var(--plum);">' + acomp + '</span></div>'
+    + '</div></div>'
+
+    + '</div>';
+
+  document.getElementById('metricas-inner').innerHTML = html;
 }
 
 function renderTabla() {
@@ -415,17 +509,57 @@ function esc(str) {
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-/* ── Check-in manual ─────────────────────────────────────── */
+/* ── Check-in con confirmación de seguridad ──────────────── */
+var pendingCheckinId = null;
+
 function hacerCheckin(id, btn) {
-  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  // Buscar info del asistente en datos locales
+  var asistente = datos && datos.asistentes ? datos.asistentes.find(function(a){ return a.id === id; }) : null;
+  pendingCheckinId = id;
+  document.getElementById('confirm-id-label').textContent = id;
+  document.getElementById('confirm-nombre').textContent   = asistente ? asistente.nombre : id;
+  document.getElementById('confirm-fase').textContent     = asistente ? (asistente.fase || '') : '';
+  document.getElementById('confirm-modal').style.display  = 'flex';
+}
+
+function confirmarCheckin() {
+  var id = pendingCheckinId;
+  if (!id) return;
+  document.getElementById('confirm-modal').style.display = 'none';
+  pendingCheckinId = null;
   adminAction({ sub: 'checkin', id: id }, function(data) {
-    if (data.error && !data.yaRegistrado) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Check-in'; }
-      alert('Error: ' + data.error);
+    if (data.error === 'encuesta_previa_pendiente') {
+      mostrarToast('⚠ ' + (data.nombre || id) + ' — encuesta previa pendiente, no puede hacer check-in.', 'err');
+    } else if (data.error) {
+      mostrarToast('Error: ' + data.error, 'err');
+    } else if (data.yaRegistrado) {
+      mostrarToast('Ya tenía check-in: ' + (data.nombre || id), 'ok');
     } else {
+      mostrarToast('✓ Check-in confirmado: ' + (data.nombre || id), 'ok');
       actualizarDatos();
     }
   });
+}
+
+function cancelarCheckin() {
+  pendingCheckinId = null;
+  document.getElementById('confirm-modal').style.display = 'none';
+}
+
+function mostrarToast(msg, tipo) {
+  var t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);padding:.75rem 1.4rem;border-radius:2px;font-size:.8rem;font-family:inherit;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:opacity .3s;white-space:nowrap;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.background = tipo === 'ok' ? '#2A0F25' : '#7a1515';
+  t.style.color      = tipo === 'ok' ? '#C6A56A' : '#f87171';
+  t.style.opacity    = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.style.opacity = '0'; }, 3000);
 }
 
 /* ── Edición de correo inline ────────────────────────────── */
@@ -492,6 +626,14 @@ function guardarAcompanante() {
       document.getElementById('comp-status').textContent = '✓ Registrado y correo enviado.';
       setTimeout(function() { cerrarCompModal(); actualizarDatos(); }, 1500);
     }
+  });
+}
+
+/* ── Correo de prueba ────────────────────────────────────── */
+function enviarCorreoPrueba() {
+  if (!confirm('¿Enviar correo de prueba a mejoracontinua@caceca.org?')) return;
+  adminAction({ sub: 'test_email' }, function(data) {
+    mostrarToast(data.error ? 'Error: ' + data.error : '✓ Correo de prueba enviado', data.error ? 'err' : 'ok');
   });
 }
 
