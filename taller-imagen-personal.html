@@ -862,6 +862,7 @@
         btn.hidden = true;
         caption.hidden = false;
         caption.textContent = ACTIVE_TIER === 'agotado' ? 'Cupo agotado' : 'Venta cerrada';
+        caption.classList.add('agotado');
         card.classList.remove('featured');
         return;
       }
@@ -870,6 +871,7 @@
         card.classList.add('featured');
         btn.hidden = false;
         caption.hidden = true;
+        caption.classList.remove('agotado');
         if (btn.tagName === 'BUTTON') {
           btn.addEventListener('click', function(){ window.location.href = '/reservar'; });
         }
@@ -878,6 +880,7 @@
         btn.hidden = true;
         caption.hidden = false;
         caption.textContent = 'Cupo agotado';
+        caption.classList.add('agotado');
       } else {
         card.classList.remove('featured');
         btn.hidden = true;
@@ -1015,7 +1018,7 @@
 <script>
 (function(){
   var STRIPE_URL = STRIPE_LINKS['preventa']; /* Fase actual: Preventa */
-  var SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzw2YuhsQXtnwF8btABlqeolGykBs6KPkLXFP4RUG0FU34sBX2Kli3CBSnu2AxfJXtqBQ/exec';
+  var SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxY1AuqgR3sonF2MhxsphCVWHQr5pTJg-Qs_xmEHEFnTaK4Q6y_ivFXrhfHUW69or7ymA/exec';
 
   /* Capturar UTM de la landing page y persistir en sessionStorage */
   var UTM_MAP = {

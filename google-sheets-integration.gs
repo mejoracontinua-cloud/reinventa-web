@@ -26,6 +26,7 @@
  * [Asistencia]
  *   A  ID Único (RNV-001)   B  Nombre             C  Correo
  *   D  Fase                 E  Asistió ✓          F  Fecha entrada
+ *   G  Encuesta ✓           H  Fecha encuesta     I  Calificación  J  Comentario
  *
  * [Dashboard] — solo fórmulas, no la toca el script
  */
@@ -135,18 +136,22 @@ function handleStripeWebhook(event) {
 
   var sheet = getSheet();
 
+  // Anti-duplicado por Stripe ID
   if (stripeId && findRowByStripeId(sheet, stripeId)) {
     return ContentService.createTextOutput(JSON.stringify({ result: 'duplicate' })).setMimeType(ContentService.MimeType.JSON);
   }
 
   var existingRow = findRowByEmail(sheet, correo);
   var tel         = '';
+  var contacto    = '';
 
   if (existingRow) {
     var yaPago = sheet.getRange(existingRow, 10).getValue() === '✓';
-    tel = sheet.getRange(existingRow, 4).getValue();
-    var contacto = sheet.getRange(existingRow, 5).getValue();
+    tel      = sheet.getRange(existingRow, 4).getValue();
+    contacto = sheet.getRange(existingRow, 5).getValue();
+
     if (!yaPago) {
+      // Primera compra de este correo — actualiza la fila existente
       var nombreFinal = nombre || sheet.getRange(existingRow, 2).getValue();
       if (nombre) sheet.getRange(existingRow, 2).setValue(nombre);
       sheet.getRange(existingRow, 7).setValue(fase);
@@ -158,8 +163,20 @@ function handleStripeWebhook(event) {
       actualizarAsistencia(correo, nombreFinal, fase);
       var idNuevo = obtenerIdAsistente(correo);
       sincronizarComunicaciones(correo, nombreFinal, tel, contacto, idNuevo);
+    } else {
+      // Segunda (o tercera) compra del mismo correo — boleto adicional
+      // Se agrega NUEVA fila en Registros con el nuevo Stripe ID
+      sheet.appendRow([
+        new Date(), nombre || sheet.getRange(existingRow, 2).getValue(), correo,
+        tel, contacto, '', fase, monto, fecha, '✓', stripeId, 'stripe directo',
+        '', '', '', '', ''
+      ]);
+      // Agrega acompañante en Asistencia (sin tocar Comunicaciones)
+      var nombreComprador = sheet.getRange(existingRow, 2).getValue() || nombre;
+      agregarAcompanante(nombreComprador, fase);
     }
   } else {
+    // Correo completamente nuevo
     sheet.appendRow([
       new Date(), nombre, correo, '', '', '', fase, monto, fecha, '✓', stripeId, 'stripe directo',
       '', '', '', '', ''
@@ -210,11 +227,29 @@ function sincronizarComunicaciones(correo, nombre, telefono, contacto, idUnico) 
 function actualizarAsistencia(correo, nombre, fase) {
   var sheet = getAsistenciaSheet();
   var data  = sheet.getDataRange().getValues();
+  // Verificar si ya existe por correo
   for (var i = 1; i < data.length; i++) {
     if ((data[i][2] || '').toLowerCase().trim() === correo.toLowerCase().trim()) return;
   }
   var id = generarSiguienteId(sheet);
   sheet.appendRow([id, nombre, correo, fase, '', '', '', '', '', '']);
+}
+
+/* ── Agregar acompañante en Asistencia ───────────────────────── */
+/* Se llama cuando el comprador ya tiene su fila pero compra un
+   boleto adicional (segunda o tercera compra del mismo correo).
+   También se usa en sincronizarRegistrosFaltantes para las fases
+   que ya traen x2 o x3 en un solo Stripe event.                 */
+function agregarAcompanante(nombreComprador, fase) {
+  var sheet     = getAsistenciaSheet();
+  var nombreAc  = 'Acompañante de ' + nombreComprador;
+  // Verificar que no exista ya ese acompañante
+  var data = sheet.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if ((data[i][1] || '').toLowerCase().trim() === nombreAc.toLowerCase().trim()) return;
+  }
+  var id = generarSiguienteId(sheet);
+  sheet.appendRow([id, nombreAc, '', fase, '', '', '', '', '', '']);
 }
 
 function generarSiguienteId(sheet) {
@@ -507,27 +542,40 @@ function generateWhatsAppLinkConfirmacion(nombre, telefono, idUnico) {
   return 'https://wa.me/' + numero + '?text=' + msg;
 }
 
-function generateWhatsAppLinkRecordatorio(nombre, telefono) {
+function generateWhatsAppLinkRecordatorio(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
-  var p  = nombre ? nombre.trim().split(' ')[0] : 'participante';
-  var e  = encodeURIComponent;
-  var NL = '%0A';
+  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e      = encodeURIComponent;
+  var NL     = '%0A';
+  var hubUrl = idUnico
+    ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
+    : 'https://reinventabymarymendez.com.mx/hub';
   var msg =
     e('*REINVENTA by Mary Mendez*') + NL + NL +
     e('Hola, ' + p + '. Mañana es el gran día.') + NL + NL +
     e('*Lo que tu imagen comunica*') + NL +
     e('- Mañana sábado 15 de agosto') + NL +
-    e('- 10:00 a 12:00 am') + NL +
+    e('- 10:00 a 12:00 pm') + NL +
     e('- The University Club of Mexico') + NL +
-    e('- Av. Reforma 150, Juárez, CDMX') + NL + NL +
+    e('- Av. Paseo de la Reforma 150, Juárez, CDMX') + NL + NL +
     e('*Cómo llegar:*') + NL +
     e('https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
-    e('Te esperamos puntual. Mary tiene algo muy especial preparado para ti.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*Tu espacio personal del evento:*') + NL +
+    e(hubUrl) + NL + NL +
+    e('Ahí encuentras la agenda del día, tu código QR de entrada y los materiales del taller.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*Ultimo recordatorio: encuesta previa*') + NL + NL +
+    e('Si aún no has contestado la encuesta dentro de tu espacio, este es el momento. Mary la revisa antes del taller para personalizar tu experiencia.') + NL + NL +
+    e('Quienes no la contesten antes del evento no tendrán acceso al material digital posterior — guías, recursos y demás — que se desbloquea en tu perfil tras el taller.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('Te esperamos puntual. ¡Nos vemos mañana!') + NL + NL +
     e('_Con cariño,_') + NL +
     e('_Reinventa by Mary Mendez_') + NL + NL +
     e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
     e('- - - - - - - - - - - - -') + NL +
+    (idUnico ? e('_Tu código de acceso: *' + idUnico + '*_') + NL : '') +
     e('_Organizado integralmente por_') + NL +
     e('*Alumbra Studios*') + NL +
     e('https://www.alumbrastudios.com');
@@ -537,48 +585,66 @@ function generateWhatsAppLinkRecordatorio(nombre, telefono) {
 function generateWhatsAppLinkQR(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
-  var p  = nombre ? nombre.trim().split(' ')[0] : 'participante';
-  var e  = encodeURIComponent;
-  var NL = '%0A';
-  var urlEntrada = 'https://reinventabymarymendez.com.mx/entrada?id=' + idUnico;
+  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e      = encodeURIComponent;
+  var NL     = '%0A';
+  var hubUrl = 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico;
   var msg =
     e('*REINVENTA by Mary Mendez*') + NL + NL +
-    e('Hola, ' + p + '. Aquí está tu acceso para el taller.') + NL + NL +
-    e('*Tu código de entrada:*') + NL +
-    e(urlEntrada) + NL + NL +
-    e('Muestra este link en la entrada el día del evento.') + NL + NL +
+    e('Hola, ' + p + '. Hoy te esperamos.') + NL + NL +
     e('*Lo que tu imagen comunica*') + NL +
-    e('- Sábado 15 de agosto') + NL +
-    e('- 10:00 a 12:00 am') + NL +
+    e('- Hoy sábado 15 de agosto') + NL +
+    e('- 10:00 a 12:00 pm') + NL +
     e('- The University Club of Mexico') + NL +
-    e('- Av. Reforma 150, Juárez, CDMX') + NL + NL +
-    e('Nos vemos pronto.') + NL + NL +
+    e('- Av. Paseo de la Reforma 150, Juárez, CDMX') + NL + NL +
+    e('*Cómo llegar:*') + NL +
+    e('https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*Tu código QR de entrada:*') + NL + NL +
+    e('Entra a tu espacio personal y muestra el código QR al llegar. El staff lo escaneará en la entrada.') + NL + NL +
+    e(hubUrl) + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('¡Nos vemos en un momento. Sera un día increíble!') + NL + NL +
     e('_Con cariño,_') + NL +
     e('_Reinventa by Mary Mendez_') + NL + NL +
     e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
     e('- - - - - - - - - - - - -') + NL +
+    e('_Tu código de acceso: *' + idUnico + '*_') + NL +
     e('_Organizado integralmente por_') + NL +
     e('*Alumbra Studios*') + NL +
     e('https://www.alumbrastudios.com');
   return 'https://wa.me/' + numero + '?text=' + msg;
 }
 
-function generateWhatsAppLinkAgradecimiento(nombre, telefono) {
+function generateWhatsAppLinkAgradecimiento(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
-  var p  = nombre ? nombre.trim().split(' ')[0] : 'participante';
-  var e  = encodeURIComponent;
-  var NL = '%0A';
+  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e      = encodeURIComponent;
+  var NL     = '%0A';
+  var hubUrl = idUnico
+    ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
+    : 'https://reinventabymarymendez.com.mx/hub';
   var msg =
     e('*REINVENTA by Mary Mendez*') + NL + NL +
-    e('Hola, ' + p + '. Gracias por acompañarnos hoy.') + NL + NL +
-    e('Fue un honor compartir este espacio contigo. Esperamos que lo que viviste hoy te acompañe mucho tiempo.') + NL + NL +
+    e('Hola, ' + p + '. Fue un honor acompañarte hoy.') + NL + NL +
+    e('Gracias por confiar en este espacio y por abrirte a transformar la manera en que tu imagen comunica quién eres. Lo que viviste hoy es solo el comienzo.') + NL + NL +
+    e('Mary estará siempre disponible para seguir acompañándote en este camino.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*Recursos del taller*') + NL + NL +
+    e('Las guías y materiales se desbloquean en tu espacio personal una vez que completes la encuesta de satisfacción.') + NL + NL +
+    e('Para acceder:') + NL +
+    e('1. Entra a tu espacio personal') + NL +
+    e('2. Completa la encuesta de satisfacción') + NL + NL +
+    e(hubUrl) + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
     e('*Conoce más sobre Mary:*') + NL +
     e('https://reinventabymarymendez.com.mx') + NL + NL +
     e('_Con cariño,_') + NL +
     e('_Reinventa by Mary Mendez_') + NL + NL +
     e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
     e('- - - - - - - - - - - - -') + NL +
+    (idUnico ? e('_Tu código de acceso: *' + idUnico + '*_') + NL : '') +
     e('_Organizado integralmente por_') + NL +
     e('*Alumbra Studios*') + NL +
     e('https://www.alumbrastudios.com');
@@ -587,33 +653,53 @@ function generateWhatsAppLinkAgradecimiento(nombre, telefono) {
 
 /* ── Generación masiva de botones WA ────────────────────────── */
 function generarBotonesConfirmacionMasivo() {
-  _generarBotonesMasivo(generateWhatsAppLinkConfirmacion, 5, 6, 'Enviar confirmación', false);
+  _generarBotonesMasivoConId(generateWhatsAppLinkConfirmacion, 5, 6, 'Enviar confirmación', false);
 }
 
 function generarBotonesRecordatorioMasivo() {
-  _generarBotonesMasivo(generateWhatsAppLinkRecordatorio, 8, 9, 'Enviar recordatorio', false);
+  _generarBotonesMasivoConId(generateWhatsAppLinkRecordatorio, 8, 9, 'Enviar recordatorio', false);
 }
 
 function generarBotonesAgradecimientoMasivo() {
-  _generarBotonesMasivo(generateWhatsAppLinkAgradecimiento, 14, 15, 'Enviar agradecimiento', false);
+  _generarBotonesMasivoConId(generateWhatsAppLinkAgradecimiento, 14, 15, 'Enviar agradecimiento', false);
 }
 
-function _generarBotonesMasivo(generadorFn, colLink, colEstado, textoBoton, soloSinLink) {
+/* Genera botones WA pasando el ID único de cada asistente al mensaje */
+function _generarBotonesMasivoConId(generadorFn, colLink, colEstado, textoBoton, soloSinLink) {
   var regSheet  = getSheet();
   var comSheet  = getComunicacionesSheet();
+  var asiSheet  = getAsistenciaSheet();
   var data      = regSheet.getDataRange().getValues();
+  var asiData   = asiSheet.getDataRange().getValues();
   var generados = 0;
+  var vistos    = {};
+
+  // Mapa correo → ID
+  var idPorCorreo = {};
+  for (var j = 1; j < asiData.length; j++) {
+    var c = (asiData[j][2] || '').toLowerCase().trim();
+    if (c) idPorCorreo[c] = asiData[j][0];
+  }
 
   for (var i = 1; i < data.length; i++) {
     if (data[i][9] !== '✓') continue;
     var correo = (data[i][2] || '').toLowerCase().trim();
     var nombre = data[i][1];
     var tel    = data[i][3];
-    var fila   = findRowByEmailInSheet(comSheet, correo);
+    if (!correo || vistos[correo]) continue;
+    vistos[correo] = true;
+
+    var id   = idPorCorreo[correo] || '';
+    var fila = findRowByEmailInSheet(comSheet, correo);
     if (!fila) continue;
     var yaLink = comSheet.getRange(fila, colLink).getValue();
     if (soloSinLink && yaLink) continue;
-    generarBotonWA(comSheet, fila, nombre, tel, generadorFn, colLink, colEstado, textoBoton);
+
+    generarBotonWA(comSheet, fila, nombre, tel,
+      function(fn, theId) {
+        return function(n, t) { return fn(n, t, theId); };
+      }(generadorFn, id),
+      colLink, colEstado, textoBoton);
     generados++;
   }
   Logger.log('Botones generados (' + textoBoton + '): ' + generados);
@@ -643,7 +729,7 @@ function generarBotonesQRMasivo() {
     var fila = findRowByEmailInSheet(comSheet, correo);
     if (!fila) continue;
 
-    var link = generateWhatsAppLinkQR(nombre, tel, id);
+    var link = generateWhatsAppLinkQR(nombre, tel, id); // id ya viene de idPorCorreo
     if (link) {
       var richText = SpreadsheetApp.newRichTextValue()
         .setText('Enviar QR')
@@ -690,8 +776,8 @@ function _detallesEvento() {
     + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .8rem;">Detalles del evento</p>'
     + '<p style="font-family:Georgia,serif;font-size:1.05rem;font-weight:400;color:#2A0F25;margin:0 0 .1rem;">Taller de imagen y liderazgo</p>'
     + '<p style="font-size:.78rem;color:#8F7383;font-style:italic;margin:0 0 1rem;">Lo que tu imagen comunica</p>'
-    + '<p style="font-size:.85rem;color:#4a3545;margin:0 0 .5rem;">📅 &nbsp;Sábado 15 de agosto de 2026 &middot; 10:00–12:00 pm</p>'
-    + '<p style="font-size:.85rem;color:#4a3545;margin:0;">📍 &nbsp;The University Club of Mexico<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#8F7383;font-size:.8rem;">Av. Paseo de la Reforma 150, Juárez, CDMX</span></p>'
+    + '<p style="font-size:.85rem;color:#4a3545;margin:0 0 .5rem;">Sábado 15 de agosto de 2026 &middot; 10:00-12:00 pm</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;margin:0;">The University Club of Mexico<br><span style="color:#8F7383;font-size:.8rem;">Av. Paseo de la Reforma 150, Juárez, CDMX</span></p>'
     + '</div>';
 }
 
@@ -712,13 +798,13 @@ function enviarCorreoConfirmacion(nombre, correo, fase, idUnico) {
     + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 1rem;">Tu lugar está reservado,<br>' + p + '.</h1>'
     + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Nos da mucho gusto tenerte en el taller. Mary estará encantada de acompañarte en este proceso. Guarda la fecha en tu calendario para que no se te pase ningún detalle.</p>'
     + _detallesEvento()
-    + '<a href="' + calLink + '" style="display:block;background:#2A0F25;color:#EFE9E2;text-align:center;padding:.9rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.6rem;">📅 &nbsp;Agregar a Google Calendar</a>'
+    + '<a href="' + calLink + '" style="display:block;background:#2A0F25;color:#EFE9E2;text-align:center;padding:.9rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1.6rem;">Agregar a Google Calendar</a>'
     + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
     + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .6rem;">Tu espacio personal del evento</p>'
     + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Aquí encontrarás tu pase de entrada con código QR, la agenda del día y los recursos del taller.</p>'
-    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem;font-weight:600;">Acceder a mi espacio →</a>'
+    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem;font-weight:600;">Acceder a mi espacio &rarr;</a>'
     + '<div style="border-top:1px solid rgba(42,15,37,.1);padding-top:.9rem;">'
-    + '<p style="font-size:.78rem;color:#2A0F25;font-weight:600;margin:0 0 .3rem;">⭐ Una cosa importante</p>'
+    + '<p style="font-size:.78rem;color:#2A0F25;font-weight:600;margin:0 0 .3rem;">Una cosa importante</p>'
     + '<p style="font-size:.8rem;color:#4a3545;line-height:1.6;margin:0;">Dentro de tu espacio hay una encuesta breve que te pedimos contestar <strong>antes del evento</strong>. Mary la revisa personalmente para preparar materiales y recomendaciones a la medida de cada asistente. No toma más de 5 minutos y hace una gran diferencia.</p>'
     + '</div></div>'
     + _firmaCorreo()
@@ -726,11 +812,14 @@ function enviarCorreoConfirmacion(nombre, correo, fase, idUnico) {
     + _footerCorreo(correo);
 
   MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
-    subject: 'Tu lugar en el taller está confirmado ✦ REINVENTA', htmlBody: html });
+    subject: 'Tu lugar en el taller está confirmado — REINVENTA', htmlBody: html });
 }
 
-function enviarCorreoRecordatorio(nombre, correo) {
-  var p = nombre ? nombre.split(' ')[0] : 'Hola';
+function enviarCorreoRecordatorio(nombre, correo, idUnico) {
+  var p      = nombre ? nombre.split(' ')[0] : 'Hola';
+  var hubUrl = idUnico
+    ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
+    : 'https://reinventabymarymendez.com.mx/hub';
 
   var html = _headerCorreo()
     + '<div style="padding:2.2rem 2.6rem 2rem;">'
@@ -739,40 +828,53 @@ function enviarCorreoRecordatorio(nombre, correo) {
     + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Mary tiene algo muy especial preparado para ti. Te esperamos puntual y con muchas ganas de transformar la manera en que tu imagen comunica quién eres.</p>'
     + _detallesEvento()
     + '<p style="font-size:.85rem;color:#4a3545;margin:-1rem 0 1.6rem;padding:0 1.6rem;"><a href="https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7" style="color:#C6A56A;text-decoration:none;">Ver en Google Maps &rarr;</a></p>'
+    // Acceso al hub
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .6rem;">Tu espacio personal del evento</p>'
+    + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Ahí encontrarás la agenda del día, tu código QR de entrada y los materiales del taller.</p>'
+    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:0;font-weight:600;">Acceder a mi espacio &rarr;</a>'
+    + '</div>'
+    // Encuesta previa — último recordatorio
+    + '<div style="border:1px solid #C6A56A;border-left:3px solid #C6A56A;padding:1.2rem 1.4rem;margin-bottom:1.6rem;background:rgba(198,165,106,.06);">'
+    + '<p style="font-size:.75rem;color:#2A0F25;font-weight:700;margin:0 0 .4rem;letter-spacing:.03em;">Último recordatorio: encuesta previa</p>'
+    + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0;">Si aún no has contestado la encuesta dentro de tu espacio, este es el momento. Mary la revisa personalmente antes del taller para personalizar tu experiencia.<br><br><strong>Importante:</strong> quienes no la contesten antes del evento no tendrán acceso al material digital posterior — guías, recursos y demás — que se desbloquea en tu perfil tras el taller.</p>'
+    + '</div>'
     + '<p style="font-size:.87rem;line-height:1.7;color:#4a3545;margin:0 0 .5rem;">Si tienes alguna duda de último momento no dudes en contactarnos. ¡Nos vemos mañana!</p>'
     + _firmaCorreo()
     + '</div>'
     + _footerCorreo(correo);
 
   MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
-    subject: 'Mañana te esperamos ✦ REINVENTA', htmlBody: html });
+    subject: 'Mañana te esperamos — REINVENTA', htmlBody: html });
 }
 
 function enviarCorreoQR(nombre, correo, idUnico) {
-  var p          = nombre ? nombre.split(' ')[0] : 'Hola';
-  var urlEntrada = 'https://reinventabymarymendez.com.mx/entrada?id=' + idUnico;
-  var urlQR      = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(urlEntrada);
+  var p      = nombre ? nombre.split(' ')[0] : 'Hola';
+  var hubUrl = 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico;
+  var urlQR  = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(hubUrl);
 
   var html = _headerCorreo()
     + '<div style="padding:2.2rem 2.6rem 2rem;text-align:center;">'
-    + '<div style="display:inline-block;background:rgba(42,15,37,.07);border-left:2px solid #C6A56A;padding:.4rem .75rem;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:#2A0F25;margin-bottom:1.4rem;">Tu acceso al evento</div>'
-    + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 .6rem;text-align:left;">' + p + ',<br>aquí está tu entrada.</h1>'
-    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;text-align:left;">Presenta este código QR en la entrada el día del evento. Puedes mostrarlo desde tu teléfono.</p>'
-    + '<div style="background:#2A0F25;display:inline-block;padding:1rem;margin-bottom:1rem;">'
-    + '<img src="' + urlQR + '" width="180" height="180" style="display:block;" alt="Código QR de entrada" /></div>'
-    + '<p style="font-size:.72rem;color:#8F7383;margin:0 0 1.6rem;">Si la imagen no carga, usa este enlace:<br><a href="' + urlEntrada + '" style="color:#C6A56A;">' + urlEntrada + '</a></p>'
+    + '<div style="display:inline-block;background:rgba(42,15,37,.07);border-left:2px solid #C6A56A;padding:.4rem .75rem;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:#2A0F25;margin-bottom:1.4rem;">Hoy es el día &middot; Sábado 15 de agosto</div>'
+    + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 .6rem;text-align:left;">' + p + ',<br>hoy te esperamos.</h1>'
+    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;text-align:left;">Muestra este código QR al llegar al evento. El staff lo escaneará en la entrada.</p>'
+    + '<div style="background:#2A0F25;display:inline-block;padding:1.2rem;margin-bottom:1.6rem;">'
+    + '<img src="' + urlQR + '" width="200" height="200" style="display:block;" alt="Código QR de entrada" /></div>'
     + _detallesEvento()
-    + '<p style="font-size:.87rem;line-height:1.7;color:#4a3545;margin:0 0 .5rem;text-align:left;">¡Nos vemos el 15 de agosto. Será un día increíble!</p>'
+    + '<p style="font-size:.87rem;line-height:1.7;color:#4a3545;margin:0 0 .5rem;text-align:left;">¡Nos vemos en un momento. Será un día increíble!</p>'
     + _firmaCorreo()
     + '</div>'
     + _footerCorreo(correo);
 
   MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
-    subject: 'Tu código de entrada ✦ REINVENTA', htmlBody: html });
+    subject: 'Tu entrada para hoy — REINVENTA', htmlBody: html });
 }
 
-function enviarCorreoAgradecimiento(nombre, correo) {
-  var p = nombre ? nombre.split(' ')[0] : 'Hola';
+function enviarCorreoAgradecimiento(nombre, correo, idUnico) {
+  var p      = nombre ? nombre.split(' ')[0] : 'Hola';
+  var hubUrl = idUnico
+    ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
+    : 'https://reinventabymarymendez.com.mx/hub';
 
   var html = _headerCorreo()
     + '<div style="padding:2.2rem 2.6rem 2rem;">'
@@ -780,6 +882,17 @@ function enviarCorreoAgradecimiento(nombre, correo) {
     + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 1rem;">' + p + ',<br>fue un honor acompañarte.</h1>'
     + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.2rem;">Gracias por confiar en este espacio y por abrirte a transformar la manera en que tu imagen comunica quién eres. Lo que viviste hoy es solo el comienzo.</p>'
     + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Mary estará siempre disponible para seguir acompañándote en este camino.</p>'
+    // Recursos del taller
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .8rem;">Recursos del taller</p>'
+    + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 1rem;">Las guías y materiales del taller se desbloquean en tu espacio personal una vez que completes la encuesta de satisfacción. Toma solo un momento y nos ayuda muchísimo.</p>'
+    + '<div style="border-top:1px solid rgba(42,15,37,.08);padding-top:1rem;margin-bottom:1rem;">'
+    + '<p style="font-size:.78rem;color:#2A0F25;margin:0 0 .3rem;">Para acceder a tus recursos:</p>'
+    + '<p style="font-size:.82rem;color:#4a3545;margin:0 0 .2rem;">1. Entra a tu espacio personal</p>'
+    + '<p style="font-size:.82rem;color:#4a3545;margin:0;">2. Completa la encuesta de satisfacción</p>'
+    + '</div>'
+    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;">Ir a mi espacio y completar encuesta &rarr;</a>'
+    + '</div>'
     + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
     + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .8rem;">Conoce más sobre Mary</p>'
     + '<p style="font-size:.87rem;color:#4a3545;margin:0;"><a href="https://reinventabymarymendez.com.mx" style="color:#C6A56A;text-decoration:none;">reinventabymarymendez.com.mx &rarr;</a></p>'
@@ -789,7 +902,7 @@ function enviarCorreoAgradecimiento(nombre, correo) {
     + _footerCorreo(correo);
 
   MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
-    subject: 'Gracias por acompañarnos ✦ REINVENTA', htmlBody: html });
+    subject: 'Gracias por acompañarnos — REINVENTA', htmlBody: html });
 }
 
 /* ── Envíos masivos de correo ────────────────────────────────── */
@@ -824,9 +937,9 @@ function _enviarCorreosMasivo(fnNombre, colEnviado, label) {
 
     if (yaEnv !== 'Sí') {
       var idUnicoCorreo = obtenerIdAsistente(correo);
-      if (fnNombre === 'enviarCorreoConfirmacion') enviarCorreoConfirmacion(nombre, correo, fase, idUnicoCorreo);
-      if (fnNombre === 'enviarCorreoRecordatorio') enviarCorreoRecordatorio(nombre, correo);
-      if (fnNombre === 'enviarCorreoAgradecimiento') enviarCorreoAgradecimiento(nombre, correo);
+      if (fnNombre === 'enviarCorreoConfirmacion')  enviarCorreoConfirmacion(nombre, correo, fase, idUnicoCorreo);
+      if (fnNombre === 'enviarCorreoRecordatorio')  enviarCorreoRecordatorio(nombre, correo, idUnicoCorreo);
+      if (fnNombre === 'enviarCorreoAgradecimiento') enviarCorreoAgradecimiento(nombre, correo, idUnicoCorreo);
       if (filaComm) comSheet.getRange(filaComm, colEnviado).setValue('Sí');
       vistos[correo] = true;
       enviados++;
@@ -872,8 +985,42 @@ function enviarCorreosQRMasivo() {
   Logger.log('Correos QR enviados: ' + enviados);
 }
 
+/* ── Trigger automático: QR a las 8am del 15 agosto 2026 ────── */
+/* Ejecuta esta función UNA SOLA VEZ desde el editor de Apps Script
+   para programar el envío automático. Puedes verificarlo en
+   Edición > Triggers del proyecto actual.                        */
+function programarEnvioQR8AM() {
+  // Eliminar triggers previos del mismo nombre para no duplicar
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'enviarCorreosQRMasivo') {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+  // Crear trigger: sábado 15 agosto 2026 a las 8:00 am (hora México = UTC-6)
+  // Apps Script usa la zona horaria del spreadsheet, asegúrate de tenerla en America/Mexico_City
+  ScriptApp.newTrigger('enviarCorreosQRMasivo')
+    .timeBased()
+    .at(new Date('2026-08-15T08:00:00'))
+    .create();
+  SpreadsheetApp.getUi().alert('Listo. El correo con código QR se mandará automáticamente el sábado 15 de agosto a las 8:00 am.');
+}
+
+/* Cancela el trigger por si necesitas moverlo o ajustarlo */
+function cancelarEnvioQR() {
+  var triggers = ScriptApp.getProjectTriggers();
+  var cancelados = 0;
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'enviarCorreosQRMasivo') {
+      ScriptApp.deleteTrigger(triggers[i]);
+      cancelados++;
+    }
+  }
+  SpreadsheetApp.getUi().alert('Trigger cancelado (' + cancelados + ' eliminado(s)).');
+}
+
 /* ── Correos de prueba ───────────────────────────────────────── */
-function enviarCorreoPrueba()              { enviarCorreoConfirmacion('Valeria García', 'mejoracontinua@caceca.org', 'Early Bird'); }
+function enviarCorreoPrueba()              { enviarCorreoConfirmacion('Valeria García', 'mejoracontinua@caceca.org', 'Early Bird', 'RNV-001'); }
 function enviarCorreoRecordatorioPrueba()  { enviarCorreoRecordatorio('Valeria García', 'mejoracontinua@caceca.org'); }
 function enviarCorreoQRPrueba()            { enviarCorreoQR('Valeria García', 'mejoracontinua@caceca.org', 'RNV-001'); }
 function enviarCorreoAgradecimientoPrueba(){ enviarCorreoAgradecimiento('Valeria García', 'mejoracontinua@caceca.org'); }
@@ -1055,7 +1202,11 @@ function contarFaseSheet(sheet, fase) {
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('REINVENTA')
+    .addItem('Sincronizar registros faltantes', 'sincronizarRegistrosFaltantes')
     .addItem('Regenerar links WA sin ID', 'regenerarLinksWASinId')
+    .addSeparator()
+    .addItem('Programar envío QR automático (8am, 15 ago)', 'programarEnvioQR8AM')
+    .addItem('Cancelar envío QR automático', 'cancelarEnvioQR')
     .addToUi();
 }
 
@@ -1085,9 +1236,12 @@ function regenerarLinksWASinId() {
 }
 
 /* ── Sincronizar registros faltantes ─────────────────────────── */
-/* Recorre Registros, y para cada fila con Pagó ✓ que no esté
-   en Asistencia o Comunicaciones, la agrega.
-   Ejecutar manualmente desde el editor de Apps Script.          */
+/* Recorre Registros, y para cada fila con Pagó ✓:
+   - Si el correo no está en Asistencia → lo agrega
+   - Si la fase es x2 → agrega 1 "Acompañante de..." en Asistencia
+   - Si la fase es x3 → agrega 2 "Acompañante de..." en Asistencia
+   - Si el correo no está en Comunicaciones → lo agrega con botón WA
+   No envía ningún correo ni WhatsApp, todo es manual.           */
 function sincronizarRegistrosFaltantes() {
   var sheet    = getSheet();
   var data     = sheet.getDataRange().getValues();
@@ -1104,19 +1258,36 @@ function sincronizarRegistrosFaltantes() {
     var contacto= (data[i][4] || '').toString().trim();
     var fase    = (data[i][6] || '').toString().trim();
 
-    if (!correo || vistos[correo]) continue;
-    vistos[correo] = true;
+    if (!correo) continue;
 
-    // Asistencia
-    actualizarAsistencia(correo, nombre, fase);
+    if (!vistos[correo]) {
+      vistos[correo] = { nombre: nombre, fase: fase, boletos: 1 };
 
-    // Comunicaciones
-    var id = obtenerIdAsistente(correo);
-    sincronizarComunicaciones(correo, nombre, telefono, contacto, id);
+      // Agregar a Asistencia si no existe
+      actualizarAsistencia(correo, nombre, fase);
 
-    agregados++;
+      // Agregar acompañantes según fase (x2 = 1 acomp., x3 = 2 acomp.)
+      var cantAcompanantes = 0;
+      if (fase.indexOf('x2') !== -1) cantAcompanantes = 1;
+      if (fase.indexOf('x3') !== -1) cantAcompanantes = 2;
+      for (var a = 0; a < cantAcompanantes; a++) {
+        agregarAcompanante(nombre, fase);
+      }
+
+      // Agregar a Comunicaciones si no existe
+      var id = obtenerIdAsistente(correo);
+      sincronizarComunicaciones(correo, nombre, telefono, contacto, id);
+
+      agregados++;
+    } else {
+      // Segunda o tercera fila del mismo correo (compra adicional)
+      vistos[correo].boletos++;
+      // Agregar acompañante por cada boleto adicional
+      agregarAcompanante(vistos[correo].nombre, fase);
+    }
+
     Utilities.sleep(300);
   }
 
-  SpreadsheetApp.getUi().alert('Listo. Se sincronizaron ' + agregados + ' registro(s) faltante(s).');
+  SpreadsheetApp.getUi().alert('Listo. Se sincronizaron ' + agregados + ' persona(s). Revisa Asistencia para ver los acompañantes agregados.');
 }
