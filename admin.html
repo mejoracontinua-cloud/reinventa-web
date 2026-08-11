@@ -1928,10 +1928,10 @@ function generarReportePrevia() {
       +'</div>';
   }
 
-  var fichaMd = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:0;">';
+  var fichaMd = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:0;page-break-inside:avoid;break-inside:avoid;">';
   enc.forEach(function(e, i){
-    if (i % 2 === 0 && i > 0) fichaMd += '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;page-break-before:always;margin-top:0;">';
-    fichaMd += '<div style="border:1px solid #E8E2DB;padding:14px;page-break-inside:avoid;background:#fff;">'
+    if (i % 2 === 0 && i > 0) fichaMd += '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;page-break-before:always;break-before:page;margin-top:0;">';
+    fichaMd += '<div style="border:1px solid #E8E2DB;padding:14px;page-break-inside:avoid;break-inside:avoid;background:#fff;">'
       +'<div style="font-family:Georgia,serif;font-size:13px;color:#2A0F25;border-bottom:1px solid #E8E2DB;padding-bottom:7px;margin-bottom:10px;">'+esc(e.nombre)+'</div>'
       +'<div style="font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#8F7383;margin:8px 0 4px;">Satisfacción personal</div>'
       + starBar(e.satisfaccion)
@@ -1970,14 +1970,23 @@ function generarReportePrevia() {
   // ── HTML del reporte ──────────────────────────────────────
   var css = '<style>'
     +'*{margin:0;padding:0;box-sizing:border-box;}'
-    +'body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#2A0F25;background:#fff;font-size:11px;line-height:1.5;}'
-    +'.page{max-width:800px;margin:0 auto;padding:48px 52px;}'
+    // Carta = 8.5in × 11in. Forzamos el body al ancho exacto para que el browser lo respete
+    +'html{width:8.5in;}'
+    +'body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#2A0F25;background:#fff;font-size:11px;line-height:1.5;width:8.5in;margin:0 auto;}'
+    // Pantalla: márgenes simulados para preview
+    +'@media screen{.page{max-width:8.5in;margin:0 auto;padding:0.75in 0.85in;}}'
+    // Impresión: tamaño carta, márgenes moderados, colores preservados
     +'@media print{'
-      +'html,body{width:210mm;}'
-      +'.page{padding:24mm 22mm;max-width:none;}'
+      +'@page{size:letter portrait;margin:0.65in 0.75in;}'
+      +'html,body{width:8.5in;margin:0;}'
+      +'.page{padding:0;max-width:none;}'
       +'.no-print{display:none!important;}'
-      +'.page-break{page-break-before:always;}'
-      +'@page{margin:0;size:A4;}'
+      +'.page-break{page-break-before:always;break-before:page;}'
+      // CRÍTICO: fuerza que los fondos y colores se impriman
+      +'*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;}'
+      // Evita que grids y cards se partan en la mitad
+      +'.ficha-row{page-break-inside:avoid;break-inside:avoid;}'
+      +'div[style*="border:1px solid #E8E2DB"]{page-break-inside:avoid;break-inside:avoid;}'
     +'}'
     +'.serif{font-family:Georgia,"Times New Roman",serif;}'
     +'.gold{color:#C6A56A;}'
