@@ -980,128 +980,132 @@ function cerrarDrawer() {
 }
 
 function renderDrawer(id, activeTab) {
-  var correo = _correosDatos[id];
-  var c = correo;
-  var total = _correosTotalGlobal || 0;
-  var pct = c.total ? Math.round((c.enviados||0) / c.total * 100) : 0;
+  var c = _correosDatos[id];
+  if (!c) return;
 
-  // Badge
+  // Mismos badges que las cards (paleta Reinventa)
   function badge(tipo) {
-    var cfg = {
-      enviado:   ['Enviado',    '#4ade80', 'rgba(34,197,94,.15)'],
-      programado:['Programado', '#fbbf24', 'rgba(251,191,36,.15)'],
-      pendiente: ['Pendiente',  'rgba(198,165,106,.5)', 'rgba(198,165,106,.08)'],
-      automatico:['Automático', '#a78bfa', 'rgba(139,92,246,.12)'],
+    var m = {
+      enviado:   { label:'Enviado',    color:'#2A0F25', bg:'rgba(198,165,106,.28)', border:'rgba(198,165,106,.6)' },
+      programado:{ label:'Programado', color:'#6b3418', bg:'rgba(198,165,106,.14)', border:'rgba(198,165,106,.35)' },
+      pendiente: { label:'Pendiente',  color:'#8F7383', bg:'rgba(143,115,131,.1)',  border:'rgba(143,115,131,.25)' },
+      automatico:{ label:'Automático', color:'#5a3060', bg:'rgba(42,15,37,.08)',    border:'rgba(42,15,37,.2)' },
     };
-    var v = cfg[tipo] || cfg.pendiente;
-    return '<span style="font-size:.42rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .65rem;color:'+v[1]+';background:'+v[2]+';border:1px solid '+v[1].replace(')',',0.3)').replace('rgb','rgba')+';font-weight:600;">'+v[0]+'</span>';
+    var v = m[tipo] || m.pendiente;
+    return '<span style="font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .8rem;color:'+v.color+';background:'+v.bg+';border:1px solid '+v.border+';font-weight:600;">'+v.label+'</span>';
   }
 
+  // KPI box — fondo cream sobre el drawer oscuro
   function kpi(n, label) {
-    return '<div style="background:rgba(198,165,106,.05);border:1px solid rgba(198,165,106,.1);padding:.8rem .6rem;text-align:center;">'
-      +'<div style="font-family:Georgia,serif;font-size:1.6rem;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums;">'+n+'</div>'
-      +'<div style="font-size:.4rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.4);margin-top:.3rem;">'+label+'</div>'
+    var val = (n === '—' || n === null || n === undefined) ? '—' : n;
+    return '<div style="background:rgba(255,255,255,.06);border:1px solid rgba(198,165,106,.15);padding:1rem .8rem;text-align:center;">'
+      +'<div style="font-family:Georgia,serif;font-size:1.8rem;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums;">'+val+'</div>'
+      +'<div style="font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(198,165,106,.5);margin-top:.4rem;">'+label+'</div>'
       +'</div>';
   }
 
+  // Botón de acción dentro del drawer
   function drawerBtn(label, sub, danger, confirmMsg) {
-    var bg = danger ? 'rgba(248,113,113,.08)' : 'rgba(198,165,106,.08)';
-    var col = danger ? '#f87171' : 'var(--gold)';
-    var brd = danger ? 'rgba(248,113,113,.3)' : 'rgba(198,165,106,.3)';
+    var col = danger ? '#e57373' : 'var(--gold)';
+    var brd = danger ? 'rgba(229,115,115,.4)' : 'rgba(198,165,106,.4)';
+    var bg  = danger ? 'rgba(229,115,115,.06)' : 'rgba(198,165,106,.06)';
     var onclick = confirmMsg
       ? 'if(!confirm(\''+confirmMsg+'\'))return; correcAccionDesdeDrawer(\''+sub+'\',\''+id+'\')'
       : 'correcAccionDesdeDrawer(\''+sub+'\',\''+id+'\')';
-    return '<button onclick="'+onclick+'" style="font-size:.54rem;padding:.45rem 1rem;border:1px solid '+brd+';background:'+bg+';color:'+col+';cursor:pointer;font-family:inherit;letter-spacing:.07em;text-transform:uppercase;">'+label+'</button>';
+    return '<button onclick="'+onclick+'" style="font-size:.65rem;padding:.5rem 1.1rem;border:1px solid '+brd+';background:'+bg+';color:'+col+';cursor:pointer;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;">'+label+'</button>';
   }
 
-  // Tabs del drawer
-  var drawerTabs = ['resumen','destinatarios','configuracion'];
-  var drawerTabLabels = { resumen:'Resumen', destinatarios:'Destinatarios', configuracion:'Configuración' };
-
-  var tabsHtml = '<div style="display:flex;gap:0;border-bottom:1px solid rgba(198,165,106,.15);margin:1rem 0;">'
-    + drawerTabs.map(function(t){
+  // Tabs
+  var tabs = ['resumen','destinatarios','configuracion'];
+  var tabLabels = { resumen:'Resumen', destinatarios:'Destinatarios', configuracion:'Configuración' };
+  var tabsHtml = '<div style="display:flex;border-bottom:1px solid rgba(198,165,106,.15);margin:1.4rem 0 1.2rem;">'
+    + tabs.map(function(t){
         var on = t === activeTab;
-        return '<button onclick="renderDrawer(\''+id+'\',\''+t+'\')" style="font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;padding:.55rem 1rem;border:none;border-bottom:2px solid '+(on?'var(--gold)':'transparent')+';background:none;color:'+(on?'var(--gold)':'rgba(198,165,106,.35)')+';cursor:pointer;font-family:inherit;">'+drawerTabLabels[t]+'</button>';
+        return '<button onclick="renderDrawer(\''+id+'\',\''+t+'\')" style="font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;padding:.6rem 1.1rem;border:none;border-bottom:2px solid '+(on?'var(--gold)':'transparent')+';background:none;color:'+(on?'var(--gold)':'rgba(198,165,106,.4)')+';cursor:pointer;font-family:inherit;">'+tabLabels[t]+'</button>';
       }).join('')
     +'</div>';
 
+  // Valores seguros para acompañante (que tiene '—')
+  var envNum  = (c.enviados  === '—') ? '—' : (c.enviados  || 0);
+  var pendNum = (c.pendientes === '—') ? '—' : (c.pendientes || 0);
+  var totNum  = (c.total     === '—') ? '—' : (c.total     || 0);
+  var progW   = (totNum !== '—' && totNum > 0) ? Math.min(100, Math.round((envNum||0) / totNum * 100)) : 0;
+  var progLabel = (totNum === '—') ? '—' : progW+'%';
+
   // Contenido por tab
   var tabContent = '';
-
   if (activeTab === 'resumen') {
-    var progW = c.total ? Math.min(100, Math.round((c.enviados||0)/c.total*100)) : 0;
     tabContent =
-      '<div style="font-size:.6rem;color:rgba(198,165,106,.5);line-height:1.7;margin-bottom:1rem;">'+c.descripcion+'</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(198,165,106,.1);margin-bottom:1rem;">'
-        +kpi(c.enviados||0,'Enviados')+kpi(c.pendientes||0,'Pendientes')+kpi(c.total,'Total')
+      '<p style="font-size:.72rem;color:rgba(198,165,106,.6);line-height:1.7;margin:0 0 1.2rem;">'+c.descripcion+'</p>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(198,165,106,.12);margin-bottom:1.2rem;">'
+        +kpi(envNum,'Enviados')+kpi(pendNum,'Pendientes')+kpi(totNum,'Total')
       +'</div>'
-      +'<div style="margin-bottom:1.2rem;">'
-        +'<div style="display:flex;justify-content:space-between;margin-bottom:.35rem;">'
-          +'<span style="font-size:.42rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(198,165,106,.35);">'+(c.enviados||0)+' / '+c.total+' enviados</span>'
-          +'<span style="font-family:Georgia,serif;font-size:.82rem;color:var(--gold);">'+progW+'%</span>'
-        +'</div>'
-        +'<div style="height:3px;background:rgba(198,165,106,.1);">'
-          +'<div style="height:100%;width:'+progW+'%;background:linear-gradient(90deg,rgba(198,165,106,.5),var(--gold));"></div>'
-        +'</div>'
-      +'</div>'
-      +(c.nota ? '<div style="background:rgba(198,165,106,.05);border:1px solid rgba(198,165,106,.1);padding:.8rem 1rem;font-size:.6rem;color:rgba(198,165,106,.5);line-height:1.6;margin-bottom:1rem;">'+c.nota+'</div>' : '');
+      +(totNum !== '—'
+        ? '<div style="margin-bottom:1.4rem;">'
+            +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.4rem;">'
+              +'<span style="font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(198,165,106,.4);">'+(envNum||0)+' / '+totNum+' enviados</span>'
+              +'<span style="font-family:Georgia,serif;font-size:1rem;color:var(--gold);">'+progLabel+'</span>'
+            +'</div>'
+            +'<div style="height:3px;background:rgba(198,165,106,.12);">'
+              +'<div style="height:100%;width:'+progW+'%;background:var(--gold);"></div>'
+            +'</div>'
+          +'</div>'
+        : '')
+      +(c.nota ? '<div style="background:rgba(198,165,106,.06);border:1px solid rgba(198,165,106,.15);padding:1rem 1.1rem;font-size:.68rem;color:rgba(198,165,106,.55);line-height:1.7;">'+c.nota+'</div>' : '');
 
   } else if (activeTab === 'destinatarios') {
-    tabContent = '<div style="font-size:.62rem;color:rgba(198,165,106,.35);padding:2rem 0;text-align:center;">La lista detallada de destinatarios está en la hoja <strong style="color:rgba(198,165,106,.6);">Comunicaciones</strong> del Sheet. Aquí se muestra el resumen de estado.</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(198,165,106,.1);">'
-        +kpi(c.enviados||0,'Enviados')+kpi(c.pendientes||0,'Pendientes')+kpi(c.total,'Total')
+    tabContent =
+      '<p style="font-size:.7rem;color:rgba(198,165,106,.45);line-height:1.7;margin:0 0 1.2rem;text-align:center;">La lista detallada vive en la hoja <strong style="color:var(--gold);">Comunicaciones</strong> del Sheet.</p>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(198,165,106,.12);">'
+        +kpi(envNum,'Enviados')+kpi(pendNum,'Pendientes')+kpi(totNum,'Total')
       +'</div>';
 
   } else if (activeTab === 'configuracion') {
-    tabContent = '<div style="display:flex;flex-direction:column;gap:.6rem;">';
     var rows = [
-      ['Tipo', c.tipo === 'auto' ? 'Automático' : (c.tipo === 'trigger' ? 'Trigger programado' : 'Manual')],
-      ['Fecha', c.fechaLabel || '—'],
-      ['Trigger activo', c.programado ? 'Sí · '+c.fechaLabel : 'No'],
+      ['Tipo de envío', c.tipo === 'auto' ? 'Automático al registrarse' : (c.tipo === 'trigger' ? 'Trigger programado' : 'Manual')],
+      ['Fecha / Momento', c.fechaLabel || '—'],
+      ['Trigger activo', c.programado ? 'Sí — '+c.fechaLabel : 'No'],
     ];
-    rows.forEach(function(r){
-      tabContent += '<div style="display:flex;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid rgba(198,165,106,.08);">'
-        +'<span style="font-size:.54rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(198,165,106,.4);">'+r[0]+'</span>'
-        +'<span style="font-size:.6rem;color:var(--gold);">'+r[1]+'</span>'
+    tabContent = rows.map(function(r){
+      return '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:.75rem 0;border-bottom:1px solid rgba(198,165,106,.1);">'
+        +'<span style="font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;color:rgba(198,165,106,.45);">'+r[0]+'</span>'
+        +'<span style="font-size:.72rem;color:var(--gold);">'+r[1]+'</span>'
         +'</div>';
-    });
-    tabContent += '</div>';
+    }).join('');
   }
 
-  // Botones de acción según el tipo de correo
+  // Botones según correo
   var btnsHtml = '';
   if (id === 'confirmacion') {
-    btnsHtml = drawerBtn('Enviar a pendientes', 'enviar_confirmacion_masivo', false, '¿Enviar confirmación a las '+(c.pendientes||0)+' personas que aún no la tienen?');
+    btnsHtml = drawerBtn('Enviar a pendientes', 'enviar_confirmacion_masivo', false, '¿Enviar confirmación a '+(pendNum||0)+' personas pendientes?');
   } else if (id === 'acompanante') {
-    btnsHtml = '<span style="font-size:.54rem;color:rgba(198,165,106,.3);letter-spacing:.06em;">Se envía automáticamente al registrar un acompañante.</span>';
+    btnsHtml = '<p style="font-size:.68rem;color:rgba(198,165,106,.45);margin:0;">Se envía automáticamente — no requiere acción manual.</p>';
   } else if (id === 'recordatorio') {
-    if (!c.programado) btnsHtml += drawerBtn('Programar trigger', 'programar_recordatorio', false, '¿Programar el recordatorio para el vie 14 ago a las 12:00 pm?');
-    else btnsHtml += drawerBtn('Cancelar trigger', 'cancelar_recordatorio', true, '¿Cancelar el trigger del recordatorio?');
-    btnsHtml += drawerBtn('Enviar ahora a pendientes', 'enviar_recordatorio_masivo', false, '¿Enviar recordatorio a '+(c.pendientes||0)+' personas?');
+    if (!c.programado) btnsHtml += drawerBtn('Programar trigger', 'programar_recordatorio', false, '¿Programar recordatorio para vie 14 ago 12:00 pm?');
+    else               btnsHtml += drawerBtn('Cancelar trigger',  'cancelar_recordatorio',  true,  '¿Cancelar el trigger?');
+    btnsHtml += drawerBtn('Enviar ahora a pendientes', 'enviar_recordatorio_masivo', false, '¿Enviar a '+(pendNum||0)+' personas?');
   } else if (id === 'qr') {
-    btnsHtml = drawerBtn('Enviar QR ahora a pendientes', 'enviar_qr_masivo', false, '¿Enviar QR a '+(c.pendientes||0)+' personas?');
+    btnsHtml = drawerBtn('Enviar QR a pendientes', 'enviar_qr_masivo', false, '¿Enviar QR a '+(pendNum||0)+' personas?');
   } else if (id === 'agradecimiento') {
-    if (!c.programado) btnsHtml += drawerBtn('Programar trigger', 'programar_agradecimiento', false, '¿Programar el agradecimiento para el lun 17 ago a las 10:00 am?');
-    else btnsHtml += drawerBtn('Cancelar trigger', 'cancelar_agradecimiento', true, '¿Cancelar el trigger del agradecimiento?');
-    btnsHtml += drawerBtn('Enviar ahora a pendientes', 'enviar_agradecimiento_masivo', false, '¿Enviar agradecimiento a '+(c.pendientes||0)+' asistentes con check-in?');
+    if (!c.programado) btnsHtml += drawerBtn('Programar trigger', 'programar_agradecimiento', false, '¿Programar agradecimiento para lun 17 ago 10:00 am?');
+    else               btnsHtml += drawerBtn('Cancelar trigger',  'cancelar_agradecimiento',  true,  '¿Cancelar el trigger?');
+    btnsHtml += drawerBtn('Enviar ahora a pendientes', 'enviar_agradecimiento_masivo', false, '¿Enviar a '+(pendNum||0)+' asistentes con check-in?');
   }
 
   document.getElementById('correo-drawer-inner').innerHTML =
-    // Header del drawer
-    '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.2rem;">'
+    // Header
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.2rem;">'
       +'<div>'
-        +'<div style="font-size:.42rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(198,165,106,.35);margin-bottom:.4rem;">'+c.fechaLabel+'</div>'
-        +'<div style="font-family:Georgia,serif;font-size:1.1rem;color:var(--gold);margin-bottom:.5rem;">'+c.titulo+'</div>'
+        +'<div style="font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(198,165,106,.4);margin-bottom:.5rem;">'+c.fechaLabel+'</div>'
+        +'<div style="font-family:Georgia,serif;font-size:1.4rem;color:var(--gold);line-height:1.2;margin-bottom:.7rem;">'+c.titulo+'</div>'
         +badge(c.badgeTipo)
       +'</div>'
-      +'<button onclick="cerrarDrawer()" style="background:none;border:none;color:rgba(198,165,106,.4);cursor:pointer;font-size:1.1rem;padding:.2rem;line-height:1;">✕</button>'
+      +'<button onclick="cerrarDrawer()" style="background:none;border:none;color:rgba(198,165,106,.45);cursor:pointer;font-size:1.2rem;padding:.3rem;line-height:1;flex-shrink:0;">✕</button>'
     +'</div>'
-
-    // Botones de acción
-    +(btnsHtml ? '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid rgba(198,165,106,.1);">'+btnsHtml+'</div>' : '')
-
+    // Acciones
+    +(btnsHtml ? '<div style="display:flex;gap:.6rem;flex-wrap:wrap;padding-bottom:1.2rem;border-bottom:1px solid rgba(198,165,106,.12);">'+btnsHtml+'</div>' : '')
     + tabsHtml
-    + '<div style="padding-top:.2rem;">'+tabContent+'</div>';
+    + tabContent;
 }
 
 function correcAccionDesdeDrawer(sub, id) {
