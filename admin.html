@@ -52,21 +52,98 @@
     .login-btn:hover { background: #3d1536; }
     .login-error { font-size: .75rem; color: #f87171; text-align: center; margin-top: .6rem; display: none; }
 
-    /* Panel */
-    #admin-panel { display: none; min-height: 100vh; flex-direction: column; }
-    .panel-header { background: var(--plum); padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-    .panel-header .marca { font-family: Georgia, serif; font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
-    .panel-header .badge { font-size: .52rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-40); background: rgba(198,165,106,.12); border: 1px solid rgba(198,165,106,.2); padding: .2rem .6rem; }
-    .panel-body { flex: 1; padding: 1.2rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+    /* ─── App Shell ─────────────────────────────────────────── */
+    #admin-panel { display: none; min-height: 100vh; flex-direction: row; }
 
-    /* KPIs */
-    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; margin-bottom: 1.2rem; }
-    @media (max-width: 600px) { .kpi-row { grid-template-columns: 1fr 1fr; } }
-    .kpi { background: var(--cream); padding: 1rem 1.1rem; }
-    .kpi-n { font-family: Georgia, serif; font-size: 2rem; font-weight: 400; line-height: 1; }
-    .kpi-l { font-size: .6rem; letter-spacing: .08em; text-transform: uppercase; color: var(--mauve); margin-top: .3rem; }
-    .kpi-bar { height: 2px; background: var(--plum-10); margin-top: .7rem; }
-    .kpi-fill { height: 100%; background: var(--gold); transition: width .4s; }
+    /* ─── Sidebar ────────────────────────────────────────────── */
+    .sidebar { width: 210px; min-height: 100vh; background: var(--plum); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; flex-shrink: 0; border-right: 1px solid rgba(198,165,106,.1); }
+    .sidebar-brand { padding: 1.4rem 1.2rem 1.1rem; border-bottom: 1px solid rgba(198,165,106,.1); }
+    .sidebar-brand .brand-name { font-family: Georgia, serif; font-size: .78rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); display: block; }
+    .sidebar-brand .brand-sub { font-size: .46rem; letter-spacing: .1em; text-transform: uppercase; color: rgba(198,165,106,.35); display: block; margin-top: .35rem; line-height: 1.5; }
+    .sidebar-nav { flex: 1; padding: .7rem 0; }
+    .sidebar-section { font-size: .38rem; letter-spacing: .18em; text-transform: uppercase; color: rgba(198,165,106,.25); padding: .9rem 1.1rem .3rem; }
+    .sidebar-item { display: flex; align-items: center; gap: .6rem; padding: .58rem 1.1rem; font-size: .6rem; letter-spacing: .07em; text-transform: uppercase; color: rgba(198,165,106,.45); cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: inherit; transition: color .15s, background .15s; border-left: 2px solid transparent; }
+    .sidebar-item:hover { color: rgba(198,165,106,.85); background: rgba(198,165,106,.05); }
+    .sidebar-item.active { color: var(--gold); background: rgba(198,165,106,.1); border-left-color: var(--gold); }
+    .sidebar-item svg { width: 14px; height: 14px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .sidebar-footer { padding: .9rem 1.1rem; border-top: 1px solid rgba(198,165,106,.1); font-size: .44rem; letter-spacing: .07em; color: rgba(198,165,106,.2); line-height: 1.5; }
+
+    /* ─── Main Area ──────────────────────────────────────────── */
+    .main-area { flex: 1; min-width: 0; display: flex; flex-direction: column; background: #F5F3F0; }
+    .topbar { background: #fff; border-bottom: 1px solid rgba(42,15,37,.07); padding: .7rem 1.6rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; gap: 1rem; }
+    .topbar-title { font-family: Georgia, serif; font-size: .9rem; color: var(--plum); }
+    .topbar-right { display: flex; align-items: center; gap: .6rem; }
+    .topbar-btn { font-size: .55rem; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .85rem; border: 1px solid rgba(42,15,37,.12); background: none; color: var(--plum); cursor: pointer; font-family: inherit; transition: border-color .15s, background .15s; white-space: nowrap; }
+    .topbar-btn:hover { border-color: var(--gold); background: rgba(198,165,106,.05); }
+    .topbar-btn.primary { background: var(--plum); color: var(--gold); border-color: var(--plum); }
+    .topbar-btn.primary:hover { background: #3d1536; }
+    .topbar-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--plum); display: flex; align-items: center; justify-content: center; font-family: Georgia,serif; font-size: .62rem; color: var(--gold); flex-shrink: 0; }
+    .content-scroll { flex: 1; overflow-y: auto; padding: 1.6rem 1.8rem; }
+
+    /* ─── Tabs ───────────────────────────────────────────────── */
+    .tab-pane { display: none; }
+    .tab-pane.on { display: block; }
+    /* legacy — hidden */
+    .kpi-row { display: none; }
+    .admin-tabs { display: none; }
+
+    /* ─── Dashboard ──────────────────────────────────────────── */
+    .dash-section { margin-bottom: 1.4rem; }
+    .dash-section-title { font-size: .5rem; letter-spacing: .15em; text-transform: uppercase; color: var(--mauve); margin-bottom: .8rem; display: flex; align-items: center; justify-content: space-between; }
+    .dash-section-link { font-size: .48rem; color: var(--gold); cursor: pointer; letter-spacing: .06em; text-decoration: none; }
+    .d-card { background: #fff; border: 1px solid rgba(42,15,37,.07); padding: 1.2rem; }
+    .dash-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; }
+    @media(max-width:780px){.dash-kpi-grid{grid-template-columns:1fr 1fr;}}
+    .dash-kpi { background: #fff; border: 1px solid rgba(42,15,37,.07); padding: 1.2rem 1.1rem 1rem; position: relative; overflow: hidden; }
+    .dash-kpi-n { font-family: Georgia, serif; font-size: 2.4rem; color: var(--plum); line-height: 1; font-variant-numeric: tabular-nums; }
+    .dash-kpi-label { font-size: .52rem; letter-spacing: .1em; text-transform: uppercase; color: var(--mauve); margin-top: .4rem; }
+    .dash-kpi-sub { font-size: .58rem; color: var(--gold); margin-top: .2rem; }
+    .dash-kpi-bar { height: 2px; background: rgba(42,15,37,.06); margin-top: .8rem; }
+    .dash-kpi-fill { height: 100%; background: var(--gold); transition: width .5s; }
+    .dash-kpi-icon { position: absolute; top: 1rem; right: 1rem; opacity: .07; }
+    .dash-kpi-icon svg { width: 32px; height: 32px; fill: var(--plum); stroke: none; }
+    .dash-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+    .dash-grid-3 { display: grid; grid-template-columns: 5fr 4fr; gap: .7rem; }
+    @media(max-width:780px){.dash-grid-2,.dash-grid-3{grid-template-columns:1fr;}}
+    .funnel-step { display: flex; align-items: center; gap: .7rem; padding: .55rem 0; border-bottom: 1px solid rgba(42,15,37,.05); }
+    .funnel-step:last-child { border-bottom: none; }
+    .funnel-label { font-size: .62rem; color: var(--mauve); min-width: 130px; letter-spacing: .03em; }
+    .funnel-bar-wrap { flex: 1; height: 5px; background: rgba(42,15,37,.06); overflow: hidden; }
+    .funnel-bar-fill { height: 100%; background: var(--gold); transition: width .5s; }
+    .funnel-n { font-family: Georgia, serif; font-size: .9rem; color: var(--plum); min-width: 24px; text-align: right; font-variant-numeric: tabular-nums; }
+    .funnel-pct { font-size: .5rem; color: var(--mauve); min-width: 32px; text-align: right; }
+    .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+    .qa-btn { display: flex; align-items: center; gap: .6rem; padding: .75rem .9rem; background: #F5F3F0; border: 1px solid rgba(42,15,37,.08); cursor: pointer; font-family: inherit; font-size: .62rem; letter-spacing: .05em; text-transform: uppercase; color: var(--plum); transition: border-color .15s, background .15s; }
+    .qa-btn:hover { border-color: var(--gold); background: rgba(198,165,106,.06); }
+    .qa-btn svg { width: 14px; height: 14px; flex-shrink: 0; fill: none; stroke: var(--gold); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .checklist-item { display: flex; align-items: flex-start; gap: .65rem; padding: .55rem 0; border-bottom: 1px solid rgba(42,15,37,.05); font-size: .65rem; color: var(--plum); }
+    .checklist-item:last-child { border-bottom: none; }
+    .ci-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: .48rem; font-weight: 700; }
+    .ci-done { background: rgba(198,165,106,.2); color: var(--gold); }
+    .ci-pend { background: rgba(42,15,37,.07); color: var(--mauve); border: 1px solid rgba(42,15,37,.12); }
+    .ci-warn { background: rgba(198,165,106,.12); color: #7c4a00; }
+    .ci-text { flex: 1; line-height: 1.3; }
+    .ci-sub { font-size: .52rem; color: var(--mauve); margin-top: .1rem; }
+    .activity-item { display: flex; align-items: flex-start; gap: .6rem; padding: .5rem 0; border-bottom: 1px solid rgba(42,15,37,.05); }
+    .activity-item:last-child { border-bottom: none; }
+    .act-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; margin-top: 5px; }
+    .act-text { flex: 1; font-size: .64rem; color: var(--plum); line-height: 1.4; }
+    .act-time { font-size: .5rem; color: var(--mauve); white-space: nowrap; }
+    .insight-card { background: var(--plum); padding: 1.2rem; }
+    .insight-item { display: flex; gap: .6rem; padding: .5rem 0; border-bottom: 1px solid rgba(198,165,106,.1); font-size: .64rem; color: rgba(198,165,106,.7); line-height: 1.5; align-items: flex-start; }
+    .insight-item:last-child { border-bottom: none; }
+    .ins-bullet { color: var(--gold); flex-shrink: 0; margin-top: 1px; }
+    .alert-banner { display: flex; align-items: center; gap: .8rem; padding: .75rem 1.2rem; margin-bottom: 1.2rem; font-size: .68rem; letter-spacing: .04em; }
+    .alert-ok { background: rgba(198,165,106,.12); border: 1px solid rgba(198,165,106,.25); color: var(--plum); }
+    .alert-event { background: var(--plum); color: var(--gold); }
+
+    /* ─── KPI legacy (hidden but DOM kept) ──────────────────── */
+    .kpi { display: none; }
+    .kpi-n { } .kpi-l { } .kpi-bar { } .kpi-fill { }
+
+    /* Panel — legacy kept for table/filter/modal styles below */
+    .panel-header { display: none; }
+    .panel-body { padding: 0; max-width: none; margin: 0; }
 
     /* Filtros */
     .filter-row { display: flex; gap: .5rem; margin-bottom: .8rem; flex-wrap: wrap; align-items: center; }
@@ -169,36 +246,87 @@
 
 <!-- Panel -->
 <div id="admin-panel">
-  <div class="panel-header">
-    <div>
-      <span class="marca">Reinventa</span>
-      <span style="font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-40);display:block;margin-top:.1rem;">by Mary Méndez · 15 ago 2026</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:.7rem;">
-      <button class="refresh-btn" onclick="window.open('https://www.reinventabymarymendez.com.mx/reservar.html?fase=precio_final','_blank')" style="font-size:.52rem;border:1px solid rgba(198,165,106,.35);background:none;color:rgba(198,165,106,.7);padding:.3rem .7rem;cursor:pointer;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;" title="Abrir página de pago">💳 Link de pago</button>
-      <button class="refresh-btn" onclick="actualizarDatos()">↻ Actualizar</button>
-      <span class="badge">Admin</span>
-    </div>
-  </div>
 
-  <div class="panel-body">
+  <!-- ── Sidebar ─────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-name">Reinventa</span>
+      <span class="brand-sub">by Mary Méndez<br>15 agosto 2026</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Principal</div>
+      <button class="sidebar-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)">
+        <svg viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6"/><rect x="9" y="1" width="6" height="6"/><rect x="1" y="9" width="6" height="6"/><rect x="9" y="9" width="6" height="6"/></svg>
+        Dashboard
+      </button>
+      <button class="sidebar-item" data-tab="asistentes" onclick="switchTab('asistentes',this)">
+        <svg viewBox="0 0 16 16"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-3.3 2.2-5 5-5s5 1.7 5 5"/><circle cx="12.5" cy="5.5" r="2"/><path d="M11 13.5c0-2 1.1-3.3 2.7-3.3"/></svg>
+        Asistentes
+      </button>
+      <div class="sidebar-section">Comunicación</div>
+      <button class="sidebar-item" data-tab="correos" onclick="switchTab('correos',this)">
+        <svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" rx="1"/><path d="M1 5l7 4.5L15 5"/></svg>
+        Correos
+      </button>
+      <div class="sidebar-section">Análisis</div>
+      <button class="sidebar-item" data-tab="previa" onclick="switchTab('previa',this)">
+        <svg viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="14" rx="1"/><path d="M6 1v1h4V1"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
+        Enc. previa
+      </button>
+      <button class="sidebar-item" data-tab="post" onclick="switchTab('post',this)">
+        <svg viewBox="0 0 16 16"><polygon points="8,1 10.2,6.2 16,6.9 11.8,10.8 13,16 8,13.2 3,16 4.2,10.8 0,6.9 5.8,6.2"/></svg>
+        Enc. post
+      </button>
+      <button class="sidebar-item" data-tab="evento" onclick="switchTab('evento',this)">
+        <svg viewBox="0 0 16 16"><rect x="1" y="7" width="3" height="8"/><rect x="6.5" y="4" width="3" height="11"/><rect x="12" y="1" width="3" height="14"/></svg>
+        Evento & Métricas
+      </button>
+    </nav>
+    <div class="sidebar-footer">Desarrollado por Innermap</div>
+  </aside>
 
-    <!-- KPIs -->
-    <div class="kpi-row" id="kpi-row">
-      <div class="kpi"><div class="kpi-n" id="kpi-total">—</div><div class="kpi-l">Registradas</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-total" style="width:100%"></div></div></div>
-      <div class="kpi"><div class="kpi-n" id="kpi-checkin">—</div><div class="kpi-l">Check-in</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-checkin"></div></div></div>
-      <div class="kpi"><div class="kpi-n" id="kpi-previa">—</div><div class="kpi-l">Encuesta previa</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-previa"></div></div></div>
-      <div class="kpi"><div class="kpi-n" id="kpi-encuesta">—</div><div class="kpi-l">Encuesta post</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-encuesta"></div></div></div>
+  <!-- ── Main Area ────────────────────────────────────── -->
+  <div class="main-area">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
+      <div class="topbar-right">
+        <button class="topbar-btn" onclick="actualizarDatos()" title="Actualizar datos">↻ Actualizar</button>
+        <button class="topbar-btn" onclick="window.open('https://www.reinventabymarymendez.com.mx/reservar.html?fase=precio_final','_blank')">Link de pago</button>
+        <button class="topbar-btn primary" onclick="abrirQRScanner()">Escanear QR</button>
+        <div style="display:flex;align-items:center;gap:.5rem;margin-left:.3rem;">
+          <div class="topbar-avatar">M</div>
+          <span style="font-size:.58rem;color:var(--mauve);">Mary Méndez</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hidden KPI DOM elements (updated by existing JS, read by renderDashboard) -->
+    <div style="display:none;">
+      <div class="kpi-row" id="kpi-row">
+        <div class="kpi"><div class="kpi-n" id="kpi-total">—</div><div class="kpi-l">Registradas</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-total" style="width:100%"></div></div></div>
+        <div class="kpi"><div class="kpi-n" id="kpi-checkin">—</div><div class="kpi-l">Check-in</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-checkin"></div></div></div>
+        <div class="kpi"><div class="kpi-n" id="kpi-previa">—</div><div class="kpi-l">Encuesta previa</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-previa"></div></div></div>
+        <div class="kpi"><div class="kpi-n" id="kpi-encuesta">—</div><div class="kpi-l">Encuesta post</div><div class="kpi-bar"><div class="kpi-fill" id="kpi-fill-encuesta"></div></div></div>
+      </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="admin-tabs">
-      <button class="admin-tab on" onclick="switchTab('asistentes', this)">Asistentes</button>
-      <button class="admin-tab" onclick="switchTab('evento', this)">Evento &amp; Métricas</button>
-      <button class="admin-tab" onclick="switchTab('correos', this)">Comunicación</button>
-      <button class="admin-tab" onclick="switchTab('previa', this)">Encuesta previa</button>
-      <button class="admin-tab" onclick="switchTab('post', this)">Encuesta post</button>
-    </div>
+    <div class="content-scroll">
+
+      <!-- Tab: Dashboard -->
+      <div id="tab-dashboard" class="tab-pane on">
+        <div id="dashboard-inner" style="color:var(--mauve);font-size:.7rem;padding:2rem 0;">Cargando…</div>
+      </div>
+
+      <!-- Tab: Asistentes — legacy admin-tabs hidden but kept -->
+      <div class="admin-tabs" style="display:none;">
+        <button class="admin-tab on" onclick="switchTab('asistentes', this)">Asistentes</button>
+        <button class="admin-tab" onclick="switchTab('evento', this)">Evento &amp; Métricas</button>
+        <button class="admin-tab" onclick="switchTab('correos', this)">Comunicación</button>
+        <button class="admin-tab" onclick="switchTab('previa', this)">Encuesta previa</button>
+        <button class="admin-tab" onclick="switchTab('post', this)">Encuesta post</button>
+      </div>
 
     <!-- Tab: Asistentes -->
     <div id="tab-asistentes" class="tab-pane on">
@@ -266,9 +394,9 @@
       </div>
     </div>
 
-    <div class="powered">Plataforma desarrollada por <a href="https://www.innermap.mx" target="_blank" rel="noopener">Innermap</a></div>
-  </div>
-</div>
+    </div><!-- /content-scroll -->
+  </div><!-- /main-area -->
+</div><!-- /admin-panel -->
 
 <!-- Modal Registro Manual -->
 <div id="registro-modal" class="modal-overlay" style="display:none;">
@@ -389,11 +517,24 @@ function actualizarDatos() {
     .catch(function() {});
 }
 
+var _tabTitles = {
+  dashboard: 'Dashboard',
+  asistentes: 'Asistentes',
+  correos: 'Comunicación',
+  previa: 'Encuesta previa',
+  post: 'Encuesta post',
+  evento: 'Evento & Métricas'
+};
+
 function switchTab(nombre, btn) {
   document.querySelectorAll('.tab-pane').forEach(function(t) { t.classList.remove('on'); });
-  document.querySelectorAll('.admin-tab').forEach(function(b) { b.classList.remove('on'); });
+  document.querySelectorAll('.sidebar-item').forEach(function(b) { b.classList.remove('active'); });
   document.getElementById('tab-' + nombre).classList.add('on');
-  btn.classList.add('on');
+  if (btn) btn.classList.add('active');
+  var titleEl = document.getElementById('topbar-title');
+  if (titleEl) titleEl.textContent = _tabTitles[nombre] || nombre;
+  if (nombre === 'correos') { setTimeout(function(){ if(typeof renderCorreos==='function') renderCorreos(); }, 50); }
+  if (nombre === 'evento')  { setTimeout(function(){ if(typeof renderEventoDashboard==='function') renderEventoDashboard(); }, 50); }
 }
 
 function setFiltro(f, btn) {
@@ -410,6 +551,7 @@ function pill(text, type) {
 }
 
 function renderPanel() {
+  renderDashboard();
   var d = datos;
   var total    = d.asistentes.length;
   var checkin  = d.asistentes.filter(function(a) { return a.asistio; }).length;
@@ -943,6 +1085,172 @@ function renderEventoDashboard() {
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">'
       +agendaCard+estadoCard
     +'</div>';
+}
+
+/* ── Dashboard ───────────────────────────────────────────── */
+function renderDashboard() {
+  var el = document.getElementById('dashboard-inner');
+  if (!el || !datos) return;
+  var d = datos;
+  var total   = d.asistentes.length;
+  var checkin = d.asistentes.filter(function(a){ return a.asistio; }).length;
+  var previa  = d.asistentes.filter(function(a){ return a.encuesta_previa; }).length;
+  var post    = d.asistentes.filter(function(a){ return a.encuesta_post; }).length;
+  var confEmail = d.asistentes.filter(function(a){ return a.correo_conf; }).length;
+
+  // Countdown
+  var eventDate = new Date('2026-08-15T10:00:00');
+  var now = new Date();
+  var diffDays = Math.ceil((eventDate - now) / (1000*60*60*24));
+  var diasLabel = diffDays > 0 ? diffDays + ' días para el evento' : (diffDays === 0 ? '¡Hoy es el evento!' : 'Evento finalizado');
+  var alertClass = diffDays <= 0 ? 'alert-event' : 'alert-ok';
+
+  function pct(n, t) { return t ? Math.round(n/t*100) : 0; }
+  function pctStr(n, t) { return t ? pct(n,t)+'%' : '—'; }
+
+  // Fases
+  var faseCount = {};
+  d.asistentes.forEach(function(a){ var f = a.fase||'—'; faseCount[f]=(faseCount[f]||0)+1; });
+
+  // Recent check-ins (last 5 with checkin)
+  var conCheckin = d.asistentes.filter(function(a){ return a.asistio; }).slice(-5).reverse();
+
+  // Checklist items
+  function ci(done, warn, text, sub) {
+    var cls = done ? 'ci-done' : (warn ? 'ci-warn' : 'ci-pend');
+    var icon = done ? '✓' : (warn ? '!' : '·');
+    return '<div class="checklist-item">'
+      +'<div class="ci-dot '+cls+'">'+icon+'</div>'
+      +'<div class="ci-text">'+text+'<div class="ci-sub">'+sub+'</div></div>'
+      +'</div>';
+  }
+
+  var html =
+    // Alert banner
+    '<div class="alert-banner '+alertClass+'">'
+      +'<svg style="width:14px;height:14px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7"/><path d="M8 5v4M8 11v1"/></svg>'
+      +diasLabel
+      +(diffDays > 0 ? ' · Sábado 15 de agosto de 2026 · CDMX' : '')
+    +'</div>'
+
+    // KPIs
+    + '<div class="dash-section">'
+      + '<div class="dash-kpi-grid">'
+        + _dashKpi(total, 'Registradas', pctStr(total,total), 100,
+            '<svg viewBox="0 0 16 16"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-3.3 2.2-5 5-5s5 1.7 5 5"/><circle cx="12.5" cy="5.5" r="2"/><path d="M11 13.5c0-2 1.1-3.3 2.7-3.3"/></svg>')
+        + _dashKpi(confEmail, 'Correo confirmación', pctStr(confEmail,total), pct(confEmail,total),
+            '<svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" rx="1"/><path d="M1 5l7 4.5L15 5"/></svg>')
+        + _dashKpi(checkin, 'Check-in el día', pctStr(checkin,total), pct(checkin,total),
+            '<svg viewBox="0 0 16 16"><path d="M13 4L6 12 3 9"/></svg>')
+        + _dashKpi(Math.abs(diffDays), diffDays > 0 ? 'Días para el evento' : (diffDays===0?'Día del evento':'Días transcurridos'), diffDays>0?'15 ago':'', 0,
+            '<svg viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="13" rx="1"/><path d="M1 6h14M5 1v2M11 1v2"/></svg>')
+      + '</div>'
+    + '</div>'
+
+    // Row: Funnel + Quick actions
+    + '<div class="dash-grid-3 dash-section">'
+
+      // Funnel
+      + '<div class="d-card">'
+        + '<div class="dash-section-title">Embudo del evento <span class="dash-section-link" onclick="switchTab(\'asistentes\',document.querySelector(\'[data-tab=asistentes]\'))">Ver todas →</span></div>'
+        + _funnelStep('Registradas', total, total)
+        + _funnelStep('Correo enviado', confEmail, total)
+        + _funnelStep('Encuesta previa', previa, total)
+        + _funnelStep('Check-in', checkin, total)
+        + _funnelStep('Encuesta post', post, total)
+      + '</div>'
+
+      // Quick actions + fases
+      + '<div style="display:flex;flex-direction:column;gap:.7rem;">'
+        + '<div class="d-card">'
+          + '<div class="dash-section-title">Acciones rápidas</div>'
+          + '<div class="qa-grid">'
+            + _qaBtn('<svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 0"/><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M4 4h8v8H4z"/></svg>', 'Escanear QR', 'abrirQRScanner()')
+            + _qaBtn('<svg viewBox="0 0 16 16"><circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-3.3 2.2-5 5-5s5 1.7 5 5"/><circle cx="12.5" cy="5.5" r="2"/><path d="M11 13.5c0-2 1.1-3.3 2.7-3.3"/></svg>', 'Asistentes', 'switchTab(\'asistentes\',document.querySelector(\'[data-tab=asistentes]\'))')
+            + _qaBtn('<svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" rx="1"/><path d="M1 5l7 4.5L15 5"/></svg>', 'Comunicación', 'switchTab(\'correos\',document.querySelector(\'[data-tab=correos]\'))')
+            + _qaBtn('<svg viewBox="0 0 16 16"><path d="M8 1l2.5 5 5.5.8-4 3.9.9 5.5L8 13.5 3.1 16.2l.9-5.5L0 6.8l5.5-.8z"/></svg>', 'Encuesta post', 'switchTab(\'post\',document.querySelector(\'[data-tab=post]\'))')
+          + '</div>'
+        + '</div>'
+
+        // Por fase
+        + '<div class="d-card">'
+          + '<div class="dash-section-title">Por fase de compra</div>'
+          + Object.keys(faseCount).map(function(f){
+              var n = faseCount[f];
+              var p = pct(n, total);
+              return '<div style="display:flex;align-items:center;gap:.6rem;padding:.4rem 0;border-bottom:1px solid rgba(42,15,37,.05);">'
+                +'<div style="font-size:.62rem;color:var(--mauve);flex:1;">'+f+'</div>'
+                +'<div style="font-family:Georgia,serif;font-size:.9rem;color:var(--plum);font-variant-numeric:tabular-nums;">'+n+'</div>'
+                +'<div style="font-size:.5rem;color:var(--gold);min-width:30px;text-align:right;">'+p+'%</div>'
+                +'</div>';
+            }).join('')
+        + '</div>'
+      + '</div>'
+    + '</div>'
+
+    // Row: Checklist + Actividad reciente
+    + '<div class="dash-grid-2 dash-section">'
+
+      // Checklist
+      + '<div class="d-card">'
+        + '<div class="dash-section-title">Estado del evento</div>'
+        + ci(total > 0, false, 'Registro abierto', total+' personas registradas')
+        + ci(confEmail > 0, confEmail < total, 'Correos de confirmación', confEmail+' / '+total+' enviados')
+        + ci(previa > 0, previa < total*0.7, 'Encuesta previa', previa+' / '+total+' respondidas')
+        + ci(checkin > 0, false, 'Check-in en progreso', checkin > 0 ? checkin+' personas han ingresado' : 'Pendiente para el día del evento')
+        + ci(post > 0, false, 'Encuesta post-evento', post > 0 ? post+' respuestas recibidas' : 'Disponible después del evento')
+      + '</div>'
+
+      // Actividad reciente
+      + '<div class="d-card">'
+        + '<div class="dash-section-title">Actividad reciente <span class="dash-section-link" onclick="switchTab(\'asistentes\',document.querySelector(\'[data-tab=asistentes]\'))">Ver todo →</span></div>'
+        + (conCheckin.length > 0
+          ? conCheckin.map(function(a){
+              return '<div class="activity-item">'
+                +'<div class="act-dot"></div>'
+                +'<div class="act-text">'+a.nombre+' hizo check-in</div>'
+                +'<div class="act-time">Hoy</div>'
+                +'</div>';
+            }).join('')
+          : '<div style="font-size:.62rem;color:var(--mauve);padding:.5rem 0;">Sin check-ins registrados aún.</div>'
+          )
+        + '<div class="activity-item"><div class="act-dot" style="background:var(--mauve);"></div><div class="act-text" style="color:var(--mauve);">'+total+' personas registradas en total</div><div class="act-time"></div></div>'
+      + '</div>'
+    + '</div>'
+
+    // Insights
+    + '<div class="insight-card dash-section">'
+      + '<div style="font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(198,165,106,.4);margin-bottom:.8rem;">Resumen del evento</div>'
+      + '<div class="insight-item"><span class="ins-bullet">·</span>'+(pct(previa,total))+'% de las asistentes han completado la encuesta previa.</div>'
+      + '<div class="insight-item"><span class="ins-bullet">·</span>'+Object.keys(faseCount).map(function(f){ return faseCount[f]+' en '+f; }).join(' · ')+'.</div>'
+      + '<div class="insight-item"><span class="ins-bullet">·</span>'+(diffDays > 0 ? 'Faltan '+diffDays+' días. Recuerda programar el correo de recordatorio.' : (diffDays===0 ? '¡Hoy es el evento! El QR de entrada ya debería estar enviado.' : 'El evento concluyó. Recuerda enviar el correo de agradecimiento.'))+'</div>'
+    + '</div>';
+
+  el.innerHTML = html;
+}
+
+function _dashKpi(n, label, sub, pctVal, iconSvg) {
+  return '<div class="dash-kpi">'
+    +'<div class="dash-kpi-icon">'+iconSvg+'</div>'
+    +'<div class="dash-kpi-n">'+n+'</div>'
+    +'<div class="dash-kpi-label">'+label+'</div>'
+    +'<div class="dash-kpi-sub">'+sub+'</div>'
+    +'<div class="dash-kpi-bar"><div class="dash-kpi-fill" style="width:'+pctVal+'%;"></div></div>'
+    +'</div>';
+}
+
+function _funnelStep(label, n, total) {
+  var p = total ? Math.min(100, Math.round(n/total*100)) : 0;
+  return '<div class="funnel-step">'
+    +'<div class="funnel-label">'+label+'</div>'
+    +'<div class="funnel-bar-wrap"><div class="funnel-bar-fill" style="width:'+p+'%;"></div></div>'
+    +'<div class="funnel-n">'+n+'</div>'
+    +'<div class="funnel-pct">'+p+'%</div>'
+    +'</div>';
+}
+
+function _qaBtn(icon, label, onclick) {
+  return '<button class="qa-btn" onclick="'+onclick+'">'+icon+label+'</button>';
 }
 
 /* ── Sub-tabs Comunicación ───────────────────────────────── */
