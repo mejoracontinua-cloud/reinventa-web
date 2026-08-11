@@ -2064,11 +2064,13 @@ function generarReportePrevia() {
   }
 
   var fichasHtml = '';
-  for (var i = 0; i < enc.length; i += 2) {
+  for (var i = 0; i < enc.length; i += 4) {
     var isFirst = (i === 0);
-    fichasHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;'+(isFirst?'':'page-break-before:always;break-before:page;')+'page-break-inside:avoid;break-inside:avoid;">'
+    fichasHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;'+(isFirst?'':'page-break-before:always;break-before:page;')+'page-break-inside:avoid;break-inside:avoid;">'
       + fichaCard(enc[i])
       + (enc[i+1] ? fichaCard(enc[i+1]) : '<div></div>')
+      + (enc[i+2] ? fichaCard(enc[i+2]) : '<div></div>')
+      + (enc[i+3] ? fichaCard(enc[i+3]) : '<div></div>')
     +'</div>';
   }
 
