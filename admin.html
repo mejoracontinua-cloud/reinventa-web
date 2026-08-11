@@ -1849,230 +1849,240 @@ function generarReportePrevia() {
   var hoy = new Date();
   var fechaStr = hoy.toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' });
 
-  // ── Promedios dimensiones ──────────────────────────────────
-  function avg(campo) {
-    var vals = enc.map(function(e){ return parseFloat(e[campo])||0; }).filter(function(v){ return v>0; });
-    return vals.length ? (vals.reduce(function(a,b){return a+b;},0)/vals.length).toFixed(1) : '—';
+  // ── Helpers ───────────────────────────────────────────────
+  // SVG bar — siempre se imprime, a diferencia de background-color CSS
+  function svgBar(pct, fg, bg, h) {
+    pct = Math.min(100, Math.max(0, pct||0));
+    fg  = fg  || '#2A0F25';
+    bg  = bg  || '#EDE9E4';
+    h   = h   || 9;
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="'+h+'" style="display:block;border-radius:2px;overflow:hidden;">'
+      +'<rect width="100%" height="'+h+'" fill="'+bg+'"/>'
+      +'<rect width="'+pct+'%" height="'+h+'" fill="'+fg+'"/>'
+      +'</svg>';
   }
+
+  function scoreColor(v) {
+    var nv = parseFloat(v)||0;
+    if (nv >= 8) return '#C6A56A';
+    if (nv >= 6) return '#2A0F25';
+    return '#8F7383';
+  }
+
+  function avg(key) {
+    var vals = enc.map(function(e){ return parseFloat(e[key])||0; }).filter(function(v){ return v>0; });
+    return vals.length ? (vals.reduce(function(a,b){return a+b;},0)/vals.length) : 0;
+  }
+
+  function freq(key) {
+    var f={};
+    enc.forEach(function(e){ var v=(e[key]||'—').trim(); f[v]=(f[v]||0)+1; });
+    return Object.keys(f).sort(function(a,b){return f[b]-f[a];}).map(function(k){return{val:k,n:f[k]};});
+  }
+
+  function scoreDist(key) {
+    var b=[0,0,0,0,0];
+    enc.forEach(function(e){
+      var v=parseFloat(e[key])||0;
+      if(v<=2) b[0]++; else if(v<=4) b[1]++; else if(v<=6) b[2]++; else if(v<=8) b[3]++; else b[4]++;
+    });
+    var max=Math.max.apply(null,b)||1;
+    var labs=['1–2','3–4','5–6','7–8','9–10'];
+    var cols=['#d4b8bb','#c0a0a4','#b08080','#8F7383','#2A0F25'];
+    return labs.map(function(l,i){
+      return '<div style="display:flex;align-items:center;gap:8px;margin:3px 0;">'
+        +'<span style="font-size:9px;color:#8F7383;width:26px;text-align:right;flex-shrink:0;">'+l+'</span>'
+        +'<div style="flex:1;">'+svgBar(Math.round(b[i]/max*100),cols[i],'#EDE9E4',7)+'</div>'
+        +'<span style="font-size:9px;color:#2A0F25;width:14px;text-align:right;flex-shrink:0;">'+b[i]+'</span>'
+        +'</div>';
+    }).join('');
+  }
+
   var dims = [
-    { label:'Satisfacción personal',        key:'satisfaccion', avg: avg('satisfaccion') },
-    { label:'Coherencia y autenticidad',    key:'coherencia',   avg: avg('coherencia')   },
-    { label:'Confianza y practicidad',      key:'confianza',    avg: avg('confianza')     },
-    { label:'Proyección y liderazgo',       key:'proyeccion',   avg: avg('proyeccion')    },
+    { label:'Satisfacción personal',     key:'satisfaccion' },
+    { label:'Coherencia y autenticidad', key:'coherencia'   },
+    { label:'Confianza y practicidad',   key:'confianza'    },
+    { label:'Proyección y liderazgo',    key:'proyeccion'   },
   ];
 
-  // ── Frecuencias categóricas ────────────────────────────────
-  function freq(campo) {
-    var f = {};
-    enc.forEach(function(e){ var v=(e[campo]||'—').trim(); f[v]=(f[v]||0)+1; });
-    return Object.keys(f).sort(function(a,b){ return f[b]-f[a]; }).map(function(k){ return { val:k, n:f[k] }; });
-  }
-  var fPiel    = freq('piel');
-  var fCabello = freq('cabello');
-  var fOjos    = freq('ojos');
-
-  // ── Score distribution per dimension ─────────────────────
-  function scoreDistHtml(key) {
-    var buckets = [0,0,0,0,0]; // 1-2, 3-4, 5-6, 7-8, 9-10
-    enc.forEach(function(e){
-      var v = parseFloat(e[key])||0;
-      if (v<=2) buckets[0]++; else if(v<=4) buckets[1]++; else if(v<=6) buckets[2]++; else if(v<=8) buckets[3]++; else buckets[4]++;
-    });
-    var labels = ['1-2','3-4','5-6','7-8','9-10'];
-    var colors = ['#e8b4b8','#d4a0a4','#c4928c','#b07a5f','#2A0F25'];
-    var max = Math.max.apply(null, buckets) || 1;
-    return labels.map(function(l,i){
-      var pct = Math.round(buckets[i]/max*100);
-      return '<div style="display:flex;align-items:center;gap:6px;margin:3px 0;">'
-        +'<span style="font-size:8px;color:#8F7383;width:22px;text-align:right;">'+l+'</span>'
-        +'<div style="flex:1;height:7px;background:#F0EDE9;border-radius:2px;overflow:hidden;">'
-          +'<div style="width:'+pct+'%;height:100%;background:'+colors[i]+';border-radius:2px;"></div>'
-        +'</div>'
-        +'<span style="font-size:8px;color:#2A0F25;width:14px;">'+buckets[i]+'</span>'
-        +'</div>';
-    }).join('');
-  }
-
-  // ── Colores para las fichas individuales ──────────────────
-  function scoreColor(v) {
-    var n = parseFloat(v)||0;
-    if (n>=8) return '#C6A56A';
-    if (n>=6) return '#8F7383';
-    return '#c0a0a8';
-  }
-
-  // ── Expectativas ──────────────────────────────────────────
-  var expectativasHtml = enc.map(function(e, i){
-    return '<div style="page-break-inside:avoid;padding:12px 14px;margin-bottom:10px;border-left:3px solid #C6A56A;background:#FAF8F5;">'
-      +'<div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8F7383;margin-bottom:4px;">'+esc(e.nombre)+'</div>'
-      +'<div style="font-size:11px;color:#2A0F25;line-height:1.6;font-style:italic;">"'+esc(e.expectativa||'—')+'"</div>'
-      +'</div>';
-  }).join('');
-
-  var motivacionesHtml = enc.map(function(e){
-    return '<div style="page-break-inside:avoid;padding:10px 14px;margin-bottom:8px;background:#F5F3F0;border-bottom:1px solid #EAE6E1;">'
-      +'<div style="font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:#8F7383;margin-bottom:3px;">'+esc(e.nombre)+'</div>'
-      +'<div style="font-size:10.5px;color:#2A0F25;line-height:1.5;">'+esc(e.motivacion||'—')+'</div>'
-      +'</div>';
-  }).join('');
-
-  // ── Fichas individuales ───────────────────────────────────
-  function starBar(val) {
-    var v = parseFloat(val)||0;
-    var pct = v*10;
-    return '<div style="display:flex;align-items:center;gap:6px;">'
-      +'<div style="flex:1;height:5px;background:#EAE6E1;border-radius:2px;overflow:hidden;">'
-        +'<div style="width:'+pct+'%;height:100%;background:'+scoreColor(v)+';border-radius:2px;"></div>'
-      +'</div>'
-      +'<span style="font-size:10px;font-weight:600;color:'+scoreColor(v)+';min-width:18px;">'+val+'</span>'
-      +'</div>';
-  }
-
-  var fichaMd = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:0;page-break-inside:avoid;break-inside:avoid;">';
-  enc.forEach(function(e, i){
-    if (i % 2 === 0 && i > 0) fichaMd += '</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;page-break-before:always;break-before:page;margin-top:0;">';
-    fichaMd += '<div style="border:1px solid #E8E2DB;padding:14px;page-break-inside:avoid;break-inside:avoid;background:#fff;">'
-      +'<div style="font-family:Georgia,serif;font-size:13px;color:#2A0F25;border-bottom:1px solid #E8E2DB;padding-bottom:7px;margin-bottom:10px;">'+esc(e.nombre)+'</div>'
-      +'<div style="font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#8F7383;margin:8px 0 4px;">Satisfacción personal</div>'
-      + starBar(e.satisfaccion)
-      +'<div style="font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#8F7383;margin:8px 0 4px;">Coherencia y autenticidad</div>'
-      + starBar(e.coherencia)
-      +'<div style="font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#8F7383;margin:8px 0 4px;">Confianza y practicidad</div>'
-      + starBar(e.confianza)
-      +'<div style="font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#8F7383;margin:8px 0 4px;">Proyección y liderazgo</div>'
-      + starBar(e.proyeccion)
-      +'<div style="margin-top:10px;padding-top:8px;border-top:1px solid #EAE6E1;">'
-        +'<div style="font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#8F7383;margin-bottom:3px;">Tono de piel · Cabello · Ojos</div>'
-        +'<div style="font-size:9.5px;color:#2A0F25;">'+esc(e.piel||'—')+' · '+esc(e.cabello||'—')+' · '+esc(e.ojos||'—')+'</div>'
-      +'</div>'
-      +'<div style="margin-top:9px;padding-top:8px;border-top:1px solid #EAE6E1;">'
-        +'<div style="font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#8F7383;margin-bottom:3px;">Motivación</div>'
-        +'<div style="font-size:9.5px;color:#2A0F25;line-height:1.5;">'+esc(e.motivacion||'—')+'</div>'
-      +'</div>'
-      +'</div>';
-  });
-  fichaMd += '</div>';
-
-  // ── Resumen categórico ────────────────────────────────────
-  function catHtml(items) {
-    return items.map(function(it){
-      var pct = Math.round(it.n/n*100);
-      return '<div style="display:flex;align-items:center;gap:8px;margin:5px 0;">'
-        +'<div style="font-size:9.5px;color:#2A0F25;min-width:140px;">'+esc(it.val)+'</div>'
-        +'<div style="flex:1;height:7px;background:#EAE6E1;border-radius:2px;overflow:hidden;">'
-          +'<div style="width:'+pct+'%;height:100%;background:#C6A56A;border-radius:2px;"></div>'
-        +'</div>'
-        +'<div style="font-size:9px;color:#8F7383;min-width:28px;text-align:right;">'+it.n+' ('+pct+'%)</div>'
-        +'</div>';
-    }).join('');
-  }
-
-  // ── HTML del reporte ──────────────────────────────────────
+  // ── CSS ───────────────────────────────────────────────────
   var css = '<style>'
     +'*{margin:0;padding:0;box-sizing:border-box;}'
-    // Carta = 8.5in × 11in. Forzamos el body al ancho exacto para que el browser lo respete
-    +'html{width:8.5in;}'
-    +'body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#2A0F25;background:#fff;font-size:11px;line-height:1.5;width:8.5in;margin:0 auto;}'
-    // Pantalla: márgenes simulados para preview
-    +'@media screen{.page{max-width:8.5in;margin:0 auto;padding:0.75in 0.85in;}}'
-    // Impresión: tamaño carta, márgenes moderados, colores preservados
+    +'html,body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-size:13px;line-height:1.55;color:#2A0F25;background:#fff;}'
+    +'@media screen{.page{max-width:7in;margin:0 auto;padding:0.7in 0.8in;}}'
     +'@media print{'
-      +'@page{size:letter portrait;margin:0.65in 0.75in;}'
-      +'html,body{width:8.5in;margin:0;}'
-      +'.page{padding:0;max-width:none;}'
+      +'@page{size:letter portrait;margin:0.6in 0.75in;}'
+      +'html,body{width:8.5in;margin:0;font-size:13px;}'
+      +'.page{max-width:none;padding:0;}'
       +'.no-print{display:none!important;}'
-      +'.page-break{page-break-before:always;break-before:page;}'
-      // CRÍTICO: fuerza que los fondos y colores se impriman
-      +'*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;}'
-      // Evita que grids y cards se partan en la mitad
-      +'.ficha-row{page-break-inside:avoid;break-inside:avoid;}'
-      +'div[style*="border:1px solid #E8E2DB"]{page-break-inside:avoid;break-inside:avoid;}'
+      +'*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}'
     +'}'
-    +'.serif{font-family:Georgia,"Times New Roman",serif;}'
+    +'.pb{page-break-before:always;break-before:page;}'
+    +'.avoid{page-break-inside:avoid;break-inside:avoid;}'
+    +'h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;color:#2A0F25;}'
+    +'.eyebrow{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#8F7383;}'
     +'.gold{color:#C6A56A;}'
-    +'.plum{color:#2A0F25;}'
     +'.mauve{color:#8F7383;}'
-    +'.rule{border:none;border-top:1px solid #E8E2DB;margin:20px 0;}'
-    +'.rule-gold{border:none;border-top:2px solid #C6A56A;margin:16px 0;}'
-    +'.section-label{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#8F7383;margin-bottom:12px;}'
+    +'.serif{font-family:Georgia,"Times New Roman",serif;}'
+    +'.rule{border:none;border-top:1px solid #DDD8D2;margin:18px 0;}'
     +'</style>';
 
-  // Portada
+  // ── PORTADA ────────────────────────────────────────────────
   var portada = '<div class="page">'
-    +'<div style="text-align:center;padding:60px 0 40px;">'
-      +'<div class="serif gold" style="font-size:11px;letter-spacing:.35em;text-transform:uppercase;margin-bottom:24px;">Reinventa</div>'
-      +'<div style="width:40px;height:1px;background:#C6A56A;margin:0 auto 24px;"></div>'
-      +'<div class="serif plum" style="font-size:26px;font-weight:400;line-height:1.3;margin-bottom:12px;">Informe del grupo</div>'
-      +'<div class="serif mauve" style="font-size:14px;font-weight:400;letter-spacing:.05em;margin-bottom:40px;">Encuesta previa al taller</div>'
-      +'<div style="display:inline-grid;grid-template-columns:1fr 1fr;gap:24px 48px;text-align:left;padding:24px 40px;border:1px solid #E8E2DB;margin:0 auto;">'
-        +'<div><div class="section-label">Participantes</div><div class="serif plum" style="font-size:22px;">'+n+'</div></div>'
-        +'<div><div class="section-label">Generado</div><div style="font-size:11px;color:#2A0F25;">'+fechaStr+'</div></div>'
-        +'<div style="grid-column:1/-1;"><div class="section-label">Taller</div><div style="font-size:11px;color:#2A0F25;">Imagen y liderazgo · Mary Méndez · 15 agosto 2026</div></div>'
+    // Franja decorativa superior
+    +'<div style="border-top:3px solid #C6A56A;padding-top:48px;text-align:center;">'
+      +'<div class="eyebrow gold" style="font-size:10px;letter-spacing:.35em;margin-bottom:28px;">R E I N V E N T A</div>'
+      +'<div style="width:32px;border-top:1px solid #C6A56A;margin:0 auto 28px;"></div>'
+      +'<h1 style="font-size:38px;line-height:1.1;margin-bottom:10px;">Informe del grupo</h1>'
+      +'<div class="serif" style="font-size:17px;color:#8F7383;font-style:italic;margin-bottom:56px;">Encuesta previa al taller</div>'
+    +'</div>'
+    // Recuadro de datos
+    +'<div style="border:1px solid #DDD8D2;padding:28px 32px;">'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 40px;">'
+        +'<div>'
+          +'<div class="eyebrow" style="margin-bottom:6px;">Participantes</div>'
+          +'<div class="serif" style="font-size:42px;color:#2A0F25;">'+n+'</div>'
+        +'</div>'
+        +'<div>'
+          +'<div class="eyebrow" style="margin-bottom:6px;">Generado</div>'
+          +'<div style="font-size:14px;">'+fechaStr+'</div>'
+        +'</div>'
+        +'<div style="grid-column:1/-1;border-top:1px solid #EDE9E4;padding-top:18px;">'
+          +'<div class="eyebrow" style="margin-bottom:6px;">Taller</div>'
+          +'<div style="font-size:14px;">Imagen y liderazgo · Mary Méndez · 15 agosto 2026</div>'
+        +'</div>'
       +'</div>'
     +'</div>'
-    +'<hr class="rule" style="margin-top:60px;">'
-    +'<div style="font-size:9px;color:#8F7383;text-align:center;margin-top:12px;">Documento confidencial · Para uso exclusivo de la facilitadora</div>'
+    // Pie de portada
+    +'<div style="position:fixed;bottom:0.6in;left:0.75in;right:0.75in;text-align:center;display:none;" class="no-screen">'
+    +'</div>'
+    +'<div style="margin-top:48px;text-align:center;">'
+      +'<div style="font-size:10px;color:#aaa;letter-spacing:.06em;">Documento confidencial · Para uso exclusivo de la facilitadora</div>'
+    +'</div>'
+  +'</div>';
+
+  // ── PANORAMA ───────────────────────────────────────────────
+  var dimRows = dims.map(function(d){
+    var a = avg(d.key);
+    var pct = a*10;
+    return '<div class="avoid" style="margin-bottom:20px;">'
+      +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;">'
+        +'<span style="font-size:13px;color:#2A0F25;">'+d.label+'</span>'
+        +'<span class="serif" style="font-size:28px;color:#C6A56A;line-height:1;">'+a.toFixed(1)+'</span>'
+      +'</div>'
+      +svgBar(pct,'#2A0F25','#EDE9E4',10)
+      +'<div style="margin-top:10px;padding:10px 12px;background:#FAFAF8;border:1px solid #EDE9E4;">'
+        + scoreDist(d.key)
+      +'</div>'
     +'</div>';
+  }).join('');
 
-  // Resumen ejecutivo
-  var resumen = '<div class="page page-break">'
-    +'<div class="section-label">01 · Resumen del grupo</div>'
-    +'<div class="serif" style="font-size:20px;color:#2A0F25;margin-bottom:6px;">Panorama general</div>'
-    +'<div style="font-size:10px;color:#8F7383;margin-bottom:28px;">Puntuaciones promedio por dimensión · Escala 1 – 10</div>'
-
-    // Barras de promedios
-    +'<div style="margin-bottom:32px;">'
-    + dims.map(function(d){
-        var v = parseFloat(d.avg)||0;
-        var pct = v*10;
-        return '<div style="margin-bottom:14px;">'
-          +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">'
-            +'<div style="font-size:10.5px;color:#2A0F25;">'+d.label+'</div>'
-            +'<div class="serif" style="font-size:18px;color:#C6A56A;">'+d.avg+'</div>'
-          +'</div>'
-          +'<div style="height:9px;background:#F0EDE9;border-radius:2px;overflow:hidden;">'
-            +'<div style="width:'+pct+'%;height:100%;background:#2A0F25;border-radius:2px;transition:width .3s;"></div>'
-          +'</div>'
-          +'<div style="margin-top:6px;">'+scoreDistHtml(d.key)+'</div>'
+  var catSection = (function(){
+    var cats = [
+      { label:'Tono de piel', data: freq('piel') },
+      { label:'Cabello',      data: freq('cabello') },
+      { label:'Ojos',         data: freq('ojos') },
+    ];
+    return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:24px;">'
+      + cats.map(function(c){
+          return '<div>'
+            +'<div class="eyebrow gold" style="font-size:8.5px;margin-bottom:10px;">'+c.label+'</div>'
+            + c.data.map(function(it){
+                var pct=Math.round(it.n/n*100);
+                return '<div style="margin-bottom:7px;page-break-inside:avoid;break-inside:avoid;">'
+                  +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+                    +'<span style="font-size:11px;color:#2A0F25;line-height:1.3;">'+esc(it.val)+'</span>'
+                    +'<span style="font-size:10px;color:#8F7383;margin-left:8px;white-space:nowrap;">'+it.n+' ('+pct+'%)</span>'
+                  +'</div>'
+                  +svgBar(pct,'#C6A56A','#EDE9E4',6)
+                +'</div>';
+              }).join('')
           +'</div>';
-      }).join('')
-    +'</div>'
-
-    +'<hr class="rule">'
-
-    // Características del grupo
-    +'<div style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#8F7383;margin:24px 0 16px;">Características del grupo</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;">'
-      +'<div><div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#C6A56A;margin-bottom:10px;">Tono de piel</div>'+catHtml(fPiel)+'</div>'
-      +'<div><div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#C6A56A;margin-bottom:10px;">Cabello</div>'+catHtml(fCabello)+'</div>'
-      +'<div><div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#C6A56A;margin-bottom:10px;">Ojos</div>'+catHtml(fOjos)+'</div>'
-    +'</div>'
+        }).join('')
     +'</div>';
+  })();
 
-  // Expectativas
-  var expectativas = '<div class="page page-break">'
-    +'<div class="section-label">02 · Voz del grupo</div>'
-    +'<div class="serif" style="font-size:20px;color:#2A0F25;margin-bottom:6px;">Expectativas del taller</div>'
-    +'<div style="font-size:10px;color:#8F7383;margin-bottom:24px;">Qué espera cada participante — léelas antes de comenzar</div>'
-    + expectativasHtml
-    +'<div style="margin-top:28px;padding-top:20px;border-top:1px solid #E8E2DB;">'
-    +'<div style="font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#8F7383;margin-bottom:14px;">Motivaciones principales</div>'
-    + motivacionesHtml
-    +'</div>'
+  var panorama = '<div class="page pb">'
+    +'<div class="eyebrow" style="margin-bottom:8px;">01 · Resumen del grupo</div>'
+    +'<h1 style="font-size:28px;margin-bottom:4px;">Panorama general</h1>'
+    +'<div style="font-size:11px;color:#8F7383;margin-bottom:28px;">Puntuaciones promedio por dimensión · Escala 1 – 10</div>'
+    + dimRows
+    +'<div class="rule"></div>'
+    +'<div class="eyebrow" style="margin-bottom:4px;">Características del grupo</div>'
+    + catSection
+  +'</div>';
+
+  // ── VOZ DEL GRUPO ──────────────────────────────────────────
+  // Combinamos expectativa + motivación por persona (evita páginas orphan)
+  var vozCards = enc.map(function(e){
+    return '<div class="avoid" style="border-left:2px solid #C6A56A;padding:12px 16px;margin-bottom:12px;">'
+      +'<div class="eyebrow" style="font-size:9px;margin-bottom:6px;">'+esc(e.nombre)+'</div>'
+      +'<div class="serif" style="font-size:13px;font-style:italic;color:#2A0F25;line-height:1.6;margin-bottom:8px;">"'+esc(e.expectativa||'—')+'"</div>'
+      +'<div style="display:flex;gap:6px;align-items:baseline;">'
+        +'<span class="eyebrow" style="font-size:8px;white-space:nowrap;">Motivación:</span>'
+        +'<span style="font-size:12px;color:#2A0F25;">'+esc(e.motivacion||'—')+'</span>'
+      +'</div>'
     +'</div>';
+  }).join('');
 
-  // Fichas individuales
-  var fichas = '<div class="page page-break">'
-    +'<div class="section-label">03 · Fichas individuales</div>'
-    +'<div class="serif" style="font-size:20px;color:#2A0F25;margin-bottom:6px;">Perfiles del grupo</div>'
-    +'<div style="font-size:10px;color:#8F7383;margin-bottom:20px;">Puntuaciones y preferencias de cada participante</div>'
-    + fichaMd
+  var voz = '<div class="page pb">'
+    +'<div class="eyebrow" style="margin-bottom:8px;">02 · Voz del grupo</div>'
+    +'<h1 style="font-size:28px;margin-bottom:4px;">Expectativas y motivaciones</h1>'
+    +'<div style="font-size:11px;color:#8F7383;margin-bottom:28px;">Qué espera y qué motiva a cada participante — léelas antes de comenzar</div>'
+    + vozCards
+  +'</div>';
+
+  // ── FICHAS INDIVIDUALES ────────────────────────────────────
+  function fichaCard(e) {
+    var scoreRow = function(label, key) {
+      var v = parseFloat(e[key])||0;
+      var pct = v*10;
+      var col = scoreColor(v);
+      return '<div style="margin-bottom:10px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">'
+          +'<span class="eyebrow" style="font-size:8px;">'+label+'</span>'
+          +'<span class="serif" style="font-size:16px;color:'+col+';">'+v+'</span>'
+        +'</div>'
+        +svgBar(pct, col, '#EDE9E4', 7)
+      +'</div>';
+    };
+    return '<div class="avoid" style="border:1px solid #DDD8D2;padding:16px;break-inside:avoid;page-break-inside:avoid;">'
+      +'<div class="serif" style="font-size:16px;border-bottom:1px solid #EDE9E4;padding-bottom:10px;margin-bottom:14px;">'+esc(e.nombre)+'</div>'
+      + scoreRow('Satisfacción personal',     'satisfaccion')
+      + scoreRow('Coherencia y autenticidad', 'coherencia')
+      + scoreRow('Confianza y practicidad',   'confianza')
+      + scoreRow('Proyección y liderazgo',    'proyeccion')
+      +'<div style="border-top:1px solid #EDE9E4;padding-top:10px;margin-top:4px;">'
+        +'<div class="eyebrow" style="font-size:8px;margin-bottom:4px;">Tono de piel · Cabello · Ojos</div>'
+        +'<div style="font-size:12px;">'+esc(e.piel||'—')+' · '+esc(e.cabello||'—')+' · '+esc(e.ojos||'—')+'</div>'
+      +'</div>'
+      +'<div style="border-top:1px solid #EDE9E4;padding-top:10px;margin-top:10px;">'
+        +'<div class="eyebrow" style="font-size:8px;margin-bottom:4px;">Motivación principal</div>'
+        +'<div style="font-size:12px;color:#2A0F25;">'+esc(e.motivacion||'—')+'</div>'
+      +'</div>'
     +'</div>';
+  }
 
-  // Botón de impresión (visible en pantalla, oculto al imprimir)
-  var printBtn = '<div class="no-print" style="position:fixed;top:20px;right:20px;display:flex;gap:10px;z-index:99;">'
-    +'<button onclick="window.print()" style="background:#2A0F25;color:#C6A56A;border:none;padding:10px 22px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;font-family:Georgia,serif;">Imprimir / Guardar PDF</button>'
-    +'<button onclick="window.close()" style="background:none;border:1px solid #ccc;padding:10px 16px;font-size:12px;cursor:pointer;color:#888;">✕ Cerrar</button>'
+  var fichasHtml = '';
+  for (var i = 0; i < enc.length; i += 2) {
+    var isFirst = (i === 0);
+    fichasHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;'+(isFirst?'':'page-break-before:always;break-before:page;')+'page-break-inside:avoid;break-inside:avoid;">'
+      + fichaCard(enc[i])
+      + (enc[i+1] ? fichaCard(enc[i+1]) : '<div></div>')
+    +'</div>';
+  }
+
+  var fichas = '<div class="page pb">'
+    +'<div class="eyebrow" style="margin-bottom:8px;">03 · Fichas individuales</div>'
+    +'<h1 style="font-size:28px;margin-bottom:4px;">Perfiles del grupo</h1>'
+    +'<div style="font-size:11px;color:#8F7383;margin-bottom:20px;">Puntuaciones y preferencias de cada participante</div>'
+    + fichasHtml
+  +'</div>';
+
+  // ── Botón pantalla ─────────────────────────────────────────
+  var printBtn = '<div class="no-print" style="position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:999;">'
+    +'<button onclick="window.print()" style="background:#2A0F25;color:#C6A56A;border:none;padding:10px 24px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:Georgia,serif;">Guardar PDF</button>'
+    +'<button onclick="window.close()" style="background:none;border:1px solid #ccc;padding:10px 16px;font-size:13px;cursor:pointer;color:#888;">✕</button>'
     +'</div>';
 
   var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
@@ -2080,19 +2090,16 @@ function generarReportePrevia() {
     + css
     +'</head><body>'
     + printBtn
-    + portada
-    + resumen
-    + expectativas
-    + fichas
+    + portada + panorama + voz + fichas
     +'</body></html>';
 
-  var w = window.open('', '_blank', 'width=900,height=800,scrollbars=yes');
+  var w = window.open('', '_blank', 'width=960,height=840,scrollbars=yes');
   if (!w) { alert('El navegador bloqueó la ventana emergente. Permite popups para este sitio y vuelve a intentarlo.'); return; }
   w.document.write(html);
   w.document.close();
-  // Pequeño delay para que el CSS cargue antes del diálogo de impresión
   setTimeout(function(){ w.focus(); }, 400);
 }
+
 
 function renderTablaPost() {
   var html = datos.asistentes.filter(function(a) { return a.encuesta && a.calificacion; }).map(function(a) {
