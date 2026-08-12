@@ -1033,7 +1033,7 @@ function enviarCorreoConfirmacion(nombre, correo, fase, idUnico) {
 
 /* ── Jueves 13 ago: indicaciones de vestimenta y análisis ───────── */
 function enviarCorreoIndicaciones(nombre, correo, idUnico) {
-  var p      = nombre ? nombre.split(' ')[0] : 'Hola';
+  var p      = nombre ? nombre.split(' ')[0] : 'hola';
   var hubUrl = idUnico
     ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
     : 'https://reinventabymarymendez.com.mx/hub';
@@ -1041,54 +1041,48 @@ function enviarCorreoIndicaciones(nombre, correo, idUnico) {
   var html = _headerCorreo()
     + '<div style="padding:2.2rem 2.6rem 2rem;">'
     + '<div style="display:inline-block;background:rgba(42,15,37,.07);border-left:2px solid #C6A56A;padding:.4rem .75rem;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:#2A0F25;margin-bottom:1.4rem;">Preparación &middot; Jueves 13 de agosto</div>'
-    + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 1rem;">¡Hola a todas!</h1>'
-    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Estamos muy cerca de nuestro taller y, para que aproveches al máximo tu experiencia y podamos realizar tu análisis de cuerpo y rostro de forma precisa, te comparto los siguientes requerimientos e indicaciones para el día del evento:</p>'
+    + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 .8rem;">' + p + ',<br>ya casi llegamos. 🌟</h1>'
+    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.6rem;">Para que tu experiencia del sábado sea increíble — y podamos hacer tu análisis de cuerpo y rostro de forma precisa — aquí van las indicaciones para llegar lista:</p>'
+
+    // Hub destacado primero
+    + '<div style="background:#2A0F25;padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(198,165,106,.6);margin:0 0 .5rem;">Tu espacio personal</p>'
+    + '<p style="font-size:.87rem;color:#EFE9E2;line-height:1.6;margin:0 0 .9rem;">Entra a tu espacio para ver la agenda, tu QR de entrada y registrar tus medidas de cuerpo antes del taller.</p>'
+    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;">Entrar a mi espacio &rarr;</a>'
+    + '</div>'
 
     // Vestimenta
-    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.4rem;">'
-    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .9rem;">👕 Vestimenta &mdash; Análisis de cuerpo</p>'
-    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0 0 .5rem;"><strong style="color:#2A0F25;">Parte inferior:</strong> Asiste con un pantalón ajustado (tipo leggings o jeans ajustados).</p>'
-    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0 0 .5rem;"><strong style="color:#2A0F25;">Parte superior:</strong> Lleva una blusa o playera básica ajustada (de preferencia en color blanco o neutro).</p>'
-    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0;"><strong style="color:#2A0F25;">Capa extra:</strong> Encima de tu playera básica, puedes llevar un saco, blazer o blusón en el color que más te guste o con el que te sientas más cómoda.</p>'
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .9rem;">👕 Qué ponerte &mdash; Análisis de cuerpo</p>'
+    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0 0 .5rem;"><strong style="color:#2A0F25;">Abajo:</strong> Pantalón ajustado — leggings o jeans pegados funcionan perfecto.</p>'
+    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0 0 .5rem;"><strong style="color:#2A0F25;">Arriba:</strong> Blusa o playera básica ajustada. Si puedes, en blanco o neutro.</p>'
+    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0;"><strong style="color:#2A0F25;">Encima:</strong> Un saco, blazer o blusón en el color que más te guste — ese va a poder ser cualquiera.</p>'
     + '</div>'
 
-    // Rostro / visagismo
-    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.4rem;">'
+    // Rostro
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1rem;">'
     + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .9rem;">💇‍♀️ Rostro &mdash; Análisis visagismo</p>'
-    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0;">Es muy importante despejar tu rostro. Te sugerimos acudir con el cabello recogido; si no te es posible, no te preocupes, aquí contaremos con pinzas para facilitártelo.</p>'
+    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0;">De preferencia con el cabello recogido para el análisis. Si no puedes, no te preocupes &mdash; habrá pinzas disponibles. ✌️</p>'
     + '</div>'
 
-    // Cómo medir tu cuerpo
-    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.4rem;">'
-    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .9rem;">📏 Pasos para medir tu cuerpo</p>'
-    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 .4rem;"><strong style="color:#2A0F25;">Hombros:</strong> Mide de un extremo al otro pasando por la parte más alta de la espalda.</p>'
-    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 .4rem;"><strong style="color:#2A0F25;">Busto:</strong> Rodea la parte más voluminosa del pecho, a la altura de los pezones.</p>'
-    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 .4rem;"><strong style="color:#2A0F25;">Cintura:</strong> Ubica la zona más angosta del torso, justo 2 dedos arriba del ombligo, sin meter el abdomen.</p>'
-    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 1.2rem;"><strong style="color:#2A0F25;">Cadera:</strong> Mide la parte más ancha de los glúteos y los huesos de la cadera. Toma nota de cada medida.</p>'
-    + '<div style="height:1px;background:rgba(42,15,37,.09);margin-bottom:1rem;"></div>'
-    + '<p style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#2A0F25;margin:0 0 .7rem;font-weight:600;">Identifica la forma de tu cuerpo</p>'
-    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Reloj de arena:</strong> Busto y caderas tienen medidas similares, y la cintura es notablemente más pequeña (con una diferencia de 20 cm o más respecto a los hombros/caderas).</p>'
-    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Rectángulo:</strong> Hombros, cintura y cadera tienen medidas muy parecidas sin una cintura muy marcada.</p>'
-    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Triángulo o Pera:</strong> Las caderas son más anchas (un 5% o más) que los hombros y el busto.</p>'
-    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Triángulo invertido:</strong> Los hombros o el busto son más anchos que las caderas.</p>'
-    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0;"><strong style="color:#2A0F25;">Manzana:</strong> La medida de la cintura es mayor o similar a la de los hombros y caderas.</p>'
-    + '</div>'
-
-    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;"><strong>¡Asegúrate de venir cómoda y lista para descubrir tu mejor versión!</strong> Nos vemos muy pronto. 🌟</p>'
-
-    // Acceso al hub
+    // Medidas
     + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
-    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .6rem;">Tu espacio personal del evento</p>'
-    + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Ahí encontrarás tu código QR de entrada, la agenda del día y toda la información del taller.</p>'
-    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:0;font-weight:600;">Acceder a mi espacio &rarr;</a>'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .9rem;">📏 Tus medidas (opcional pero súper útil)</p>'
+    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0 0 1rem;">Si puedes tomarte las medidas antes de llegar, Mary podrá hacer tu análisis aún más personalizado. Son solo 4: hombros, busto, cintura y cadera. Necesitas una cinta métrica y 5 minutos.</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Hombros:</strong> De un extremo al otro por la parte más alta de la espalda.</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Busto:</strong> La parte más voluminosa del pecho, a la altura de los pezones.</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Cintura:</strong> La zona más angosta, 2 dedos arriba del ombligo, sin meter el abdomen.</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 1rem;"><strong style="color:#2A0F25;">Cadera:</strong> La parte más ancha de los glúteos y los huesos de la cadera.</p>'
+    + '<a href="' + hubUrl + '" style="display:block;background:transparent;border:1px solid #C6A56A;color:#2A0F25;text-align:center;padding:.7rem 1.2rem;text-decoration:none;font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600;">Registrar mis medidas en mi espacio &rarr;</a>'
     + '</div>'
 
+    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 .5rem;">¡Nos vemos el sábado! Va a ser un día para descubrir muchas cosas lindas.</p>'
     + _firmaCorreo()
     + '</div>'
     + _footerCorreo(correo);
 
   MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
-    subject: 'Indicaciones para el taller — REINVENTA', htmlBody: html });
+    subject: p + ', esto necesitas para el taller 🌟 — REINVENTA', htmlBody: html });
 }
 
 function enviarCorreoRecordatorio(nombre, correo, idUnico) {
