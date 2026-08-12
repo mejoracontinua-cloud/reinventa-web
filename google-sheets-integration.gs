@@ -739,6 +739,10 @@ function generateWhatsAppLinkIndicaciones(nombre, telefono, idUnico) {
     e('Registra tus medidas en tu espacio personal:') + NL +
     e(hub) + NL + NL +
     e('- - -') + NL + NL +
+    e('*Encuesta previa*') + NL + NL +
+    e('Si aun no has contestado la encuesta dentro de tu espacio, este es el momento. Mary la lee personalmente para preparar tu experiencia. No toma mas de 5 minutos.') + NL + NL +
+    e(hub) + NL + NL +
+    e('- - -') + NL + NL +
     e('Nos vemos el sabado. Va a ser un dia para descubrir muchas cosas lindas.') + NL + NL +
     e('_Con carino,_') + NL +
     e('_Reinventa by Mary Mendez_') + NL + NL +
@@ -777,8 +781,17 @@ function generateWhatsAppLinkRecordatorio(nombre, telefono, idUnico) {
     e('- Encima: saco, blazer o bluson en el color que prefieras.') + NL +
     e('- Rostro: de preferencia con el cabello recogido para el analisis de visagismo.') + NL + NL +
     e('- - -') + NL + NL +
-    e('*Ultimo recordatorio: encuesta previa*') + NL + NL +
-    e('Si aun no has contestado la encuesta dentro de tu espacio, este es el momento. Mary la revisa antes del taller para personalizar tu experiencia.') + NL + NL +
+    e('*Medidas de cuerpo*') + NL + NL +
+    e('Si aun no las registraste, puedes hacerlo desde tu espacio antes de llegar. Solo necesitas una cinta metrica:') + NL + NL +
+    e('- Hombros: extremo a extremo por la parte alta de la espalda.') + NL +
+    e('- Busto: la parte mas voluminosa del pecho.') + NL +
+    e('- Cintura: zona mas angosta, 2 dedos arriba del ombligo.') + NL +
+    e('- Cadera: la parte mas ancha de los gluteos.') + NL + NL +
+    e(hub) + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Encuesta previa*') + NL + NL +
+    e('Si aun no la has contestado, este es el ultimo momento. Mary la revisa antes del taller para personalizar tu experiencia. Quienes no la contesten no tendran acceso al material digital posterior.') + NL + NL +
+    e(hub) + NL + NL +
     e('- - -') + NL + NL +
     e('Te esperamos puntual. Nos vemos manana.') + NL + NL +
     e('_Con carino,_') + NL +
@@ -1098,6 +1111,12 @@ function enviarCorreoRecordatorio(nombre, correo, idUnico) {
     + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0 0 .35rem;"><strong>Parte superior:</strong> Blusa o playera básica ajustada (blanco o neutro de preferencia).</p>'
     + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0 0 .35rem;"><strong>Capa extra:</strong> Saco, blazer o blusón en el color que prefieras.</p>'
     + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0;"><strong>Rostro:</strong> De preferencia con el cabello recogido para el análisis de visagismo (si no puedes, hay pinzas disponibles).</p>'
+    + '</div>'
+    // Medidas — recordatorio compacto
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.2rem 1.4rem;margin-bottom:1.4rem;">'
+    + '<p style="font-size:.75rem;color:#2A0F25;font-weight:700;margin:0 0 .4rem;letter-spacing:.03em;">Tus medidas de cuerpo</p>'
+    + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0 0 .7rem;">Si aún no las registraste, puedes hacerlo ahora en tu espacio. Mary las usará para personalizar tu análisis de cuerpo. Solo necesitas una cinta métrica: hombros, busto, cintura y cadera.</p>'
+    + '<a href="' + hubUrl + '" style="display:inline-block;background:transparent;border:1px solid #C6A56A;color:#2A0F25;padding:.5rem 1rem;text-decoration:none;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;">Registrar mis medidas &rarr;</a>'
     + '</div>'
     // Encuesta previa — último recordatorio
     + '<div style="border:1px solid #C6A56A;border-left:3px solid #C6A56A;padding:1.2rem 1.4rem;margin-bottom:1.6rem;background:rgba(198,165,106,.06);">'
