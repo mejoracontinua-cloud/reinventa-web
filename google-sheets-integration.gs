@@ -331,17 +331,23 @@ function handleHub(id) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
 
-  // ── Fallback: buscar en Registros por correo y auto-crear entrada en Asistencia ──
-  // (cubre el caso de personas que pagaron pero no fueron sincronizadas aún)
+  // ── Fallback: buscar en Registros por correo o por ID (si ya fue sincronizado)
+  // Cubre el caso de personas que pagaron pero no fueron sincronizadas a Asistencia aún.
   try {
     var regSheet = getSheet();
     var regData  = regSheet.getDataRange().getValues();
+    var idBaja   = id.toString().trim().toLowerCase();
+    var esCodigoRNV = /^rnv-\d+$/i.test(idBaja);
+
     for (var r = 1; r < regData.length; r++) {
       var regCorreo = (regData[r][2] || '').toString().trim().toLowerCase();
       var regPago   = (regData[r][9] || '').toString().trim();
-      if (regCorreo && regPago === '✓' &&
-          regCorreo === id.toString().trim().toLowerCase()) {
-        // Persona pagada en Registros pero no en Asistencia → auto-sincronizar
+      if (!regCorreo || regPago !== '✓') continue;
+
+      // Coincide si el input es el correo de la persona
+      var coincide = (regCorreo === idBaja);
+
+      if (coincide) {
         var regNombre = (regData[r][1] || '').toString().trim();
         var regFase   = (regData[r][6] || '').toString().trim();
         actualizarAsistencia(regCorreo, regNombre, regFase);
