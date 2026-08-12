@@ -1250,18 +1250,18 @@ function renderEventoDashboard() {
   // ── Card: Encuesta previa — scores
   var hasScores = scoreFields.some(function(f){ return scoreData[f].n > 0; });
   var scoresCard = '<div style="background:var(--cream);padding:1.3rem 1.4rem;">'
-    +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:.9rem;">Encuesta previa — promedios (escala 1–5)</div>'
+    +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:.9rem;">Encuesta previa — promedios (escala 1–10)</div>'
     +(previa === 0
       ? '<div style="font-size:.72rem;color:var(--mauve);">Sin respuestas aún.</div>'
       : !hasScores
         ? '<div style="font-size:.72rem;color:var(--mauve);">Los campos de puntaje no son numéricos o están vacíos.</div>'
         : scoreFields.map(function(f){
             var avg = scoreData[f].n ? (scoreData[f].sum/scoreData[f].n) : 0;
-            var pf  = Math.round(avg/5*100);
+            var pf  = Math.round(avg/10*100);
             return '<div style="margin-bottom:.75rem;">'
               +'<div style="display:flex;justify-content:space-between;margin-bottom:.3rem;">'
                 +'<span style="font-size:.7rem;color:var(--plum);">'+scoreLabels[f]+'</span>'
-                +'<span style="font-family:Georgia,serif;font-size:.82rem;color:var(--plum);">'+(avg?avg.toFixed(1):'—')+'<span style="font-size:.5rem;color:var(--mauve);"> / 5</span></span>'
+                +'<span style="font-family:Georgia,serif;font-size:.82rem;color:var(--plum);">'+(avg?avg.toFixed(1):'—')+'<span style="font-size:.5rem;color:var(--mauve);"> / 10</span></span>'
               +'</div>'
               +'<div style="height:3px;background:var(--plum-10);border-radius:2px;overflow:hidden;">'
                 +'<div style="height:100%;width:'+pf+'%;background:#C6A56A;"></div>'
