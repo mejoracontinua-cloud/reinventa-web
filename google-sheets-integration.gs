@@ -847,11 +847,12 @@ function generateWhatsAppLinkAgradecimiento(nombre, telefono, idUnico) {
     e('Gracias por confiar en este espacio y por abrirte a transformar la manera en que tu imagen comunica quien eres. Lo que viviste hoy es solo el comienzo.') + NL + NL +
     e('Mary estara siempre disponible para seguir acompaanandote en este camino.') + NL + NL +
     e('- - -') + NL + NL +
-    e('*Recursos del taller*') + NL + NL +
-    e('Las guias y materiales se desbloquean en tu espacio personal una vez que completes la encuesta de satisfaccion.') + NL + NL +
-    e('Para acceder:') + NL +
-    e('1. Entra a tu espacio personal') + NL +
-    e('2. Completa la encuesta de satisfaccion') + NL + NL +
+    e('*Encuesta post-evento — importante*') + NL + NL +
+    e('Nos toma menos de 3 minutos y contestarla desbloquea en tu espacio:') + NL + NL +
+    e('- Tu constancia de participacion descargable.') + NL +
+    e('- Las guias y materiales del taller.') + NL +
+    e('- Tu feedback le llega directamente a Mary para seguir mejorando.') + NL + NL +
+    e('Entra a tu espacio y contestala:') + NL +
     e(hub) + NL + NL +
     e('- - -') + NL + NL +
     e('Conoce mas sobre Mary: https://reinventabymarymendez.com.mx') + NL + NL +
@@ -1166,20 +1167,19 @@ function enviarCorreoAgradecimiento(nombre, correo, idUnico) {
     + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 1rem;">' + p + ',<br>fue un honor acompañarte.</h1>'
     + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.2rem;">Gracias por confiar en este espacio y por abrirte a transformar la manera en que tu imagen comunica quién eres. Lo que viviste hoy es solo el comienzo.</p>'
     + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Mary estará siempre disponible para seguir acompañándote en este camino.</p>'
-    // Recursos del taller
-    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
-    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .8rem;">Recursos del taller</p>'
-    + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 1rem;">Las guías y materiales del taller se desbloquean en tu espacio personal una vez que completes la encuesta de satisfacción. Toma solo un momento y nos ayuda muchísimo.</p>'
-    + '<div style="border-top:1px solid rgba(42,15,37,.08);padding-top:1rem;margin-bottom:1rem;">'
-    + '<p style="font-size:.78rem;color:#2A0F25;margin:0 0 .3rem;">Para acceder a tus recursos:</p>'
-    + '<p style="font-size:.82rem;color:#4a3545;margin:0 0 .2rem;">1. Entra a tu espacio personal</p>'
-    + '<p style="font-size:.82rem;color:#4a3545;margin:0;">2. Completa la encuesta de satisfacción</p>'
+    // Encuesta post — principal CTA
+    + '<div style="background:#2A0F25;padding:1.4rem 1.6rem;margin-bottom:1.4rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(198,165,106,.6);margin:0 0 .5rem;">Un paso importante antes de cerrar</p>'
+    + '<p style="font-family:Georgia,serif;font-size:1.05rem;color:#EFE9E2;margin:0 0 .8rem;line-height:1.4;">Contesta la encuesta post-evento</p>'
+    + '<p style="font-size:.85rem;color:rgba(239,233,226,.75);line-height:1.6;margin:0 0 1rem;">Nos toma menos de 3 minutos y es muy importante para nosotras. Contestarla desbloquea tres cosas en tu espacio:</p>'
+    + '<p style="font-size:.83rem;color:rgba(239,233,226,.85);margin:0 0 .3rem;">· Tu <strong style="color:#C6A56A;">constancia de participación</strong> descargable.</p>'
+    + '<p style="font-size:.83rem;color:rgba(239,233,226,.85);margin:0 0 .3rem;">· Las <strong style="color:#C6A56A;">guías y materiales</strong> del taller.</p>'
+    + '<p style="font-size:.83rem;color:rgba(239,233,226,.85);margin:0 0 1.1rem;">· Tu <strong style="color:#C6A56A;">feedback le llega directamente a Mary</strong> para seguir mejorando.</p>'
+    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;">Contestar encuesta y ver mi constancia &rarr;</a>'
     + '</div>'
-    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;">Ir a mi espacio y completar encuesta &rarr;</a>'
-    + '</div>'
-    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
-    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .8rem;">Conoce más sobre Mary</p>'
-    + '<p style="font-size:.87rem;color:#4a3545;margin:0;"><a href="https://reinventabymarymendez.com.mx" style="color:#C6A56A;text-decoration:none;">reinventabymarymendez.com.mx &rarr;</a></p>'
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.2rem 1.4rem;margin-bottom:1.6rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .5rem;">Conoce más sobre Mary</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;margin:0;"><a href="https://reinventabymarymendez.com.mx" style="color:#C6A56A;text-decoration:none;">reinventabymarymendez.com.mx &rarr;</a></p>'
     + '</div>'
     + _firmaCorreo()
     + '</div>'
