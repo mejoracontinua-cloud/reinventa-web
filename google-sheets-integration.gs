@@ -1491,6 +1491,8 @@ function onOpen() {
     .addSeparator()
     .addItem('Correos indicaciones masivo (jue 13 ago)', 'enviarCorreosIndicacionesMasivo')
     .addItem('Generar botones WA indicaciones (jue 13 ago)', 'generarBotonesIndicacionesMasivo')
+    .addItem('Programar indicaciones automático (jue 13 ago 12pm)', 'adminProgramarIndicaciones')
+    .addItem('Cancelar indicaciones automático', 'adminCancelarIndicaciones')
     .addSeparator()
     .addItem('Enviar recordatorio masivo ahora', 'adminEnviarRecordatorioMasivo')
     .addItem('Programar recordatorio automático (vie 14 ago 12pm)', 'adminProgramarRecordatorio')
@@ -1600,6 +1602,9 @@ function handleAdminAction(data) {
   if (sub === 'registro_manual')             return adminRegistroManual(data.nombre, data.correo, data.telefono, data.fase);
   if (sub === 'test_email_acompanante')      return adminTestEmailAcompanante();
   if (sub === 'estado_correos')              return adminEstadoCorreos();
+  if (sub === 'programar_indicaciones')      return adminProgramarIndicaciones();
+  if (sub === 'cancelar_indicaciones')       return adminCancelarIndicaciones();
+  if (sub === 'enviar_indicaciones_masivo')  return adminEnviarIndicacionesMasivo();
   if (sub === 'programar_recordatorio')      return adminProgramarRecordatorio();
   if (sub === 'cancelar_recordatorio')       return adminCancelarRecordatorio();
   if (sub === 'enviar_recordatorio_masivo')  return adminEnviarRecordatorioMasivo();
@@ -1793,7 +1798,7 @@ function adminEstadoCorreos() {
     if (c && aData[i][4] === '✓') checkinSet[c] = true;
   }
 
-  var total = 0, recEnv = 0, qrEnv = 0, agrEnv = 0, conCheckin = 0;
+  var total = 0, recEnv = 0, qrEnv = 0, agrEnv = 0, indEnv = 0, conCheckin = 0;
   for (var j = 1; j < cData.length; j++) {
     var correo = (cData[j][0]||'').toLowerCase().trim();
     if (!correo) continue;
@@ -1801,6 +1806,7 @@ function adminEstadoCorreos() {
     if ((cData[j][9] ||'').toString() === 'Sí') recEnv++;
     if ((cData[j][12]||'').toString() === 'Sí') qrEnv++;
     if ((cData[j][15]||'').toString() === 'Sí') agrEnv++;
+    if ((cData[j][18]||'').toString() === 'Sí') indEnv++; // col S = indicaciones
     if (checkinSet[correo]) conCheckin++;
   }
 
@@ -1808,6 +1814,7 @@ function adminEstadoCorreos() {
   var props = PropertiesService.getScriptProperties();
   var trigRec = props.getProperty('trigger_recordatorio') === 'true';
   var trigAgr = props.getProperty('trigger_agradecimiento') === 'true';
+  var trigInd = props.getProperty('trigger_indicaciones') === 'true';
 
   // Confirmación: col G (índice 6) = 'Sí' cuando se envió bienvenida
   var confEnv = 0;
@@ -1818,6 +1825,7 @@ function adminEstadoCorreos() {
   return jsOk({
     total: total,
     confirmacion:   { enviados: confEnv, pendientes: total - confEnv },
+    indicaciones:   { enviados: indEnv,  pendientes: total - indEnv,  programado: trigInd, fecha: 'Jue 13 ago 2026 · 12:00 pm' },
     recordatorio:   { enviados: recEnv,  pendientes: total - recEnv,  programado: trigRec, fecha: 'Vie 14 ago 2026 · 12:00 pm' },
     qr:             { enviados: qrEnv,   pendientes: total - qrEnv,   programado: true,    fecha: 'Sáb 15 ago 2026 · 8:00 am' },
     agradecimiento: { enviados: agrEnv,  pendientes: conCheckin - agrEnv, conCheckin: conCheckin, programado: trigAgr, fecha: 'Lun 17 ago 2026 · 10:00 am' }
@@ -1874,6 +1882,58 @@ function adminCancelarRecordatorio() {
     if (t.getHandlerFunction() === 'triggerRecordatorioMasivo') { ScriptApp.deleteTrigger(t); n++; }
   });
   PropertiesService.getScriptProperties().deleteProperty('trigger_recordatorio');
+  return jsOk({ cancelado: true, eliminados: n });
+}
+
+/* ── Indicaciones masivo (jueves 13 ago 12pm) ──────────────── */
+function triggerIndicacionesMasivo() { adminEnviarIndicacionesMasivo(); }
+
+function adminEnviarIndicacionesMasivo() {
+  var com   = getComunicacionesSheet();
+  var asi   = getAsistenciaSheet();
+  var cData = com.getDataRange().getValues();
+  var aData = asi.getDataRange().getValues();
+
+  var idPorCorreo = {};
+  for (var i = 1; i < aData.length; i++) {
+    var c = (aData[i][2]||'').toLowerCase().trim();
+    if (c) idPorCorreo[c] = aData[i][0];
+  }
+
+  var enviados = 0;
+  for (var j = 1; j < cData.length; j++) {
+    var correo  = (cData[j][0]||'').toLowerCase().trim();
+    var nombre  = cData[j][1] || '';
+    var yaEnv   = (cData[j][18]||'').toString(); // col S (índice 18)
+    if (!correo || yaEnv === 'Sí') continue;
+    var id = idPorCorreo[correo] || '';
+    try {
+      enviarCorreoIndicaciones(nombre, correo, id);
+      com.getRange(j+1, 19).setValue('Sí'); // col S
+      enviados++;
+      Utilities.sleep(800);
+    } catch(e) { Logger.log('Error indicaciones ' + correo + ': ' + e); }
+  }
+  Logger.log('Indicaciones enviadas: ' + enviados);
+  return jsOk({ enviados: enviados });
+}
+
+function adminProgramarIndicaciones() {
+  ScriptApp.getProjectTriggers().forEach(function(t){
+    if (t.getHandlerFunction() === 'triggerIndicacionesMasivo') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('triggerIndicacionesMasivo')
+    .timeBased().at(new Date('2026-08-13T18:00:00')).create(); // UTC = 12pm Mexico City (UTC-6)
+  PropertiesService.getScriptProperties().setProperty('trigger_indicaciones', 'true');
+  return jsOk({ programado: true, fecha: 'Jue 13 ago 2026 · 12:00 pm' });
+}
+
+function adminCancelarIndicaciones() {
+  var n = 0;
+  ScriptApp.getProjectTriggers().forEach(function(t){
+    if (t.getHandlerFunction() === 'triggerIndicacionesMasivo') { ScriptApp.deleteTrigger(t); n++; }
+  });
+  PropertiesService.getScriptProperties().deleteProperty('trigger_indicaciones');
   return jsOk({ cancelado: true, eliminados: n });
 }
 

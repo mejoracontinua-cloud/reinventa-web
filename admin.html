@@ -1509,6 +1509,10 @@ function renderDrawer(id, activeTab) {
     btnsHtml = drawerBtn('Enviar a pendientes', 'enviar_confirmacion_masivo', false, '¿Enviar confirmación a '+(pendNum||0)+' personas pendientes?');
   } else if (id === 'acompanante') {
     btnsHtml = '<p style="font-size:.68rem;color:rgba(198,165,106,.45);margin:0;">Se envía automáticamente — no requiere acción manual.</p>';
+  } else if (id === 'indicaciones') {
+    if (!c.programado) btnsHtml += drawerBtn('Programar trigger', 'programar_indicaciones', false, '¿Programar indicaciones para jue 13 ago 12:00 pm?');
+    else               btnsHtml += drawerBtn('Cancelar trigger',  'cancelar_indicaciones',  true,  '¿Cancelar el trigger?');
+    btnsHtml += drawerBtn('Enviar ahora a pendientes', 'enviar_indicaciones_masivo', false, '¿Enviar a '+(pendNum||0)+' personas?');
   } else if (id === 'recordatorio') {
     if (!c.programado) btnsHtml += drawerBtn('Programar trigger', 'programar_recordatorio', false, '¿Programar recordatorio para vie 14 ago 12:00 pm?');
     else               btnsHtml += drawerBtn('Cancelar trigger',  'cancelar_recordatorio',  true,  '¿Cancelar el trigger?');
@@ -1572,6 +1576,7 @@ function renderCorreos() {
     var total = data.total || 0;
     _correosTotalGlobal = total;
     var conf = data.confirmacion   || {};
+    var ind  = data.indicaciones   || {};
     var rec  = data.recordatorio   || {};
     var qr   = data.qr             || {};
     var agr  = data.agradecimiento || {};
@@ -1596,6 +1601,15 @@ function renderCorreos() {
         badgeTipo: 'automatico',
         enviados: '—', pendientes: '—', total: '—',
         nota: 'No requiere acción manual. Se dispara al guardar los datos del acompañante.'
+      },
+      indicaciones: {
+        titulo: 'Indicaciones del taller',
+        descripcion: 'Dresscode, cómo tomarse las medidas y acceso al hub. Se envía el jueves antes del evento.',
+        fechaLabel: 'Jue 13 ago 2026 · 12:00 pm',
+        tipo: 'trigger', programado: ind.programado,
+        badgeTipo: (ind.enviados||0) > 0 ? 'enviado' : (ind.programado ? 'programado' : 'pendiente'),
+        enviados: ind.enviados||0, pendientes: ind.pendientes||0, total: total,
+        nota: 'Si alguien se registra después del envío masivo, usa "Enviar ahora" para que le llegue individualmente.'
       },
       recordatorio: {
         titulo: 'Recordatorio del evento',
@@ -1684,8 +1698,8 @@ function renderCorreos() {
     }
 
     // ── KPI strip ───────────────────────────────────────────────
-    var enviados5 = [confEnv>=total&&total>0, (rec.enviados||0)>0, (qr.enviados||0)>0, (agr.enviados||0)>0].filter(Boolean).length;
-    var programados = [rec.programado, true, agr.programado].filter(Boolean).length;
+    var enviados5 = [confEnv>=total&&total>0, (ind.enviados||0)>0, (rec.enviados||0)>0, (qr.enviados||0)>0, (agr.enviados||0)>0].filter(Boolean).length;
+    var programados = [ind.programado, rec.programado, true, agr.programado].filter(Boolean).length;
 
     var kpiStrip =
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.4rem;">'
@@ -1710,6 +1724,7 @@ function renderCorreos() {
       +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem;">'
         + card('confirmacion')
         + card('acompanante')
+        + card('indicaciones')
         + card('recordatorio')
         + card('qr')
         + card('agradecimiento')
