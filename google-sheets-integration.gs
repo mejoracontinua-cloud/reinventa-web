@@ -667,205 +667,182 @@ function generarBotonWA(sheet, fila, nombre, telefono, generadorFn, colLink, col
 function generateWhatsAppLinkConfirmacion(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
-  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
-  var e      = encodeURIComponent;
-  var NL     = '%0A';
-  var hubUrl = idUnico
+  var p   = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e   = encodeURIComponent;
+  var NL  = '%0A';
+  var hub = idUnico
     ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
     : 'https://reinventabymarymendez.com.mx/hub';
   var msg =
-    e('*REINVENTA by Mary Méndez*') + NL + NL +
-    e('Hola, ' + p + '. Tu lugar está confirmado.') + NL + NL +
+    e('*REINVENTA by Mary Mendez*') + NL + NL +
+    e('Hola, ' + p + '. Tu lugar esta confirmado.') + NL + NL +
     e('*Lo que tu imagen comunica*') + NL +
-    e('- Sábado 15 de agosto de 2026') + NL +
+    e('- Sabado 15 de agosto de 2026') + NL +
     e('- 10:00 a 12:00 pm') + NL +
     e('- The University Club of Mexico') + NL +
-    e('- Av. Paseo de la Reforma 150, Juárez, CDMX') + NL + NL +
-    e('*Cómo llegar:*') + NL +
-    e('https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*Tu espacio personal del evento:*') + NL +
-    e(hubUrl) + NL + NL +
-    e('Aquí encontrarás tu pase de entrada con código QR, la agenda del día y los recursos del taller.') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*POR FAVOR LEE ESTO ANTES DE CERRAR*') + NL + NL +
-    e('Dentro de tu espacio hay una *encuesta previa* que Mary necesita que contestes _antes del taller_.') + NL + NL +
-    e('Mary lee personalmente cada respuesta para preparar los materiales, los ejemplos y las recomendaciones específicas para cada asistente. Si no la contestas antes del evento, Mary no podrá personalizar tu experiencia ese día.') + NL + NL +
-    e('No toma más de 5 minutos. Por favor, hazlo hoy mismo.') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('Nos da mucho gusto tenerte. Mary estará encantada de acompañarte.') + NL + NL +
-    e('_Con cariño,_') + NL +
-    e('_Reinventa by Mary Méndez_') + NL + NL +
-    e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL +
-    (idUnico ? e('_Tu código de acceso: *' + idUnico + '*_') + NL : '') +
-    e('_Organizado integralmente por_') + NL +
-    e('*Alumbra Studios*') + NL +
-    e('https://www.alumbrastudios.com');
+    e('- Av. Paseo de la Reforma 150, Juarez, CDMX') + NL + NL +
+    e('Como llegar: https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Tu espacio personal:*') + NL +
+    e(hub) + NL + NL +
+    e('Ahi encontraras tu pase con codigo QR, la agenda del dia y los recursos del taller.') + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Encuesta previa — importante*') + NL + NL +
+    e('Dentro de tu espacio hay una encuesta que Mary necesita que contestes antes del taller. La lee personalmente para preparar los materiales y recomendaciones de cada asistente. No toma mas de 5 minutos.') + NL + NL +
+    e('- - -') + NL + NL +
+    e('Nos da mucho gusto tenerte. Mary estara encantada de acompanarte.') + NL + NL +
+    e('_Con carino,_') + NL +
+    e('_Reinventa by Mary Mendez_') + NL + NL +
+    e('_Mensaje informativo — por favor no respondas a este chat._') + NL +
+    (idUnico ? NL + e('Codigo de acceso: ' + idUnico) + NL : '') +
+    e('_Organizado por Alumbra Studios · alumbrastudios.com_');
   return 'https://wa.me/' + numero + '?text=' + msg;
 }
 
 function generateWhatsAppLinkIndicaciones(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
-  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
-  var e      = encodeURIComponent;
-  var NL     = '%0A';
-  var hubUrl = idUnico
+  var p   = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e   = encodeURIComponent;
+  var NL  = '%0A';
+  var hub = idUnico
     ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
     : 'https://reinventabymarymendez.com.mx/hub';
   var msg =
     e('*REINVENTA by Mary Mendez*') + NL + NL +
-    e('¡Hola a todas!') + NL + NL +
-    e('Estamos muy cerca de nuestro taller y, para que aproveches al máximo tu experiencia y podamos realizar tu análisis de cuerpo y rostro de forma precisa, te comparto los siguientes requerimientos e indicaciones para el día del evento:') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*👕 Vestimenta (Análisis de cuerpo):*') + NL + NL +
-    e('*Parte inferior:* Asiste con un pantalón ajustado (tipo leggings o jeans ajustados).') + NL + NL +
-    e('*Parte superior:* Lleva una blusa o playera básica ajustada (de preferencia en color blanco o neutro).') + NL + NL +
-    e('*Capa extra:* Encima de tu playera básica, puedes llevar un saco, blazer o blusón en el color que más te guste o con el que te sientas más cómoda.') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*💇‍♀️ Rostro (Análisis visagismo):*') + NL + NL +
-    e('Es muy importante despejar tu rostro. Te sugerimos acudir con el cabello recogido; si no te es posible, no te preocupes, aquí contaremos con pinzas para facilitártelo.') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*📏 Pasos para medir tu cuerpo:*') + NL + NL +
-    e('• Hombros: Mide de un extremo al otro pasando por la parte más alta de la espalda.') + NL +
-    e('• Busto: Rodea la parte más voluminosa del pecho, a la altura de los pezones.') + NL +
-    e('• Cintura: Ubica la zona más angosta del torso, justo 2 dedos arriba del ombligo, sin meter el abdomen.') + NL +
-    e('• Cadera: Mide la parte más ancha de los glúteos y los huesos de la cadera. Toma nota de cada medida.') + NL + NL +
-    e('*Identifica la forma de tu cuerpo:*') + NL + NL +
-    e('• Reloj de arena: Busto y caderas similares, cintura notablemente más pequeña (diferencia de 20 cm o más).') + NL +
-    e('• Rectángulo: Hombros, cintura y cadera con medidas muy parecidas.') + NL +
-    e('• Triángulo o Pera: Las caderas son más anchas (5% o más) que hombros y busto.') + NL +
-    e('• Triángulo invertido: Los hombros o busto son más anchos que las caderas.') + NL +
-    e('• Manzana: La medida de la cintura es mayor o similar a la de hombros y caderas.') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('¡Asegúrate de venir cómoda y lista para descubrir tu mejor versión! Nos vemos muy pronto. 🌟') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*Tu espacio personal del evento:*') + NL +
-    e(hubUrl) + NL + NL +
-    e('_Con cariño,_') + NL +
+    e('Hola, ' + p + '. Ya casi llegamos.') + NL + NL +
+    e('Para que tu experiencia del sabado sea increible, aqui van las indicaciones:') + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Tu espacio personal:*') + NL +
+    e(hub) + NL + NL +
+    e('Entra para ver la agenda, tu QR de entrada y registrar tus medidas antes del taller.') + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Vestimenta — Analisis de cuerpo*') + NL + NL +
+    e('- Abajo: pantalon ajustado (leggings o jeans pegados).') + NL +
+    e('- Arriba: blusa o playera basica ajustada, de preferencia en blanco o neutro.') + NL +
+    e('- Encima: saco, blazer o bluson en el color que mas te guste.') + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Rostro — Analisis visagismo*') + NL + NL +
+    e('- De preferencia con el cabello recogido.') + NL +
+    e('- Si no puedes, no te preocupes, habra pinzas disponibles.') + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Medidas de cuerpo (opcional pero util)*') + NL + NL +
+    e('Si puedes tomartelas antes, Mary podra hacer tu analisis aun mas personalizado. Son 4:') + NL + NL +
+    e('- Hombros: de un extremo al otro por la parte mas alta de la espalda.') + NL +
+    e('- Busto: la parte mas voluminosa del pecho, a la altura de los pezones.') + NL +
+    e('- Cintura: zona mas angosta, 2 dedos arriba del ombligo, sin meter el abdomen.') + NL +
+    e('- Cadera: la parte mas ancha de los gluteos y los huesos de la cadera.') + NL + NL +
+    e('Registra tus medidas en tu espacio personal:') + NL +
+    e(hub) + NL + NL +
+    e('- - -') + NL + NL +
+    e('Nos vemos el sabado. Va a ser un dia para descubrir muchas cosas lindas.') + NL + NL +
+    e('_Con carino,_') + NL +
     e('_Reinventa by Mary Mendez_') + NL + NL +
-    e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL +
-    (idUnico ? e('_Tu código de acceso: *' + idUnico + '*_') + NL : '') +
-    e('_Organizado integralmente por_') + NL +
-    e('*Alumbra Studios*') + NL +
-    e('https://www.alumbrastudios.com');
+    e('_Mensaje informativo — por favor no respondas a este chat._') + NL +
+    (idUnico ? NL + e('Codigo de acceso: ' + idUnico) + NL : '') +
+    e('_Organizado por Alumbra Studios · alumbrastudios.com_');
   return 'https://wa.me/' + numero + '?text=' + msg;
 }
 
 function generateWhatsAppLinkRecordatorio(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
-  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
-  var e      = encodeURIComponent;
-  var NL     = '%0A';
-  var hubUrl = idUnico
+  var p   = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e   = encodeURIComponent;
+  var NL  = '%0A';
+  var hub = idUnico
     ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
     : 'https://reinventabymarymendez.com.mx/hub';
   var msg =
     e('*REINVENTA by Mary Mendez*') + NL + NL +
-    e('Hola, ' + p + '. Mañana es el gran día.') + NL + NL +
+    e('Hola, ' + p + '. Manana es el gran dia.') + NL + NL +
     e('*Lo que tu imagen comunica*') + NL +
-    e('- Mañana sábado 15 de agosto') + NL +
+    e('- Manana sabado 15 de agosto') + NL +
     e('- 10:00 a 12:00 pm') + NL +
     e('- The University Club of Mexico') + NL +
-    e('- Av. Paseo de la Reforma 150, Juárez, CDMX') + NL + NL +
-    e('*Cómo llegar:*') + NL +
-    e('https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*Tu espacio personal del evento:*') + NL +
-    e(hubUrl) + NL + NL +
-    e('Ahí encuentras la agenda del día, tu código QR de entrada y los materiales del taller.') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*👕 Recuerda el dresscode de mañana:*') + NL + NL +
-    e('• Parte inferior: pantalón ajustado (leggings o jeans).') + NL +
-    e('• Parte superior: blusa o playera básica ajustada (blanco o neutro de preferencia).') + NL +
-    e('• Capa extra: saco, blazer o blusón en el color que prefieras.') + NL +
-    e('• Rostro: de preferencia con el cabello recogido para el análisis de visagismo.') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
+    e('- Av. Paseo de la Reforma 150, Juarez, CDMX') + NL + NL +
+    e('Como llegar: https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Tu espacio personal:*') + NL +
+    e(hub) + NL + NL +
+    e('Ahi encuentras la agenda del dia y tu codigo QR de entrada.') + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Dresscode de manana*') + NL + NL +
+    e('- Abajo: pantalon ajustado (leggings o jeans).') + NL +
+    e('- Arriba: blusa o playera basica ajustada (blanco o neutro de preferencia).') + NL +
+    e('- Encima: saco, blazer o bluson en el color que prefieras.') + NL +
+    e('- Rostro: de preferencia con el cabello recogido para el analisis de visagismo.') + NL + NL +
+    e('- - -') + NL + NL +
     e('*Ultimo recordatorio: encuesta previa*') + NL + NL +
-    e('Si aún no has contestado la encuesta dentro de tu espacio, este es el momento. Mary la revisa antes del taller para personalizar tu experiencia.') + NL + NL +
-    e('Quienes no la contesten antes del evento no tendrán acceso al material digital posterior — guías, recursos y demás — que se desbloquea en tu perfil tras el taller.') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('Te esperamos puntual. ¡Nos vemos mañana!') + NL + NL +
-    e('_Con cariño,_') + NL +
+    e('Si aun no has contestado la encuesta dentro de tu espacio, este es el momento. Mary la revisa antes del taller para personalizar tu experiencia.') + NL + NL +
+    e('- - -') + NL + NL +
+    e('Te esperamos puntual. Nos vemos manana.') + NL + NL +
+    e('_Con carino,_') + NL +
     e('_Reinventa by Mary Mendez_') + NL + NL +
-    e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL +
-    (idUnico ? e('_Tu código de acceso: *' + idUnico + '*_') + NL : '') +
-    e('_Organizado integralmente por_') + NL +
-    e('*Alumbra Studios*') + NL +
-    e('https://www.alumbrastudios.com');
+    e('_Mensaje informativo — por favor no respondas a este chat._') + NL +
+    (idUnico ? NL + e('Codigo de acceso: ' + idUnico) + NL : '') +
+    e('_Organizado por Alumbra Studios · alumbrastudios.com_');
   return 'https://wa.me/' + numero + '?text=' + msg;
 }
 
 function generateWhatsAppLinkQR(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
-  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
-  var e      = encodeURIComponent;
-  var NL     = '%0A';
-  var hubUrl = 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico;
+  var p   = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e   = encodeURIComponent;
+  var NL  = '%0A';
+  var hub = 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico;
   var msg =
     e('*REINVENTA by Mary Mendez*') + NL + NL +
     e('Hola, ' + p + '. Hoy te esperamos.') + NL + NL +
     e('*Lo que tu imagen comunica*') + NL +
-    e('- Hoy sábado 15 de agosto') + NL +
+    e('- Hoy sabado 15 de agosto') + NL +
     e('- 10:00 a 12:00 pm') + NL +
     e('- The University Club of Mexico') + NL +
-    e('- Av. Paseo de la Reforma 150, Juárez, CDMX') + NL + NL +
-    e('*Cómo llegar:*') + NL +
-    e('https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*Tu código QR de entrada:*') + NL + NL +
-    e('Entra a tu espacio personal y muestra el código QR al llegar. El staff lo escaneará en la entrada.') + NL + NL +
-    e(hubUrl) + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('¡Nos vemos en un momento. Sera un día increíble!') + NL + NL +
-    e('_Con cariño,_') + NL +
+    e('- Av. Paseo de la Reforma 150, Juarez, CDMX') + NL + NL +
+    e('Como llegar: https://maps.app.goo.gl/Uo7tYiQz23jMCmKw7') + NL + NL +
+    e('- - -') + NL + NL +
+    e('*Tu codigo QR de entrada:*') + NL + NL +
+    e('Entra a tu espacio y muestra el codigo QR al llegar. El staff lo escaneara en la entrada.') + NL + NL +
+    e(hub) + NL + NL +
+    e('- - -') + NL + NL +
+    e('Nos vemos en un momento. Sera un dia increible.') + NL + NL +
+    e('_Con carino,_') + NL +
     e('_Reinventa by Mary Mendez_') + NL + NL +
-    e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL +
-    e('_Tu código de acceso: *' + idUnico + '*_') + NL +
-    e('_Organizado integralmente por_') + NL +
-    e('*Alumbra Studios*') + NL +
-    e('https://www.alumbrastudios.com');
+    e('_Mensaje informativo — por favor no respondas a este chat._') + NL +
+    NL + e('Codigo de acceso: ' + idUnico) + NL +
+    e('_Organizado por Alumbra Studios · alumbrastudios.com_');
   return 'https://wa.me/' + numero + '?text=' + msg;
 }
 
 function generateWhatsAppLinkAgradecimiento(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
-  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
-  var e      = encodeURIComponent;
-  var NL     = '%0A';
-  var hubUrl = idUnico
+  var p   = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e   = encodeURIComponent;
+  var NL  = '%0A';
+  var hub = idUnico
     ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
     : 'https://reinventabymarymendez.com.mx/hub';
   var msg =
     e('*REINVENTA by Mary Mendez*') + NL + NL +
-    e('Hola, ' + p + '. Fue un honor acompañarte hoy.') + NL + NL +
-    e('Gracias por confiar en este espacio y por abrirte a transformar la manera en que tu imagen comunica quién eres. Lo que viviste hoy es solo el comienzo.') + NL + NL +
-    e('Mary estará siempre disponible para seguir acompañándote en este camino.') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
+    e('Hola, ' + p + '. Fue un honor acompanarte hoy.') + NL + NL +
+    e('Gracias por confiar en este espacio y por abrirte a transformar la manera en que tu imagen comunica quien eres. Lo que viviste hoy es solo el comienzo.') + NL + NL +
+    e('Mary estara siempre disponible para seguir acompaanandote en este camino.') + NL + NL +
+    e('- - -') + NL + NL +
     e('*Recursos del taller*') + NL + NL +
-    e('Las guías y materiales se desbloquean en tu espacio personal una vez que completes la encuesta de satisfacción.') + NL + NL +
+    e('Las guias y materiales se desbloquean en tu espacio personal una vez que completes la encuesta de satisfaccion.') + NL + NL +
     e('Para acceder:') + NL +
     e('1. Entra a tu espacio personal') + NL +
-    e('2. Completa la encuesta de satisfacción') + NL + NL +
-    e(hubUrl) + NL + NL +
-    e('- - - - - - - - - - - - -') + NL + NL +
-    e('*Conoce más sobre Mary:*') + NL +
-    e('https://reinventabymarymendez.com.mx') + NL + NL +
-    e('_Con cariño,_') + NL +
+    e('2. Completa la encuesta de satisfaccion') + NL + NL +
+    e(hub) + NL + NL +
+    e('- - -') + NL + NL +
+    e('Conoce mas sobre Mary: https://reinventabymarymendez.com.mx') + NL + NL +
+    e('_Con carino,_') + NL +
     e('_Reinventa by Mary Mendez_') + NL + NL +
-    e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
-    e('- - - - - - - - - - - - -') + NL +
-    (idUnico ? e('_Tu código de acceso: *' + idUnico + '*_') + NL : '') +
-    e('_Organizado integralmente por_') + NL +
-    e('*Alumbra Studios*') + NL +
-    e('https://www.alumbrastudios.com');
+    e('_Mensaje informativo — por favor no respondas a este chat._') + NL +
+    (idUnico ? NL + e('Codigo de acceso: ' + idUnico) + NL : '') +
+    e('_Organizado por Alumbra Studios · alumbrastudios.com_');
   return 'https://wa.me/' + numero + '?text=' + msg;
 }
 
