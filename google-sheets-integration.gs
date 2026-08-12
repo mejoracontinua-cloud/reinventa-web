@@ -493,7 +493,11 @@ function handleAdmin() {
   }
 
   return ContentService
-    .createTextOutput(JSON.stringify({ asistentes: asistentes, encuestasPrevia: encuestasPrevia }))
+    .createTextOutput(JSON.stringify({
+      asistentes:     asistentes,
+      encuestasPrevia: encuestasPrevia,
+      totalMedidas:   Object.keys(medidasPorId).length
+    }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
