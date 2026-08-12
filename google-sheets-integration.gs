@@ -22,6 +22,8 @@
  *   K  WA QR                L  Estado QR WA       M  Correo QR Enviado
  *   — Agradecimiento —
  *   N  WA Agradecimiento    O  Estado Agradec. WA P  Correo Agradec. Enviado
+ *   — Indicaciones (jueves 13 ago) —
+ *   Q  WA Indicaciones      R  Estado Indic. WA  S  Correo Indic. Enviado
  *
  * [Asistencia]
  *   A  ID Único (RNV-001)   B  Nombre             C  Correo
@@ -272,33 +274,88 @@ function handleHub(id) {
   if (!id) {
     return ContentService.createTextOutput(JSON.stringify({ error: 'ID requerido' })).setMimeType(ContentService.MimeType.JSON);
   }
-  var sheet = getAsistenciaSheet();
-  var data  = sheet.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if ((data[i][0] || '').toString().trim() === id) {
-      // Verificar encuesta previa en hoja separada
-      var ss        = SpreadsheetApp.getActiveSpreadsheet();
-      var prevSheet = ss.getSheetByName('Encuesta Previa');
-      var encPrev   = false;
-      if (prevSheet) {
-        var prevData = prevSheet.getDataRange().getValues();
-        for (var j = 1; j < prevData.length; j++) {
-          if ((prevData[j][0] || '').toString().trim() === id) { encPrev = true; break; }
-        }
-      }
-      return ContentService.createTextOutput(JSON.stringify({
-        id:             data[i][0],
-        nombre:         data[i][1],
-        correo:         data[i][2],
-        fase:           data[i][3],
-        asistio:        data[i][4] === '✓',
-        fechaEntrada:   data[i][5] ? data[i][5].toString() : '',
-        encuesta:       data[i][6] === '✓',
-        calificacion:   data[i][8] || 0,
-        encuestaPrevia: encPrev
-      })).setMimeType(ContentService.MimeType.JSON);
+
+  var idNorm = id.toString().trim().toUpperCase();
+  var ss     = SpreadsheetApp.getActiveSpreadsheet();
+
+  // ── Buscar en Asistencia: primero por ID (col A), luego por correo (col C) ──
+  var asiSheet = getAsistenciaSheet();
+  var asiData  = asiSheet.getDataRange().getValues();
+  var fila     = -1;
+
+  // Pasada 1: coincidencia exacta por ID
+  for (var i = 1; i < asiData.length; i++) {
+    if ((asiData[i][0] || '').toString().trim().toUpperCase() === idNorm) { fila = i; break; }
+  }
+
+  // Pasada 2: si no encontró por ID, busca por correo (quien entra con su correo en vez del código)
+  if (fila === -1) {
+    for (var i = 1; i < asiData.length; i++) {
+      if ((asiData[i][2] || '').toString().trim().toLowerCase() === id.toString().trim().toLowerCase()) { fila = i; break; }
     }
   }
+
+  // ── Si encontró en Asistencia → devolver datos ────────────────────────────
+  if (fila !== -1) {
+    var foundId   = (asiData[fila][0] || '').toString().trim();
+    var prevSheet = ss.getSheetByName('Encuesta Previa');
+    var encPrev   = false;
+    if (prevSheet) {
+      var prevData = prevSheet.getDataRange().getValues();
+      for (var j = 1; j < prevData.length; j++) {
+        if ((prevData[j][0] || '').toString().trim() === foundId) { encPrev = true; break; }
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify({
+      id:             asiData[fila][0],
+      nombre:         asiData[fila][1],
+      correo:         asiData[fila][2],
+      fase:           asiData[fila][3],
+      asistio:        asiData[fila][4] === '✓',
+      fechaEntrada:   asiData[fila][5] ? asiData[fila][5].toString() : '',
+      encuesta:       asiData[fila][6] === '✓',
+      calificacion:   asiData[fila][8] || 0,
+      encuestaPrevia: encPrev
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // ── Fallback: buscar en Registros por correo y auto-crear entrada en Asistencia ──
+  // (cubre el caso de personas que pagaron pero no fueron sincronizadas aún)
+  try {
+    var regSheet = getSheet();
+    var regData  = regSheet.getDataRange().getValues();
+    for (var r = 1; r < regData.length; r++) {
+      var regCorreo = (regData[r][2] || '').toString().trim().toLowerCase();
+      var regPago   = (regData[r][9] || '').toString().trim();
+      if (regCorreo && regPago === '✓' &&
+          regCorreo === id.toString().trim().toLowerCase()) {
+        // Persona pagada en Registros pero no en Asistencia → auto-sincronizar
+        var regNombre = (regData[r][1] || '').toString().trim();
+        var regFase   = (regData[r][6] || '').toString().trim();
+        actualizarAsistencia(regCorreo, regNombre, regFase);
+        // Recuperar la fila recién creada
+        var asiData2 = asiSheet.getDataRange().getValues();
+        for (var k = 1; k < asiData2.length; k++) {
+          if ((asiData2[k][2] || '').toString().trim().toLowerCase() === regCorreo) {
+            return ContentService.createTextOutput(JSON.stringify({
+              id:             asiData2[k][0],
+              nombre:         asiData2[k][1],
+              correo:         asiData2[k][2],
+              fase:           asiData2[k][3],
+              asistio:        false,
+              fechaEntrada:   '',
+              encuesta:       false,
+              calificacion:   0,
+              encuestaPrevia: false
+            })).setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+      }
+    }
+  } catch(e) {
+    // Si falla el fallback, caemos al error estándar
+  }
+
   return ContentService.createTextOutput(JSON.stringify({ error: 'Registro no encontrado' })).setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -563,6 +620,55 @@ function generateWhatsAppLinkConfirmacion(nombre, telefono, idUnico) {
   return 'https://wa.me/' + numero + '?text=' + msg;
 }
 
+function generateWhatsAppLinkIndicaciones(nombre, telefono, idUnico) {
+  var numero = normalizeWhatsAppNumber(telefono);
+  if (!numero) return null;
+  var p      = nombre ? nombre.trim().split(' ')[0] : 'participante';
+  var e      = encodeURIComponent;
+  var NL     = '%0A';
+  var hubUrl = idUnico
+    ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
+    : 'https://reinventabymarymendez.com.mx/hub';
+  var msg =
+    e('*REINVENTA by Mary Mendez*') + NL + NL +
+    e('¡Hola a todas!') + NL + NL +
+    e('Estamos muy cerca de nuestro taller y, para que aproveches al máximo tu experiencia y podamos realizar tu análisis de cuerpo y rostro de forma precisa, te comparto los siguientes requerimientos e indicaciones para el día del evento:') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*👕 Vestimenta (Análisis de cuerpo):*') + NL + NL +
+    e('*Parte inferior:* Asiste con un pantalón ajustado (tipo leggings o jeans ajustados).') + NL + NL +
+    e('*Parte superior:* Lleva una blusa o playera básica ajustada (de preferencia en color blanco o neutro).') + NL + NL +
+    e('*Capa extra:* Encima de tu playera básica, puedes llevar un saco, blazer o blusón en el color que más te guste o con el que te sientas más cómoda.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*💇‍♀️ Rostro (Análisis visagismo):*') + NL + NL +
+    e('Es muy importante despejar tu rostro. Te sugerimos acudir con el cabello recogido; si no te es posible, no te preocupes, aquí contaremos con pinzas para facilitártelo.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*📏 Pasos para medir tu cuerpo:*') + NL + NL +
+    e('• Hombros: Mide de un extremo al otro pasando por la parte más alta de la espalda.') + NL +
+    e('• Busto: Rodea la parte más voluminosa del pecho, a la altura de los pezones.') + NL +
+    e('• Cintura: Ubica la zona más angosta del torso, justo 2 dedos arriba del ombligo, sin meter el abdomen.') + NL +
+    e('• Cadera: Mide la parte más ancha de los glúteos y los huesos de la cadera. Toma nota de cada medida.') + NL + NL +
+    e('*Identifica la forma de tu cuerpo:*') + NL + NL +
+    e('• Reloj de arena: Busto y caderas similares, cintura notablemente más pequeña (diferencia de 20 cm o más).') + NL +
+    e('• Rectángulo: Hombros, cintura y cadera con medidas muy parecidas.') + NL +
+    e('• Triángulo o Pera: Las caderas son más anchas (5% o más) que hombros y busto.') + NL +
+    e('• Triángulo invertido: Los hombros o busto son más anchos que las caderas.') + NL +
+    e('• Manzana: La medida de la cintura es mayor o similar a la de hombros y caderas.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('¡Asegúrate de venir cómoda y lista para descubrir tu mejor versión! Nos vemos muy pronto. 🌟') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*Tu espacio personal del evento:*') + NL +
+    e(hubUrl) + NL + NL +
+    e('_Con cariño,_') + NL +
+    e('_Reinventa by Mary Mendez_') + NL + NL +
+    e('_Este es un mensaje informativo, por favor no respondas a este chat._') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL +
+    (idUnico ? e('_Tu código de acceso: *' + idUnico + '*_') + NL : '') +
+    e('_Organizado integralmente por_') + NL +
+    e('*Alumbra Studios*') + NL +
+    e('https://www.alumbrastudios.com');
+  return 'https://wa.me/' + numero + '?text=' + msg;
+}
+
 function generateWhatsAppLinkRecordatorio(nombre, telefono, idUnico) {
   var numero = normalizeWhatsAppNumber(telefono);
   if (!numero) return null;
@@ -586,6 +692,12 @@ function generateWhatsAppLinkRecordatorio(nombre, telefono, idUnico) {
     e('*Tu espacio personal del evento:*') + NL +
     e(hubUrl) + NL + NL +
     e('Ahí encuentras la agenda del día, tu código QR de entrada y los materiales del taller.') + NL + NL +
+    e('- - - - - - - - - - - - -') + NL + NL +
+    e('*👕 Recuerda el dresscode de mañana:*') + NL + NL +
+    e('• Parte inferior: pantalón ajustado (leggings o jeans).') + NL +
+    e('• Parte superior: blusa o playera básica ajustada (blanco o neutro de preferencia).') + NL +
+    e('• Capa extra: saco, blazer o blusón en el color que prefieras.') + NL +
+    e('• Rostro: de preferencia con el cabello recogido para el análisis de visagismo.') + NL + NL +
     e('- - - - - - - - - - - - -') + NL + NL +
     e('*Ultimo recordatorio: encuesta previa*') + NL + NL +
     e('Si aún no has contestado la encuesta dentro de tu espacio, este es el momento. Mary la revisa antes del taller para personalizar tu experiencia.') + NL + NL +
@@ -675,6 +787,10 @@ function generateWhatsAppLinkAgradecimiento(nombre, telefono, idUnico) {
 /* ── Generación masiva de botones WA ────────────────────────── */
 function generarBotonesConfirmacionMasivo() {
   _generarBotonesMasivoConId(generateWhatsAppLinkConfirmacion, 5, 6, 'Enviar confirmación', false);
+}
+
+function generarBotonesIndicacionesMasivo() {
+  _generarBotonesMasivoConId(generateWhatsAppLinkIndicaciones, 17, 18, 'Enviar indicaciones (jueves)', false);
 }
 
 function generarBotonesRecordatorioMasivo() {
@@ -836,6 +952,66 @@ function enviarCorreoConfirmacion(nombre, correo, fase, idUnico) {
     subject: 'Tu lugar en el taller está confirmado — REINVENTA', htmlBody: html });
 }
 
+/* ── Jueves 13 ago: indicaciones de vestimenta y análisis ───────── */
+function enviarCorreoIndicaciones(nombre, correo, idUnico) {
+  var p      = nombre ? nombre.split(' ')[0] : 'Hola';
+  var hubUrl = idUnico
+    ? 'https://reinventabymarymendez.com.mx/hub?id=' + idUnico
+    : 'https://reinventabymarymendez.com.mx/hub';
+
+  var html = _headerCorreo()
+    + '<div style="padding:2.2rem 2.6rem 2rem;">'
+    + '<div style="display:inline-block;background:rgba(42,15,37,.07);border-left:2px solid #C6A56A;padding:.4rem .75rem;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:#2A0F25;margin-bottom:1.4rem;">Preparación &middot; Jueves 13 de agosto</div>'
+    + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.5rem;line-height:1.35;color:#2A0F25;margin:0 0 1rem;">¡Hola a todas!</h1>'
+    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;">Estamos muy cerca de nuestro taller y, para que aproveches al máximo tu experiencia y podamos realizar tu análisis de cuerpo y rostro de forma precisa, te comparto los siguientes requerimientos e indicaciones para el día del evento:</p>'
+
+    // Vestimenta
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.4rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .9rem;">👕 Vestimenta &mdash; Análisis de cuerpo</p>'
+    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0 0 .5rem;"><strong style="color:#2A0F25;">Parte inferior:</strong> Asiste con un pantalón ajustado (tipo leggings o jeans ajustados).</p>'
+    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0 0 .5rem;"><strong style="color:#2A0F25;">Parte superior:</strong> Lleva una blusa o playera básica ajustada (de preferencia en color blanco o neutro).</p>'
+    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0;"><strong style="color:#2A0F25;">Capa extra:</strong> Encima de tu playera básica, puedes llevar un saco, blazer o blusón en el color que más te guste o con el que te sientas más cómoda.</p>'
+    + '</div>'
+
+    // Rostro / visagismo
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.4rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .9rem;">💇‍♀️ Rostro &mdash; Análisis visagismo</p>'
+    + '<p style="font-size:.88rem;color:#4a3545;line-height:1.7;margin:0;">Es muy importante despejar tu rostro. Te sugerimos acudir con el cabello recogido; si no te es posible, no te preocupes, aquí contaremos con pinzas para facilitártelo.</p>'
+    + '</div>'
+
+    // Cómo medir tu cuerpo
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.4rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .9rem;">📏 Pasos para medir tu cuerpo</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 .4rem;"><strong style="color:#2A0F25;">Hombros:</strong> Mide de un extremo al otro pasando por la parte más alta de la espalda.</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 .4rem;"><strong style="color:#2A0F25;">Busto:</strong> Rodea la parte más voluminosa del pecho, a la altura de los pezones.</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 .4rem;"><strong style="color:#2A0F25;">Cintura:</strong> Ubica la zona más angosta del torso, justo 2 dedos arriba del ombligo, sin meter el abdomen.</p>'
+    + '<p style="font-size:.85rem;color:#4a3545;line-height:1.7;margin:0 0 1.2rem;"><strong style="color:#2A0F25;">Cadera:</strong> Mide la parte más ancha de los glúteos y los huesos de la cadera. Toma nota de cada medida.</p>'
+    + '<div style="height:1px;background:rgba(42,15,37,.09);margin-bottom:1rem;"></div>'
+    + '<p style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:#2A0F25;margin:0 0 .7rem;font-weight:600;">Identifica la forma de tu cuerpo</p>'
+    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Reloj de arena:</strong> Busto y caderas tienen medidas similares, y la cintura es notablemente más pequeña (con una diferencia de 20 cm o más respecto a los hombros/caderas).</p>'
+    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Rectángulo:</strong> Hombros, cintura y cadera tienen medidas muy parecidas sin una cintura muy marcada.</p>'
+    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Triángulo o Pera:</strong> Las caderas son más anchas (un 5% o más) que los hombros y el busto.</p>'
+    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0 0 .35rem;"><strong style="color:#2A0F25;">Triángulo invertido:</strong> Los hombros o el busto son más anchos que las caderas.</p>'
+    + '<p style="font-size:.83rem;color:#4a3545;line-height:1.7;margin:0;"><strong style="color:#2A0F25;">Manzana:</strong> La medida de la cintura es mayor o similar a la de los hombros y caderas.</p>'
+    + '</div>'
+
+    + '<p style="font-size:.92rem;line-height:1.7;color:#4a3545;margin:0 0 1.8rem;"><strong>¡Asegúrate de venir cómoda y lista para descubrir tu mejor versión!</strong> Nos vemos muy pronto. 🌟</p>'
+
+    // Acceso al hub
+    + '<div style="border:1px solid rgba(42,15,37,.12);padding:1.4rem 1.6rem;margin-bottom:1.6rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .6rem;">Tu espacio personal del evento</p>'
+    + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Ahí encontrarás tu código QR de entrada, la agenda del día y toda la información del taller.</p>'
+    + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:0;font-weight:600;">Acceder a mi espacio &rarr;</a>'
+    + '</div>'
+
+    + _firmaCorreo()
+    + '</div>'
+    + _footerCorreo(correo);
+
+  MailApp.sendEmail({ to: correo, bcc: 'alopez@alumbrastudios.com', name: 'Reinventa by Mary Méndez',
+    subject: 'Indicaciones para el taller — REINVENTA', htmlBody: html });
+}
+
 function enviarCorreoRecordatorio(nombre, correo, idUnico) {
   var p      = nombre ? nombre.split(' ')[0] : 'Hola';
   var hubUrl = idUnico
@@ -854,6 +1030,14 @@ function enviarCorreoRecordatorio(nombre, correo, idUnico) {
     + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#8F7383;margin:0 0 .6rem;">Tu espacio personal del evento</p>'
     + '<p style="font-size:.87rem;color:#4a3545;line-height:1.6;margin:0 0 .8rem;">Ahí encontrarás la agenda del día, tu código QR de entrada y los materiales del taller.</p>'
     + '<a href="' + hubUrl + '" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:0;font-weight:600;">Acceder a mi espacio &rarr;</a>'
+    + '</div>'
+    // Dresscode — recordatorio compacto
+    + '<div style="border:1px solid rgba(42,15,37,.15);border-left:3px solid #C6A56A;padding:1.2rem 1.4rem;margin-bottom:1.4rem;background:rgba(198,165,106,.04);">'
+    + '<p style="font-size:.75rem;color:#2A0F25;font-weight:700;margin:0 0 .5rem;letter-spacing:.03em;">👕 Recuerda el dresscode del día</p>'
+    + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0 0 .35rem;"><strong>Parte inferior:</strong> Pantalón ajustado (leggings o jeans).</p>'
+    + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0 0 .35rem;"><strong>Parte superior:</strong> Blusa o playera básica ajustada (blanco o neutro de preferencia).</p>'
+    + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0 0 .35rem;"><strong>Capa extra:</strong> Saco, blazer o blusón en el color que prefieras.</p>'
+    + '<p style="font-size:.82rem;color:#4a3545;line-height:1.6;margin:0;"><strong>Rostro:</strong> De preferencia con el cabello recogido para el análisis de visagismo (si no puedes, hay pinzas disponibles).</p>'
     + '</div>'
     // Encuesta previa — último recordatorio
     + '<div style="border:1px solid #C6A56A;border-left:3px solid #C6A56A;padding:1.2rem 1.4rem;margin-bottom:1.6rem;background:rgba(198,165,106,.06);">'
@@ -931,6 +1115,10 @@ function enviarConfirmacionExistentes() {
   _enviarCorreosMasivo('enviarCorreoConfirmacion', 7, 'Correos confirmación');
 }
 
+function enviarCorreosIndicacionesMasivo() {
+  _enviarCorreosMasivo('enviarCorreoIndicaciones', 19, 'Correos indicaciones (jueves)');
+}
+
 function enviarCorreosRecordatorioMasivo() {
   _enviarCorreosMasivo('enviarCorreoRecordatorio', 10, 'Correos recordatorio');
 }
@@ -959,6 +1147,7 @@ function _enviarCorreosMasivo(fnNombre, colEnviado, label) {
     if (yaEnv !== 'Sí') {
       var idUnicoCorreo = obtenerIdAsistente(correo);
       if (fnNombre === 'enviarCorreoConfirmacion')  enviarCorreoConfirmacion(nombre, correo, fase, idUnicoCorreo);
+      if (fnNombre === 'enviarCorreoIndicaciones')  enviarCorreoIndicaciones(nombre, correo, idUnicoCorreo);
       if (fnNombre === 'enviarCorreoRecordatorio')  enviarCorreoRecordatorio(nombre, correo, idUnicoCorreo);
       if (fnNombre === 'enviarCorreoAgradecimiento') enviarCorreoAgradecimiento(nombre, correo, idUnicoCorreo);
       if (filaComm) comSheet.getRange(filaComm, colEnviado).setValue('Sí');
@@ -1225,6 +1414,9 @@ function onOpen() {
     .createMenu('REINVENTA')
     .addItem('Sincronizar registros faltantes', 'sincronizarRegistrosFaltantes')
     .addItem('Regenerar links WA sin ID', 'regenerarLinksWASinId')
+    .addSeparator()
+    .addItem('Correos indicaciones masivo (jue 13 ago)', 'enviarCorreosIndicacionesMasivo')
+    .addItem('Generar botones WA indicaciones (jue 13 ago)', 'generarBotonesIndicacionesMasivo')
     .addSeparator()
     .addItem('Enviar recordatorio masivo ahora', 'adminEnviarRecordatorioMasivo')
     .addItem('Programar recordatorio automático (vie 14 ago 12pm)', 'adminProgramarRecordatorio')

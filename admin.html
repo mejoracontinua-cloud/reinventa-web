@@ -377,9 +377,29 @@
       </div>
       <!-- Sub-pane: WhatsApp -->
       <div id="subtab-whats" style="display:none;">
-        <div style="padding:3rem 1rem;text-align:center;">
-          <div style="font-family:Georgia,serif;font-size:1rem;color:var(--gold);margin-bottom:.5rem;">WhatsApp</div>
-          <div style="font-size:.7rem;color:var(--mauve);line-height:1.7;max-width:320px;margin:0 auto;">Próximamente — mensajes automáticos vía WhatsApp Business API para recordatorios y confirmaciones.</div>
+        <div style="padding:2rem 1rem 1.5rem;max-width:560px;">
+          <div style="font-family:Georgia,serif;font-size:1.05rem;color:var(--gold);margin-bottom:.35rem;">WhatsApp Business</div>
+          <div style="font-size:.72rem;color:var(--mauve);line-height:1.7;margin-bottom:1.5rem;">Conecta tu cuenta de WhatsApp Business para enviar recordatorios y confirmaciones de forma automática.</div>
+
+          <!-- Estado de conexión -->
+          <div id="wa-status-box" style="background:rgba(198,165,106,.06);border:1px solid rgba(198,165,106,.18);border-radius:3px;padding:.9rem 1.1rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.75rem;">
+            <div id="wa-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--mauve);flex-shrink:0;"></div>
+            <div>
+              <div id="wa-status-label" style="font-size:.72rem;color:var(--cream);font-weight:600;">No conectado</div>
+              <div id="wa-status-sub" style="font-size:.64rem;color:var(--mauve);margin-top:.1rem;">Conecta tu cuenta de Meta Business para activar WhatsApp.</div>
+            </div>
+          </div>
+
+          <!-- Botón conectar -->
+          <button id="wa-connect-btn" onclick="iniciarConexionWhatsApp()"
+            style="display:inline-flex;align-items:center;gap:.5rem;background:transparent;border:1.5px solid var(--gold);color:var(--gold);padding:.6rem 1.2rem;border-radius:2px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:background .2s,color .2s;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.554 4.105 1.523 5.824L0 24l6.341-1.502A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.849 0-3.589-.485-5.098-1.333l-.364-.214-3.765.892.944-3.665-.237-.38A9.946 9.946 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+            Conectar con Meta
+          </button>
+
+          <div style="font-size:.6rem;color:var(--mauve);margin-top:.9rem;line-height:1.6;max-width:420px;">
+            Al conectar serás redirigida a Meta para autorizar el acceso. Solo se guardan los IDs de tu cuenta — nunca contraseñas ni tokens — y puedes desconectar en cualquier momento desde Meta Business Suite.
+          </div>
         </div>
       </div>
     </div>
@@ -703,6 +723,68 @@ function cancelarCheckin() {
   pendingCheckinId = null;
   document.getElementById('confirm-modal').style.display = 'none';
 }
+
+// ─── WhatsApp Embedded Signup ─────────────────────────────────────────────────
+
+function iniciarConexionWhatsApp() {
+  var btn = document.getElementById('wa-connect-btn');
+  if (btn) { btn.textContent = 'Conectando…'; btn.disabled = true; }
+
+  // Solicitar state firmado al backend (stateless HMAC, sin almacenamiento)
+  fetch('/api/meta/whatsapp/state', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.state || !data.appId) throw new Error('Respuesta de state inválida');
+
+      // Construir URL de OAuth de Meta con los parámetros requeridos
+      var params = new URLSearchParams({
+        client_id:     data.appId,
+        redirect_uri:  data.redirectUri,
+        scope:         'whatsapp_business_management,whatsapp_business_messaging,business_management',
+        state:         data.state,
+        response_type: 'code',
+      });
+      // Redirigir a Meta para Embedded Signup
+      window.location.href = 'https://www.facebook.com/v21.0/dialog/oauth?' + params.toString();
+    })
+    .catch(function(err) {
+      console.error('[WA Connect] Error al generar state:', err);
+      if (btn) { btn.textContent = 'Conectar con Meta'; btn.disabled = false; }
+      mostrarToast('Error al iniciar conexión con WhatsApp', 'err');
+    });
+}
+
+// Detección de resultado OAuth al cargar la página
+(function detectarResultadoWhatsApp() {
+  var params = new URLSearchParams(window.location.search);
+  var resultado = params.get('whatsapp');
+  if (!resultado) return;
+
+  // Limpiar el parámetro de la URL sin recargar la página
+  var urlLimpia = window.location.pathname;
+  history.replaceState(null, '', urlLimpia);
+
+  // Mostrar feedback después de que el panel esté listo
+  setTimeout(function() {
+    if (resultado === 'connected') {
+      // Actualizar indicador de estado en el subtab de WhatsApp
+      var dot   = document.getElementById('wa-status-dot');
+      var label = document.getElementById('wa-status-label');
+      var sub   = document.getElementById('wa-status-sub');
+      var btn   = document.getElementById('wa-connect-btn');
+      if (dot)   dot.style.background   = '#4ade80';
+      if (label) label.textContent      = 'Conectado';
+      if (sub)   sub.textContent        = 'Cuenta de Meta autorizada. Los IDs están disponibles en los logs de Vercel.';
+      if (btn)   btn.textContent        = 'Reconectar';
+
+      mostrarToast('✓ WhatsApp Business conectado correctamente', 'ok');
+    } else if (resultado === 'error') {
+      mostrarToast('Error al conectar WhatsApp — revisa los logs de Vercel', 'err');
+    }
+  }, 800);
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function mostrarToast(msg, tipo) {
   var t = document.getElementById('toast');

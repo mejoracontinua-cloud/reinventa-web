@@ -717,11 +717,11 @@
     </div>
     <div class="login-body">
       <p class="login-intro">Tu espacio personal para el taller. Ingresa tu código de acceso para comenzar.</p>
-      <label class="field-label" for="login-codigo">Código de acceso</label>
-      <input id="login-codigo" type="text" class="field-input" placeholder="RNV-001"
+      <label class="field-label" for="login-codigo">Código de acceso o correo</label>
+      <input id="login-codigo" type="text" class="field-input" placeholder="RNV-001 o tu correo"
         onkeydown="if(event.key==='Enter')accederConCodigo()">
       <button class="login-btn" onclick="accederConCodigo()">Ingresar al evento</button>
-      <p class="login-error" id="login-error">Código no encontrado. Revisa tu correo o WhatsApp.</p>
+      <p class="login-error" id="login-error">No encontramos tu registro. Intenta con tu código (RNV-001) o con tu correo electrónico.</p>
       <a href="/admin" class="login-admin-link">¿Eres del equipo? <span>Acceso administrador ↗</span></a>
     </div>
   </div>
@@ -813,6 +813,14 @@
         <span class="drawer-item-status" id="ds-constancia" style="color:rgba(239,233,226,.4);">—</span>
       </div>
 
+      <div class="drawer-item" id="di-medidas" onclick="irDrawer('medidas')">
+        <div class="drawer-item-left">
+          <svg class="drawer-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M2 12l4-4M2 12l4 4M22 12l-4-4M22 12l-4 4"/><line x1="8" y1="7" x2="8" y2="17"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="16" y1="7" x2="16" y2="17"/></svg>
+          <span class="drawer-item-label">Mis Medidas</span>
+        </div>
+        <span class="drawer-item-status" id="ds-medidas" style="color:rgba(239,233,226,.4);">—</span>
+      </div>
+
       <div class="drawer-salir">
         <button class="btn-salir" onclick="salir()">Salir</button>
       </div>
@@ -833,6 +841,33 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             Check-in confirmado
           </span>
+        </div>
+      </div>
+
+      <!-- Dresscode banner -->
+      <div id="dresscode-banner" style="background:rgba(198,165,106,.08);border:1px solid rgba(198,165,106,.25);border-left:3px solid var(--gold);border-radius:3px;padding:1rem 1.1rem;margin-bottom:1.1rem;position:relative;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;">
+          <div style="flex:1;">
+            <p style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 .45rem;font-weight:600;">👗 Indicaciones para el taller · Sábado 15 ago</p>
+            <div id="dresscode-content">
+              <div style="font-size:.78rem;color:var(--ink-dim);line-height:1.65;margin-bottom:.5rem;">
+                <strong style="color:var(--ink);">Parte inferior:</strong> Pantalón ajustado (leggings o jeans).
+              </div>
+              <div style="font-size:.78rem;color:var(--ink-dim);line-height:1.65;margin-bottom:.5rem;">
+                <strong style="color:var(--ink);">Parte superior:</strong> Blusa o playera básica ajustada, de preferencia en color blanco o neutro.
+              </div>
+              <div style="font-size:.78rem;color:var(--ink-dim);line-height:1.65;margin-bottom:.5rem;">
+                <strong style="color:var(--ink);">Capa extra:</strong> Saco, blazer o blusón en el color que prefieras.
+              </div>
+              <div style="font-size:.78rem;color:var(--ink-dim);line-height:1.65;margin-bottom:.6rem;">
+                <strong style="color:var(--ink);">💇‍♀️ Rostro:</strong> Cabello recogido para el análisis de visagismo (si no puedes, ¡hay pinzas disponibles!).
+              </div>
+              <button onclick="irDrawer('medidas')" style="background:transparent;border:1px solid rgba(198,165,106,.4);color:var(--gold);font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;padding:.38rem .8rem;cursor:pointer;font-family:inherit;border-radius:2px;">
+                Registrar mis medidas →
+              </button>
+            </div>
+          </div>
+          <button onclick="document.getElementById('dresscode-banner').style.display='none'" style="background:none;border:none;color:rgba(143,115,131,.5);cursor:pointer;font-size:1rem;line-height:1;padding:0;flex-shrink:0;" title="Cerrar">×</button>
         </div>
       </div>
 
@@ -1097,6 +1132,11 @@
       <div id="constancia-inner"></div>
     </div>
 
+    <!-- MIS MEDIDAS -->
+    <div class="tab-pane" id="tab-medidas">
+      <div id="medidas-inner" style="max-width:480px;"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1139,7 +1179,8 @@ function cerrarDrawer() {
 
 var SCREEN_LABELS = {
   inicio: 'Inicio', pase: 'Mi Pase', agenda: 'Agenda',
-  encuesta: 'Encuesta Previa', recursos: 'Recursos', constancia: 'Constancia'
+  encuesta: 'Encuesta Previa', recursos: 'Recursos', constancia: 'Constancia',
+  medidas: 'Mis Medidas'
 };
 
 function irDrawer(tab) {
@@ -1161,6 +1202,7 @@ function ir(tab) {
   if (tab === 'recursos')   renderRecursos();
   if (tab === 'encuesta')   renderEncuesta();
   if (tab === 'constancia') renderConstancia();
+  if (tab === 'medidas')    renderMedidas();
 }
 
 function navTabBtn(tab) { return null; } // legacy compat
@@ -1273,6 +1315,19 @@ function poblarUI(p) {
   renderCalendar();
   renderAgendaPreview();
   actualizarDrawerStatus();
+  actualizarBadgeMedidas();
+}
+
+function actualizarBadgeMedidas() {
+  var guardadas = {};
+  try { guardadas = JSON.parse(localStorage.getItem(_medidasKey()) || '{}'); } catch(e){}
+  var campos = ['hombros','busto','cintura','cadera'];
+  var rellenos = campos.filter(function(k){ return !!guardadas[k]; }).length;
+  var ds = document.getElementById('ds-medidas');
+  if (!ds) return;
+  if (rellenos === 4)     { ds.textContent = 'Guardado ✓'; ds.style.color = '#C6A56A'; }
+  else if (rellenos > 0) { ds.textContent = 'Parcial';    ds.style.color = 'rgba(198,165,106,.5)'; }
+  else                   { ds.textContent = '—';          ds.style.color = 'rgba(239,233,226,.4)'; }
 }
 
 function actualizarDrawerStatus() {
@@ -1287,6 +1342,135 @@ function actualizarDrawerStatus() {
     document.getElementById('ds-constancia').textContent = 'Disponible';
     document.getElementById('ds-constancia').style.color = '#C6A56A';
   }
+}
+
+/* ── Mis Medidas ────────────────────────── */
+function _medidasKey() { return 'medidas_' + (perfil ? perfil.id : 'guest'); }
+
+function _calcularForma(hombros, busto, cintura, cadera) {
+  // Reglas según el mensaje de Mary
+  var dif_bc = Math.abs(busto - cadera);
+  var dif_c  = Math.min(hombros, cadera) - cintura;
+  if (dif_bc <= 5 && dif_c >= 20) return {
+    nombre: 'Reloj de arena ⌛',
+    desc:   'Busto y caderas similares, cintura notablemente más estrecha. Tu silueta es muy equilibrada — casi cualquier estilo te favorece.',
+    color:  '#C6A56A'
+  };
+  var pct_cadera_vs_hombros = ((cadera - hombros) / hombros) * 100;
+  if (pct_cadera_vs_hombros >= 5) return {
+    nombre: 'Triángulo / Pera 🍐',
+    desc:   'Las caderas son más anchas que los hombros y el busto. Prendas que equilibren la parte superior realzan tu figura.',
+    color:  '#a08060'
+  };
+  var pct_hombros_vs_cadera = ((hombros - cadera) / cadera) * 100;
+  var pct_busto_vs_cadera   = ((busto   - cadera) / cadera) * 100;
+  if (pct_hombros_vs_cadera >= 5 || pct_busto_vs_cadera >= 5) return {
+    nombre: 'Triángulo invertido 🔻',
+    desc:   'Los hombros o el busto son más anchos que las caderas. Prendas que den volumen a la parte inferior crean armonía.',
+    color:  '#8a7060'
+  };
+  if (cintura >= hombros * 0.9 || cintura >= cadera * 0.9) return {
+    nombre: 'Manzana 🍎',
+    desc:   'La cintura es similar o mayor a hombros y caderas. Cortes en A y prendas fluidas en la parte inferior son tus aliados.',
+    color:  '#8F7383'
+  };
+  return {
+    nombre: 'Rectángulo ▬',
+    desc:   'Hombros, cintura y cadera con medidas parecidas. Puedes crear ilusión de curvas con cinturones, drapeados o colores.',
+    color:  '#7a8080'
+  };
+}
+
+function renderMedidas() {
+  var el = document.getElementById('medidas-inner');
+  var guardadas = {};
+  try { guardadas = JSON.parse(localStorage.getItem(_medidasKey()) || '{}'); } catch(e){}
+
+  var h = guardadas.hombros || '', b = guardadas.busto || '',
+      c = guardadas.cintura || '', ca = guardadas.cadera || '';
+
+  var resultadoHtml = '';
+  if (h && b && c && ca) {
+    var forma = _calcularForma(parseFloat(h), parseFloat(b), parseFloat(c), parseFloat(ca));
+    resultadoHtml = '<div style="background:rgba(42,15,37,.07);border:1px solid rgba(198,165,106,.25);border-left:3px solid ' + forma.color + ';border-radius:3px;padding:1rem 1.1rem;margin-bottom:1.2rem;">'
+      + '<p style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mauve,#8F7383);margin:0 0 .35rem;">Tu forma de cuerpo</p>'
+      + '<p style="font-family:Georgia,serif;font-size:1.05rem;color:var(--plum,#2A0F25);margin:0 0 .4rem;font-weight:400;">' + forma.nombre + '</p>'
+      + '<p style="font-size:.78rem;color:var(--ink-dim);line-height:1.6;margin:0;">' + forma.desc + '</p>'
+      + '</div>';
+  }
+
+  el.innerHTML = '<p style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mauve,#8F7383);margin:0 0 .3rem;">Mis Medidas</p>'
+    + '<p style="font-family:Georgia,serif;font-size:1.15rem;color:var(--plum,#2A0F25);margin:0 0 .3rem;">Registro de medidas</p>'
+    + '<p style="font-size:.75rem;color:var(--ink-dim);line-height:1.6;margin:0 0 1.2rem;">Puedes tomarlas antes del taller o ese mismo día. Se guardan solo en este dispositivo.</p>'
+
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">'
+    + _campoMedida('Hombros', 'hombros', h)
+    + _campoMedida('Busto', 'busto', b)
+    + _campoMedida('Cintura', 'cintura', c)
+    + _campoMedida('Cadera', 'cadera', ca)
+    + '</div>'
+
+    + '<p style="font-size:.65rem;color:var(--mauve,#8F7383);line-height:1.55;margin:0 0 1rem;">Todas las medidas en centímetros (cm). Consulta las instrucciones en el correo de indicaciones que recibiste.</p>'
+
+    + '<button onclick="guardarMedidas()" style="display:block;width:100%;background:var(--gold,#C6A56A);color:var(--plum,#2A0F25);border:none;padding:.75rem;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;font-family:inherit;font-weight:600;border-radius:2px;margin-bottom:.75rem;">Guardar medidas</button>'
+    + '<button onclick="limpiarMedidas()" style="display:block;width:100%;background:transparent;color:var(--mauve,#8F7383);border:1px solid rgba(143,115,131,.3);padding:.6rem;font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;font-family:inherit;border-radius:2px;margin-bottom:1.4rem;">Borrar y volver a registrar</button>'
+
+    + resultadoHtml
+
+    + '<div style="border-top:1px solid rgba(42,15,37,.1);padding-top:1rem;">'
+    + '<p style="font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--mauve,#8F7383);margin:0 0 .5rem;">¿Cómo medir?</p>'
+    + '<p style="font-size:.73rem;color:var(--ink-dim);line-height:1.65;margin:0 0 .3rem;"><strong style="color:var(--plum,#2A0F25);">Hombros:</strong> De un extremo al otro por la parte más alta de la espalda.</p>'
+    + '<p style="font-size:.73rem;color:var(--ink-dim);line-height:1.65;margin:0 0 .3rem;"><strong style="color:var(--plum,#2A0F25);">Busto:</strong> La parte más voluminosa del pecho, a la altura de los pezones.</p>'
+    + '<p style="font-size:.73rem;color:var(--ink-dim);line-height:1.65;margin:0 0 .3rem;"><strong style="color:var(--plum,#2A0F25);">Cintura:</strong> La zona más angosta, 2 dedos arriba del ombligo, sin meter el abdomen.</p>'
+    + '<p style="font-size:.73rem;color:var(--ink-dim);line-height:1.65;margin:0;"><strong style="color:var(--plum,#2A0F25);">Cadera:</strong> La parte más ancha de los glúteos y huesos de la cadera.</p>'
+    + '</div>';
+}
+
+function _campoMedida(label, id, valor) {
+  return '<div>'
+    + '<label style="display:block;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mauve,#8F7383);margin-bottom:.3rem;">' + label + ' (cm)</label>'
+    + '<input id="med-' + id + '" type="number" min="40" max="200" step="0.5" value="' + (valor || '') + '" placeholder="—"'
+    + ' style="width:100%;box-sizing:border-box;background:rgba(42,15,37,.06);border:1px solid rgba(42,15,37,.15);border-radius:2px;padding:.55rem .65rem;font-size:.9rem;color:var(--plum,#2A0F25);font-family:inherit;outline:none;"'
+    + ' oninput="this.style.borderColor=this.value?\'var(--gold,#C6A56A)\':\'\'">'
+    + '</div>';
+}
+
+function guardarMedidas() {
+  var campos = ['hombros','busto','cintura','cadera'];
+  var vals = {};
+  var completo = true;
+  campos.forEach(function(id) {
+    var el = document.getElementById('med-' + id);
+    var v  = el ? el.value.trim() : '';
+    if (!v) completo = false;
+    vals[id] = v;
+  });
+  try { localStorage.setItem(_medidasKey(), JSON.stringify(vals)); } catch(e){}
+
+  // Actualizar estado en drawer
+  var dsMedidas = document.getElementById('ds-medidas');
+  if (dsMedidas) {
+    dsMedidas.textContent = completo ? 'Guardado ✓' : 'Parcial';
+    dsMedidas.style.color = completo ? '#C6A56A' : 'rgba(198,165,106,.5)';
+  }
+
+  // Re-render para mostrar resultado
+  renderMedidas();
+
+  // Scroll al resultado si hay medidas completas
+  if (completo) {
+    setTimeout(function() {
+      var res = document.querySelector('#medidas-inner [style*="border-left:3px"]');
+      if (res) res.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  }
+}
+
+function limpiarMedidas() {
+  try { localStorage.removeItem(_medidasKey()); } catch(e){}
+  var dsMedidas = document.getElementById('ds-medidas');
+  if (dsMedidas) { dsMedidas.textContent = '—'; dsMedidas.style.color = 'rgba(239,233,226,.4)'; }
+  renderMedidas();
 }
 
 /* ── Recursos ───────────────────────────── */
