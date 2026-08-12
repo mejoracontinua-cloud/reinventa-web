@@ -1231,9 +1231,10 @@ function cancelarEnvioQR() {
 
 /* ── Correos de prueba ───────────────────────────────────────── */
 function enviarCorreoPrueba()              { enviarCorreoConfirmacion('Valeria García', 'mejoracontinua@caceca.org', 'Early Bird', 'RNV-001'); }
-function enviarCorreoRecordatorioPrueba()  { enviarCorreoRecordatorio('Valeria García', 'mejoracontinua@caceca.org'); }
+function enviarCorreoIndicacionesPrueba()  { enviarCorreoIndicaciones('Valeria García', 'mejoracontinua@caceca.org', 'RNV-001'); }
+function enviarCorreoRecordatorioPrueba()  { enviarCorreoRecordatorio('Valeria García', 'mejoracontinua@caceca.org', 'RNV-001'); }
 function enviarCorreoQRPrueba()            { enviarCorreoQR('Valeria García', 'mejoracontinua@caceca.org', 'RNV-001'); }
-function enviarCorreoAgradecimientoPrueba(){ enviarCorreoAgradecimiento('Valeria García', 'mejoracontinua@caceca.org'); }
+function enviarCorreoAgradecimientoPrueba(){ enviarCorreoAgradecimiento('Valeria García', 'mejoracontinua@caceca.org', 'RNV-001'); }
 
 /* ── Prueba WhatsApp ─────────────────────────────────────────── */
 function probarEnlaceWhatsApp() {
