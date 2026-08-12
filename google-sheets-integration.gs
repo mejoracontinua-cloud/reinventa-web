@@ -36,6 +36,7 @@
 var SHEET_REGISTROS      = 'Registros';
 var SHEET_COMUNICACIONES = 'Comunicaciones';
 var SHEET_ASISTENCIA     = 'Asistencia';
+var SHEET_MEDIDAS        = 'Medidas';
 
 var EMAILS_NOTIFICACION = ['mejoracontinua@caceca.org', 'alopez@alumbrastudios.com'];
 var LIMITE_TOTAL        = 40;
@@ -45,6 +46,16 @@ var STAFF_PIN           = '1508';
 function getSheet()               { return getSheetByName(SHEET_REGISTROS); }
 function getComunicacionesSheet() { return getSheetByName(SHEET_COMUNICACIONES); }
 function getAsistenciaSheet()     { return getSheetByName(SHEET_ASISTENCIA); }
+function getMedidasSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_MEDIDAS);
+  if (!sh) {
+    sh = ss.insertSheet(SHEET_MEDIDAS);
+    sh.appendRow(['ID', 'Nombre', 'Hombros (cm)', 'Busto (cm)', 'Cintura (cm)', 'Cadera (cm)', 'Forma de cuerpo', 'Fecha']);
+    sh.getRange(1, 1, 1, 8).setFontWeight('bold');
+  }
+  return sh;
+}
 
 function getSheetByName(nombre) {
   var ss    = SpreadsheetApp.getActiveSpreadsheet();
@@ -73,6 +84,7 @@ function doPost(e) {
     }
     if (data.action === 'encuesta')        return handleEncuesta(data);
     if (data.action === 'encuesta_previa') return handleEncuestaPrevia(data);
+    if (data.action === 'guardar_medidas') return handleGuardarMedidas(data);
     if (data.action === 'admin_action')    return handleAdminAction(data);
     return handleFormSubmit(data);
   } catch(err) {
@@ -360,6 +372,54 @@ function handleHub(id) {
 }
 
 /* ── Admin: todos los datos del panel ───────────────────────── */
+/* ── Guardar medidas de cuerpo desde el hub ─────────────────── */
+function handleGuardarMedidas(data) {
+  if (!data.id) {
+    return ContentService.createTextOutput(JSON.stringify({ error: 'ID requerido' })).setMimeType(ContentService.MimeType.JSON);
+  }
+  var sheet   = getMedidasSheet();
+  var medData = sheet.getDataRange().getValues();
+  var idNorm  = data.id.toString().trim();
+
+  // Buscar fila existente para este ID
+  var filaExistente = -1;
+  for (var i = 1; i < medData.length; i++) {
+    if ((medData[i][0] || '').toString().trim() === idNorm) { filaExistente = i + 1; break; }
+  }
+
+  // Obtener nombre del asistente desde Asistencia
+  var nombre = data.nombre || '';
+  if (!nombre) {
+    try {
+      var asiData = getAsistenciaSheet().getDataRange().getValues();
+      for (var j = 1; j < asiData.length; j++) {
+        if ((asiData[j][0] || '').toString().trim() === idNorm) { nombre = asiData[j][1]; break; }
+      }
+    } catch(e) {}
+  }
+
+  var fila = [
+    idNorm,
+    nombre,
+    parseFloat(data.hombros) || '',
+    parseFloat(data.busto)   || '',
+    parseFloat(data.cintura) || '',
+    parseFloat(data.cadera)  || '',
+    data.forma || '',
+    new Date().toLocaleString('es-MX')
+  ];
+
+  if (filaExistente > 0) {
+    sheet.getRange(filaExistente, 1, 1, 8).setValues([fila]);
+  } else {
+    sheet.appendRow(fila);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
 function handleAdmin() {
   var asiSheet  = getAsistenciaSheet();
   var asiData   = asiSheet.getDataRange().getValues();
@@ -384,14 +444,32 @@ function handleAdmin() {
     });
   }
 
+  // Mapa de medidas por ID
+  var medidasPorId = {};
+  try {
+    var medSheet = getMedidasSheet();
+    var medData  = medSheet.getDataRange().getValues();
+    for (var m = 1; m < medData.length; m++) {
+      var mid = (medData[m][0] || '').toString().trim();
+      if (mid) medidasPorId[mid] = {
+        hombros: medData[m][2] || '',
+        busto:   medData[m][3] || '',
+        cintura: medData[m][4] || '',
+        cadera:  medData[m][5] || '',
+        forma:   medData[m][6] || ''
+      };
+    }
+  } catch(e) {}
+
   var encuestasPrevia = [];
   if (prevSheet) {
     var prevData = prevSheet.getDataRange().getValues();
     for (var j = 1; j < prevData.length; j++) {
       var p = prevData[j];
       if (!p[0]) continue;
+      var pid = (p[0] || '').toString().trim();
       encuestasPrevia.push({
-        id:           p[0],
+        id:           pid,
         nombre:       p[1],
         correo:       p[2],
         satisfaccion: p[4],
@@ -402,7 +480,8 @@ function handleAdmin() {
         expectativa:  p[9],
         piel:         p[10],
         cabello:      p[11],
-        ojos:         p[12]
+        ojos:         p[12],
+        medidas:      medidasPorId[pid] || null
       });
     }
   }

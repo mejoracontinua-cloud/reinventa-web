@@ -1436,16 +1436,22 @@ function _campoMedida(label, id, valor) {
 }
 
 function guardarMedidas() {
-  var campos = ['hombros','busto','cintura','cadera'];
+  var campoIds = ['hombros','busto','cintura','cadera'];
   var vals = {};
   var completo = true;
-  campos.forEach(function(id) {
-    var el = document.getElementById('med-' + id);
+  campoIds.forEach(function(c) {
+    var el = document.getElementById('med-' + c);
     var v  = el ? el.value.trim() : '';
     if (!v) completo = false;
-    vals[id] = v;
+    vals[c] = v;
   });
   try { localStorage.setItem(_medidasKey(), JSON.stringify(vals)); } catch(e){}
+
+  // Calcular forma para enviar junto con las medidas
+  var forma = '';
+  if (completo) {
+    try { forma = _calcularForma(parseFloat(vals.hombros), parseFloat(vals.busto), parseFloat(vals.cintura), parseFloat(vals.cadera)).nombre; } catch(e){}
+  }
 
   // Actualizar estado en drawer
   var dsMedidas = document.getElementById('ds-medidas');
@@ -1463,6 +1469,23 @@ function guardarMedidas() {
       var res = document.querySelector('#medidas-inner [style*="border-left:3px"]');
       if (res) res.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
+  }
+
+  // Sincronizar con servidor (no bloqueante — si falla, localStorage sigue siendo la fuente)
+  if (perfil && perfil.id) {
+    fetch('/api/hub-medidas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id:      perfil.id,
+        nombre:  perfil.nombre || '',
+        hombros: vals.hombros,
+        busto:   vals.busto,
+        cintura: vals.cintura,
+        cadera:  vals.cadera,
+        forma:   forma
+      })
+    }).catch(function() {}); // silencioso si no hay conexión
   }
 }
 

@@ -2126,28 +2126,59 @@ function generarReportePrevia() {
       var v = parseFloat(e[key])||0;
       var pct = v*10;
       var col = scoreColor(v);
-      return '<div style="margin-bottom:10px;">'
-        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">'
+      return '<div style="margin-bottom:9px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;">'
           +'<span class="eyebrow" style="font-size:8px;">'+label+'</span>'
-          +'<span class="serif" style="font-size:16px;color:'+col+';">'+v+'</span>'
+          +'<span class="serif" style="font-size:15px;color:'+col+';">'+v+'</span>'
         +'</div>'
-        +svgBar(pct, col, '#EDE9E4', 7)
+        +svgBar(pct, col, '#EDE9E4', 6)
       +'</div>';
     };
-    return '<div class="avoid" style="border:1px solid #DDD8D2;padding:16px;break-inside:avoid;page-break-inside:avoid;">'
-      +'<div class="serif" style="font-size:16px;border-bottom:1px solid #EDE9E4;padding-bottom:10px;margin-bottom:14px;">'+esc(e.nombre)+'</div>'
+
+    // Bloque de medidas — solo si existen
+    var medidasHtml = '';
+    var m = e.medidas;
+    if (m && (m.hombros || m.busto || m.cintura || m.cadera)) {
+      var medVal = function(v) { return v ? (parseFloat(v).toFixed(1)+' cm') : '—'; };
+      // Barras de medidas relativas al máximo entre ellas
+      var vals = [parseFloat(m.hombros)||0, parseFloat(m.busto)||0, parseFloat(m.cintura)||0, parseFloat(m.cadera)||0];
+      var maxVal = Math.max.apply(null, vals) || 1;
+      var medRow = function(label, val) {
+        var n = parseFloat(val)||0;
+        var pct = (n/maxVal)*100;
+        return '<div style="margin-bottom:5px;">'
+          +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;">'
+            +'<span style="font-size:8px;color:#8F7383;letter-spacing:.08em;text-transform:uppercase;">'+label+'</span>'
+            +'<span style="font-size:10px;color:#2A0F25;">'+medVal(val)+'</span>'
+          +'</div>'
+          +svgBar(pct, '#C6A56A', '#EDE9E4', 5)
+        +'</div>';
+      };
+      medidasHtml = '<div style="border-top:1px solid #EDE9E4;padding-top:9px;margin-top:8px;">'
+        +'<div class="eyebrow" style="font-size:8px;margin-bottom:6px;">📏 Medidas de cuerpo</div>'
+        + medRow('Hombros', m.hombros)
+        + medRow('Busto',   m.busto)
+        + medRow('Cintura', m.cintura)
+        + medRow('Cadera',  m.cadera)
+        +(m.forma ? '<div style="margin-top:6px;background:#F7F4F1;border-left:2px solid #C6A56A;padding:5px 7px;font-size:10px;color:#2A0F25;">'+esc(m.forma)+'</div>' : '')
+      +'</div>';
+    }
+
+    return '<div class="avoid" style="border:1px solid #DDD8D2;padding:14px;break-inside:avoid;page-break-inside:avoid;">'
+      +'<div class="serif" style="font-size:15px;border-bottom:1px solid #EDE9E4;padding-bottom:9px;margin-bottom:12px;">'+esc(e.nombre)+'</div>'
       + scoreRow('Satisfacción personal',     'satisfaccion')
       + scoreRow('Coherencia y autenticidad', 'coherencia')
       + scoreRow('Confianza y practicidad',   'confianza')
       + scoreRow('Proyección y liderazgo',    'proyeccion')
-      +'<div style="border-top:1px solid #EDE9E4;padding-top:10px;margin-top:4px;">'
+      +'<div style="border-top:1px solid #EDE9E4;padding-top:9px;margin-top:4px;">'
         +'<div class="eyebrow" style="font-size:8px;margin-bottom:4px;">Tono de piel · Cabello · Ojos</div>'
-        +'<div style="font-size:12px;">'+esc(e.piel||'—')+' · '+esc(e.cabello||'—')+' · '+esc(e.ojos||'—')+'</div>'
+        +'<div style="font-size:11px;">'+esc(e.piel||'—')+' · '+esc(e.cabello||'—')+' · '+esc(e.ojos||'—')+'</div>'
       +'</div>'
-      +'<div style="border-top:1px solid #EDE9E4;padding-top:10px;margin-top:10px;">'
+      +'<div style="border-top:1px solid #EDE9E4;padding-top:9px;margin-top:8px;">'
         +'<div class="eyebrow" style="font-size:8px;margin-bottom:4px;">Motivación principal</div>'
-        +'<div style="font-size:12px;color:#2A0F25;">'+esc(e.motivacion||'—')+'</div>'
+        +'<div style="font-size:11px;color:#2A0F25;">'+esc(e.motivacion||'—')+'</div>'
       +'</div>'
+      + medidasHtml
     +'</div>';
   }
 
