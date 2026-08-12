@@ -974,9 +974,35 @@ function renderEventoDashboard() {
   var d       = datos ? datos.asistentes : [];
   var total   = d.length;
   var checkin = d.filter(function(a){return a.asistio;}).length;
-  var previa  = datos ? datos.encuestasPrevia.length : 0;
+  var previa  = datos ? (datos.encuestasPrevia||[]).length : 0;
   var post    = d.filter(function(a){return a.encuesta;}).length;
+  var medidas = datos ? (datos.totalMedidas||0) : 0;
   var CUPO    = 40;
+
+  // ── Medidas: formas de cuerpo
+  var formas = {};
+  var medidasConForma = 0;
+  (datos ? datos.encuestasPrevia : []).forEach(function(e){
+    if (e.medidas && e.medidas.forma) {
+      formas[e.medidas.forma] = (formas[e.medidas.forma]||0)+1;
+      medidasConForma++;
+    }
+  });
+
+  // ── Encuesta previa: promedios (campos 1-5)
+  var scoreFields = ['satisfaccion','coherencia','confianza','proyeccion','motivacion'];
+  var scoreLabels = { satisfaccion:'Satisfacción imagen', coherencia:'Coherencia personal', confianza:'Confianza', proyeccion:'Proyección deseada', motivacion:'Motivación' };
+  var scoreData = {};
+  scoreFields.forEach(function(f){ scoreData[f]={sum:0,n:0}; });
+  (datos ? datos.encuestasPrevia : []).forEach(function(e){
+    scoreFields.forEach(function(f){
+      var v = parseFloat(e[f]);
+      if (!isNaN(v) && v > 0) { scoreData[f].sum += v; scoreData[f].n++; }
+    });
+  });
+
+  // ── Comunicaciones (si ya cargaron)
+  var com = _correosDatos || {};
 
   var eventoTs = new Date('2026-08-15T10:00:00').getTime();
   var esHoy    = (function(){ var n=new Date(); return n.getFullYear()===2026 && n.getMonth()===7 && n.getDate()===15; })();
@@ -1183,16 +1209,94 @@ function renderEventoDashboard() {
       +'</div></div>';
   }
 
+  var sinCorreo = d.filter(function(a){ return (a.nombre||'').toLowerCase().startsWith('acompañante de') && !a.correo; }).length;
   var estadoCard = '<div style="background:var(--cream);padding:1.1rem 1.3rem;height:100%;box-sizing:border-box;">'
     +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:.9rem;">Estado general</div>'
-    +progressRow('Encuesta previa completada', previa, total)
-    +progressRow('Check-in el día del evento', checkin, total)
-    +progressRow('Encuesta post completada', post, total)
+    +progressRow('Encuesta previa', previa, total)
+    +progressRow('Medidas registradas', medidas, total)
+    +progressRow('Check-in el día', checkin, total)
+    +progressRow('Encuesta post', post, total)
     +'<div style="margin-top:1rem;">'
     +statusRow('Cupo disponible', (CUPO-total)+' lugares', CUPO-total>0)
-    +statusRow('Acompañantes sin correo', d.filter(function(a){ return (a.nombre||'').toLowerCase().startsWith('acompañante de') && !a.correo; }).length+' personas', d.filter(function(a){ return (a.nombre||'').toLowerCase().startsWith('acompañante de') && !a.correo; }).length===0)
     +statusRow('Sin encuesta previa', (total-previa)+' personas', total-previa===0)
+    +statusRow('Sin medidas', (total-medidas)+' personas', total-medidas===0)
+    +statusRow('Acompañantes sin correo', sinCorreo+' personas', sinCorreo===0)
     +'</div>'
+    +'</div>';
+
+  // ── Card: Formas de cuerpo
+  var formaColors = { 'Reloj de arena':'#C6A56A', 'Triángulo / Pera':'#8F7383', 'Triángulo invertido':'#6b4e8a', 'Manzana':'#c47a5a', 'Rectángulo':'#2A0F25' };
+  var formaKeys = Object.keys(formas).sort(function(a,b){ return formas[b]-formas[a]; });
+  var formasCard = '<div style="background:var(--cream);padding:1.3rem 1.4rem;">'
+    +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:.9rem;">Formas de cuerpo registradas</div>'
+    +(formaKeys.length === 0
+      ? '<div style="font-size:.72rem;color:var(--mauve);padding:.5rem 0;">Sin datos aún — las formas se calculan cuando las asistentes registran sus medidas.</div>'
+      : formaKeys.map(function(f){
+          var n = formas[f], pf = medidasConForma ? Math.round(n/medidasConForma*100) : 0;
+          var col = formaColors[f] || '#8F7383';
+          return '<div style="margin-bottom:.8rem;">'
+            +'<div style="display:flex;justify-content:space-between;margin-bottom:.3rem;">'
+              +'<span style="font-size:.72rem;color:var(--plum);">'+f+'</span>'
+              +'<span style="font-family:Georgia,serif;font-size:.85rem;color:var(--plum);">'+n+'<span style="font-size:.55rem;color:var(--mauve);margin-left:.2rem;">'+pf+'%</span></span>'
+            +'</div>'
+            +'<div style="height:3px;background:var(--plum-10);border-radius:2px;overflow:hidden;">'
+              +'<div style="height:100%;width:'+pf+'%;background:'+col+';"></div>'
+            +'</div></div>';
+        }).join('')
+        +'<div style="border-top:1px solid var(--plum-10);margin-top:.4rem;padding-top:.6rem;font-size:.65rem;color:var(--mauve);">'+medidasConForma+' de '+medidas+' con forma calculada</div>'
+    )
+    +'</div>';
+
+  // ── Card: Encuesta previa — scores
+  var hasScores = scoreFields.some(function(f){ return scoreData[f].n > 0; });
+  var scoresCard = '<div style="background:var(--cream);padding:1.3rem 1.4rem;">'
+    +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:.9rem;">Encuesta previa — promedios (escala 1–5)</div>'
+    +(previa === 0
+      ? '<div style="font-size:.72rem;color:var(--mauve);">Sin respuestas aún.</div>'
+      : !hasScores
+        ? '<div style="font-size:.72rem;color:var(--mauve);">Los campos de puntaje no son numéricos o están vacíos.</div>'
+        : scoreFields.map(function(f){
+            var avg = scoreData[f].n ? (scoreData[f].sum/scoreData[f].n) : 0;
+            var pf  = Math.round(avg/5*100);
+            return '<div style="margin-bottom:.75rem;">'
+              +'<div style="display:flex;justify-content:space-between;margin-bottom:.3rem;">'
+                +'<span style="font-size:.7rem;color:var(--plum);">'+scoreLabels[f]+'</span>'
+                +'<span style="font-family:Georgia,serif;font-size:.82rem;color:var(--plum);">'+(avg?avg.toFixed(1):'—')+'<span style="font-size:.5rem;color:var(--mauve);"> / 5</span></span>'
+              +'</div>'
+              +'<div style="height:3px;background:var(--plum-10);border-radius:2px;overflow:hidden;">'
+                +'<div style="height:100%;width:'+pf+'%;background:#C6A56A;"></div>'
+              +'</div></div>';
+          }).join('')
+    )
+    +'<div style="border-top:1px solid var(--plum-10);margin-top:.4rem;padding-top:.5rem;font-size:.65rem;color:var(--mauve);">'+previa+' respuestas recibidas</div>'
+    +'</div>';
+
+  // ── Card: Comunicaciones
+  var comItems = [
+    { label:'Confirmación', d:com.confirmacion },
+    { label:'Indicaciones', d:com.indicaciones },
+    { label:'Recordatorio', d:com.recordatorio },
+    { label:'QR entrada',   d:com.qr },
+    { label:'Agradecimiento',d:com.agradecimiento }
+  ];
+  var comCard = '<div style="background:var(--cream);padding:1.3rem 1.4rem;">'
+    +'<div style="font-size:.44rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mauve);margin-bottom:.9rem;">Correos enviados</div>'
+    +(com.confirmacion === undefined
+      ? '<div style="font-size:.72rem;color:var(--mauve);">Abre la pestaña Comunicación para cargar los datos.</div>'
+      : comItems.map(function(c){
+          var env = c.d ? (c.d.enviados||0) : 0;
+          var tot = (com.total||total)||1;
+          var pf  = Math.round(env/tot*100);
+          return '<div style="margin-bottom:.75rem;">'
+            +'<div style="display:flex;justify-content:space-between;margin-bottom:.3rem;">'
+              +'<span style="font-size:.7rem;color:var(--plum);">'+c.label+'</span>'
+              +'<span style="font-family:Georgia,serif;font-size:.82rem;color:var(--plum);">'+env+'<span style="font-size:.5rem;color:var(--mauve);"> / '+tot+'</span></span>'
+            +'</div>'
+            +'<div style="height:3px;background:var(--plum-10);border-radius:2px;overflow:hidden;">'
+              +'<div style="height:100%;width:'+pf+'%;background:#C6A56A;"></div>'
+            +'</div></div>';
+        }).join('')
+    )
     +'</div>';
 
   el.innerHTML =
@@ -1200,8 +1304,11 @@ function renderEventoDashboard() {
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;margin-bottom:.8rem;">'
       +progCard+faseCard+compCard
     +'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.8rem;">'
       +agendaCard+estadoCard
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;">'
+      +formasCard+scoresCard+comCard
     +'</div>';
 }
 
