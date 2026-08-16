@@ -5156,6 +5156,20 @@ function _htmlPrevBloquesEspecificos(id, contenido) {
       + '</div>';
   }
 
+  if (id === 'recordatorio_post' || id === 'ultima_llamada') {
+    var cierrePost = contenido.cierre || (id === 'ultima_llamada' ? 'Tienes hasta el domingo 23 de agosto.' : 'El acceso al hub cierra el lunes 24 de agosto.');
+    var chipPost   = id === 'ultima_llamada' ? 'Tienes hasta el domingo 23 de agosto' : 'Al contestar la encuesta desbloqueas';
+    var btnPost    = id === 'ultima_llamada' ? 'Entrar ahora antes del lunes →' : 'Ir a mis recursos →';
+    return '<div style="background:#2A0F25;padding:1.4rem 1.6rem;margin-bottom:1.4rem;">'
+      + '<p style="font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(198,165,106,.6);margin:0 0 .5rem;">' + chipPost + '</p>'
+      + '<p style="font-size:.83rem;color:rgba(239,233,226,.85);margin:0 0 .3rem;">· Tu constancia de participación descargable.</p>'
+      + '<p style="font-size:.83rem;color:rgba(239,233,226,.85);margin:0 0 .3rem;">· Guía de 7 estilos y sus esenciales.</p>'
+      + '<p style="font-size:.83rem;color:rgba(239,233,226,.85);margin:0 0 1rem;">· Guía de compras inteligentes.</p>'
+      + (id === 'recordatorio_post' ? '<p style="font-size:.78rem;color:rgba(198,165,106,.7);margin:0 0 .8rem;">⏳ ' + cierrePost + '</p>' : '')
+      + '<a href="#" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;">' + btnPost + '</a>'
+      + '</div>';
+  }
+
   // acompanante — similar a confirmacion
   return _htmlPrevDetallesEvento()
     + '<a href="#" style="display:block;background:#C6A56A;color:#2A0F25;text-align:center;padding:.8rem 1.2rem;text-decoration:none;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-bottom:1.6rem;">Ver detalles del evento &rarr;</a>';
@@ -5166,12 +5180,14 @@ function _renderCorreoPreview(id, contenido) {
   // h1 ahora viene de Contenidos (o fallback en _resolverContenidoPreview)
   var h1 = contenido.h1 || (_PREVIEW_MOCK.nombre + ',');
   var chipMap = {
-    confirmacion:  'Pago confirmado &middot; Fase Early Bird',
-    indicaciones:  'Preparación &middot; Jueves 13 de agosto',
-    recordatorio:  'Recordatorio &middot; Mañana es el taller',
-    qr:            'Hoy es el día &middot; Sábado 15 de agosto',
-    agradecimiento:'Gracias por estar aquí',
-    acompanante:   'Invitado especial &middot; Sábado 15 de agosto'
+    confirmacion:     'Pago confirmado &middot; Fase Early Bird',
+    indicaciones:     'Preparación &middot; Jueves 13 de agosto',
+    recordatorio:     'Recordatorio &middot; Mañana es el taller',
+    qr:               'Hoy es el día &middot; Sábado 15 de agosto',
+    agradecimiento:   'Gracias por estar aquí',
+    acompanante:      'Invitado especial &middot; Sábado 15 de agosto',
+    recordatorio_post:'Tus recursos te esperan',
+    ultima_llamada:   'Último aviso &middot; Lunes 24 ago'
   };
   var isQR  = id === 'qr';
   var isAgr = id === 'agradecimiento';
