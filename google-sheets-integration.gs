@@ -682,18 +682,18 @@ function handleAdmin() {
           // Confirmación — col F(5)=Estado WA, col G(6)=Correo enviado
           estConfWA:     (r[5] || '').toString(),
           correoConf:    _siTrue(r[6]),
-          // Recordatorio — NO tiene WA, col I(8)=Correo enviado
-          estRecordWA:   '',
-          correoRecord:  _siTrue(r[8]),
-          // QR de entrada — NO tiene WA, col L(11)=Correo enviado
-          estQRWA:       '',
-          correoQR:      _siTrue(r[11]),
+          // Recordatorio — col I(8)=Estado WA, col J(9)=Correo enviado
+          estRecordWA:   (r[8] || '').toString(),
+          correoRecord:  _siTrue(r[9]),
+          // QR de entrada — col L(11)=Estado WA, col M(12)=Correo enviado
+          estQRWA:       (r[11] || '').toString(),
+          correoQR:      _siTrue(r[12]),
           // Agradecimiento — col O(14)=Estado WA, col P(15)=Correo enviado
           estAgradecWA:  (r[14] || '').toString(),
           correoAgradec: _siTrue(r[15]),
-          // Indicaciones — NO tiene WA, col R(17)=Correo enviado
-          estIndicWA:    '',
-          correoIndic:   _siTrue(r[17]),
+          // Indicaciones — col R(17)=Estado WA, col S(18)=Correo enviado
+          estIndicWA:    (r[17] || '').toString(),
+          correoIndic:   _siTrue(r[18]),
           // Encuesta previa — col U(20)=Estado WA (sin correo)
           estEncPrevWA:  (r[20] || '').toString(),
           // Recursos — col X(23)=Correo enviado (sin WA)

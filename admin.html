@@ -6875,9 +6875,7 @@ function _buildReporteAlambraHTML(r, m, a, analytics) {
       +'<td style="text-align:center;">'+c.env+'</td>'
       +'<td style="text-align:center;">'+(c.corrs!==null?c.corrs:'—')+'</td>'
       +'<td style="text-align:center;">'+c.sinT+'</td>'
-      +(agradRow
-        ? '<td style="font-size:.65rem;color:#b45309;">28 enviados operacionalmente · col P muestra 16 por tracking parcial (12 vía rescate no actualizaron col P)</td>'
-        : '<td style="font-size:.65rem;color:#888;">—</td>')
+      +'<td style="font-size:.65rem;color:#888;">—</td>'
       +'</tr>';
   }).join('');
 
@@ -7149,7 +7147,6 @@ function _buildReporteAlambraHTML(r, m, a, analytics) {
         +'</tr></thead><tbody>'+campTable+'</tbody></table></div>'
       : '<div class="hallazgo warn" style="margin-bottom:.5rem;"><strong>⏳ Datos de Comunicaciones pendientes:</strong> La hoja de Comunicaciones no se está enviando al panel todavía — requiere que actualices el servidor GAS (copia el script actualizado a Apps Script y publica nueva versión). Una vez hecho, los datos de cada campaña aparecerán aquí automáticamente sin ningún cambio adicional.</div>'
     )
-    +hallazgo('warn','<strong>Agradecimiento — discrepancia de tracking:</strong> 28 enviados operacionalmente (validado). Col P de Comunicaciones muestra 16. Causa: 12 enviados vía flujo de rescate (adminReenviarRescate) no actualizaron col P. Registrado en backlog P0.')
     +hallazgo('info','<strong>WhatsApp — proceso manual:</strong> La plataforma genera links wa.me con plantilla prellenada. El envío requiere clic manual desde Sheets. NO hay Business API conectada. Sin automatización real.')
     +'</div>';
 
