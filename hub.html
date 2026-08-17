@@ -23,6 +23,7 @@
       --card-border: rgba(198,165,106,.28);
       --ok:          #3d8a5e;
       --ok-bg:       rgba(61,138,94,.1);
+      --border:      rgba(198,165,106,.22);
     }
 
     html, body {
@@ -609,8 +610,401 @@
     .enc-done-card { padding: 1.8rem; text-align: center; }
     .enc-done-card svg { width: 40px; height: 40px; color: var(--ok); margin-bottom: .8rem; }
 
-    /* Estrellas encuesta post */
-    .enc-card-dark { background: rgba(42,15,37,.06); border: 1px solid var(--card-border); border-radius: 4px; padding: 1.1rem; margin-bottom: .7rem; }
+    /* ── ESTRELLAS ──────────────────────────────────────── */
+    .est, .est-mary {
+      font-size: 1.7rem;
+      cursor: pointer;
+      color: rgba(198,165,106,.2);
+      transition: color .15s, transform .1s;
+      line-height: 1;
+      display: inline-block;
+    }
+    .est:hover, .est-mary:hover { transform: scale(1.15); }
+
+    /* ── ENCUESTA GENERAL ───────────────────────────────── */
+    .enc-card { padding: 1.2rem; margin-bottom: .7rem; border-radius: 8px; overflow: visible; }
+
+    /* Pregunta Q1 — calificación general */
+    .enc-q-general {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 0 0 .35rem;
+      line-height: 1.4;
+    }
+
+    /* ── SECCIONES ──────────────────────────────────────── */
+    .enc-bloque {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .enc-bloque-header {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .6rem .85rem;
+      background: var(--plum);
+      margin: 1.6rem 0 1rem;
+      border-radius: 5px;
+    }
+
+    .enc-bloque-titulo {
+      font-size: .58rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .enc-bloque-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(198,165,106,.3);
+    }
+
+    /* ── CADA PREGUNTA ──────────────────────────────────── */
+    .enc-pregunta {
+      padding: .9rem 0 .7rem;
+      border-bottom: 1px solid rgba(198,165,106,.12);
+    }
+    .enc-pregunta:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .enc-q-sm {
+      font-size: .9rem;
+      color: var(--ink);
+      font-weight: 700;
+      margin: 0 0 .3rem;
+      line-height: 1.4;
+    }
+
+    .enc-hint {
+      font-size: .74rem;
+      color: var(--ink-muted);
+      line-height: 1.55;
+      margin: 0 0 .85rem;
+      font-style: italic;
+    }
+
+    .enc-hint-inline {
+      font-weight: 400;
+      color: var(--ink-muted);
+      font-size: .72rem;
+      font-style: italic;
+    }
+
+    /* ── ESCALA NUMÉRICA 1-5 ─────────────────────────────── */
+    .enc-escala-num { margin-bottom: .4rem; }
+
+    .enc-escala-num-btns {
+      display: flex;
+      gap: .3rem;
+      margin-bottom: .35rem;
+    }
+
+    .enc-escala-num-btn {
+      flex: 1;
+      aspect-ratio: 1;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg);
+      color: var(--ink-dim);
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 6px;
+      transition: background .12s, border-color .15s, color .12s, transform .1s;
+      min-width: 0;
+    }
+    .enc-escala-num-btn:hover {
+      border-color: var(--gold);
+      background: rgba(198,165,106,.08);
+      color: var(--ink);
+      transform: translateY(-1px);
+    }
+    .enc-escala-num-btn.sel {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--plum);
+      font-weight: 800;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(198,165,106,.35);
+    }
+
+    .enc-escala-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: .6rem;
+      color: var(--ink-muted);
+      letter-spacing: .02em;
+    }
+
+    /* ── ESCALA CON ETIQUETAS (expectativas) ─────────────── */
+    .enc-escala {
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+      margin-bottom: .4rem;
+    }
+
+    .enc-escala-opt {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      padding: .5rem .75rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .8rem;
+      color: var(--ink-dim);
+      transition: background .12s, border-color .15s, color .12s;
+      background: var(--card-bg);
+    }
+    .enc-escala-opt:hover {
+      border-color: var(--gold);
+      background: rgba(198,165,106,.07);
+      color: var(--ink);
+    }
+    .enc-escala-opt.sel {
+      border-color: var(--gold);
+      background: rgba(198,165,106,.13);
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .enc-escala-opt-num {
+      font-size: .62rem;
+      font-weight: 800;
+      color: var(--gold);
+      min-width: 1.1rem;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      background: rgba(198,165,106,.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── CHIPS MULTI-SELECT ──────────────────────────────── */
+    .enc-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-bottom: .4rem;
+    }
+
+    .enc-chip {
+      padding: .4rem .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      font-size: .76rem;
+      color: var(--ink-dim);
+      cursor: pointer;
+      transition: background .12s, border-color .15s, color .12s, transform .1s;
+      background: var(--card-bg);
+      font-family: inherit;
+      line-height: 1.3;
+    }
+    .enc-chip:hover {
+      border-color: var(--gold);
+      background: rgba(198,165,106,.08);
+      color: var(--ink);
+    }
+    .enc-chip.sel {
+      border-color: var(--gold);
+      background: rgba(198,165,106,.15);
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* ── RADIO ROW (horizontal) ──────────────────────────── */
+    .enc-radio-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+      margin-bottom: .4rem;
+    }
+
+    .enc-radio-opt {
+      flex: 1;
+      min-width: 0;
+      padding: .45rem .4rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: .72rem;
+      color: var(--ink-dim);
+      cursor: pointer;
+      text-align: center;
+      transition: background .12s, border-color .15s, color .12s;
+      background: var(--card-bg);
+      font-family: inherit;
+      line-height: 1.35;
+    }
+    .enc-radio-opt:hover {
+      border-color: var(--gold);
+      background: rgba(198,165,106,.08);
+      color: var(--ink);
+    }
+    .enc-radio-opt.sel {
+      border-color: var(--gold);
+      background: rgba(198,165,106,.13);
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* ── RADIO COL (vertical) ────────────────────────────── */
+    .enc-radio-col {
+      display: flex;
+      flex-direction: column;
+      gap: .28rem;
+      margin-bottom: .4rem;
+    }
+    .enc-radio-col .enc-radio-opt {
+      text-align: left;
+      flex: none;
+      padding: .5rem .85rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .enc-radio-col .enc-radio-opt::before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      flex-shrink: 0;
+      transition: background .12s, border-color .15s;
+    }
+    .enc-radio-col .enc-radio-opt.sel::before {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+
+    /* ── MATRIZ ORGANIZACIÓN ─────────────────────────────── */
+    .enc-matriz { margin-bottom: .4rem; }
+
+    .enc-matriz-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .6rem .5rem;
+      border-radius: 6px;
+      transition: background .1s;
+    }
+    .enc-matriz-row:nth-child(odd) { background: rgba(198,165,106,.04); }
+
+    .enc-matriz-label {
+      flex: 1;
+      font-size: .78rem;
+      color: var(--ink-dim);
+      min-width: 0;
+      line-height: 1.4;
+    }
+
+    .enc-matriz-btns {
+      display: flex;
+      gap: .2rem;
+      flex-shrink: 0;
+      align-items: center;
+    }
+
+    .enc-matriz-num-label {
+      font-size: .55rem;
+      color: var(--ink-muted);
+      letter-spacing: .04em;
+      text-align: center;
+      width: 28px;
+      margin-bottom: .15rem;
+      display: block;
+    }
+
+    .enc-matriz-btn {
+      width: 30px;
+      height: 30px;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg);
+      color: var(--ink-muted);
+      font-size: .72rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 5px;
+      transition: background .1s, border-color .12s, color .1s, transform .08s;
+    }
+    .enc-matriz-btn:hover {
+      border-color: var(--gold);
+      background: rgba(198,165,106,.1);
+      color: var(--ink);
+      transform: translateY(-1px);
+    }
+    .enc-matriz-btn.sel {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--plum);
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(198,165,106,.3);
+    }
+
+    @media (max-width: 520px) {
+      .enc-matriz-row { flex-direction: column; align-items: flex-start; gap: .4rem; }
+      .enc-matriz-btns { width: 100%; justify-content: space-between; }
+      .enc-matriz-btn { flex: 1; height: 34px; }
+    }
+
+    /* ── NPS 0-10 ────────────────────────────────────────── */
+    .enc-nps { margin-bottom: .35rem; }
+
+    .enc-nps-btns {
+      display: flex;
+      gap: .18rem;
+      flex-wrap: nowrap;
+      margin-bottom: .3rem;
+    }
+
+    .enc-nps-btn {
+      flex: 1;
+      min-width: 0;
+      padding: .5rem 0;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg);
+      color: var(--ink-dim);
+      font-size: .72rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      border-radius: 5px;
+      text-align: center;
+      transition: background .1s, border-color .12s, color .1s, transform .08s;
+    }
+    .enc-nps-btn:hover {
+      border-color: var(--gold);
+      background: rgba(198,165,106,.08);
+      color: var(--ink);
+      transform: translateY(-1px);
+    }
+    .enc-nps-btn.sel {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: var(--plum);
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(198,165,106,.3);
+    }
+
+    .enc-nps-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: .6rem;
+      color: var(--ink-muted);
+      margin-bottom: 1.2rem;
+      font-style: italic;
+    }
 
     /* ── CONSTANCIA ─────────────────────── */
     .cert-card {
@@ -665,7 +1059,7 @@
     }
     .btn-ghost:hover { background: rgba(198,165,106,.08); }
 
-    .msg-error { font-size: .72rem; color: #b05050; text-align: center; margin-top: .5rem; display: none; }
+    .msg-error { font-size: .82rem; color: #b05050; background: #fff5f5; border: 1px solid #f5c6c6; border-radius: 8px; padding: .75rem 1rem; margin-top: .75rem; display: none; text-align: left; line-height: 1.5; }
 
     /* ── Powered ────────────────────────── */
     .powered {
@@ -1175,6 +1569,7 @@
 <script>
 var perfil = null;
 var calPost = 0;
+var calMary = 0;
 var tabActual = 'inicio';
 
 /* ── Utilidades ─────────────────────────── */
@@ -1680,23 +2075,316 @@ function guiaCard(titulo, desc, accion) {
 function renderEncuestaPost() {
   return '<p class="section-eyebrow" style="margin-top:.9rem;">Encuesta de satisfacción</p>'
     + '<div class="enc-card card">'
-    + '<p class="enc-q">¿Cómo estuvo el taller?</p>'
-    + '<p class="enc-hint">Tu retroalimentación ayuda a Mary a seguir mejorando.</p>'
-    + '<p style="font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.5rem;">Calificación</p>'
-    + '<div id="estrellas-post" style="display:flex;gap:.4rem;margin-bottom:1rem;">'
+    + '<p class="enc-q-general">En general, ¿cómo calificarías tu experiencia en Reinventa?</p>'
+    + '<p class="enc-hint">Considera todo: desde que te registraste, los correos que recibiste, el día del taller y cómo te sientes ahora.</p>'
+    + '<div id="estrellas-post" style="display:flex;gap:.4rem;margin-bottom:1.2rem;">'
     + '<span class="est" data-v="1" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
     + '<span class="est" data-v="2" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
     + '<span class="est" data-v="3" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
     + '<span class="est" data-v="4" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
     + '<span class="est" data-v="5" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
     + '</div>'
-    + '<p style="font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.4rem;">Comentarios</p>'
-    + '<textarea id="enc-post-ta" class="textarea-field" placeholder="Fue una experiencia increíble..."></textarea>'
+    // BLOQUE 1: Tu experiencia
+    + '<div class="enc-bloque">'
+    + '<div class="enc-bloque-header">'
+    + '<p class="enc-bloque-titulo">Tu experiencia</p>'
+    + '<div class="enc-bloque-line"></div>'
+    + '</div>'
+    + '<div class="enc-pregunta">'
+    + '<p class="enc-q-sm">¿El taller cumplió con lo que esperabas?</p>'
+    + '<p class="enc-hint">Antes de llegar, ¿tenías en mente algo que querías aprender o vivir? Evalúa si el taller estuvo a la altura de esas expectativas.</p>'
+    + '<div class="enc-escala" id="esc-expectativas">'
+    + '<div class="enc-escala-opt" data-v="1"><span class="enc-escala-opt-num">1</span>Para nada</div>'
+    + '<div class="enc-escala-opt" data-v="2"><span class="enc-escala-opt-num">2</span>Poco</div>'
+    + '<div class="enc-escala-opt" data-v="3"><span class="enc-escala-opt-num">3</span>Parcialmente</div>'
+    + '<div class="enc-escala-opt" data-v="4"><span class="enc-escala-opt-num">4</span>Sí</div>'
+    + '<div class="enc-escala-opt" data-v="5"><span class="enc-escala-opt-num">5</span>Superó mis expectativas</div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="enc-pregunta">'
+    + '<p class="enc-q-sm">¿Sientes que puedes aplicar lo que aprendiste?</p>'
+    + '<p class="enc-hint">Piensa en los temas del taller: análisis de silueta, estilos, colores, compras inteligentes... ¿Qué tan fácil te sería llevarlo a tu vida diaria real?</p>'
+    + '<div class="enc-escala-num" id="esc-aplicabilidad">'
+    + '<div class="enc-escala-num-btns">'
+    + '<button class="enc-escala-num-btn" data-v="1">1</button>'
+    + '<button class="enc-escala-num-btn" data-v="2">2</button>'
+    + '<button class="enc-escala-num-btn" data-v="3">3</button>'
+    + '<button class="enc-escala-num-btn" data-v="4">4</button>'
+    + '<button class="enc-escala-num-btn" data-v="5">5</button>'
+    + '</div>'
+    + '<div class="enc-escala-labels"><span>Muy poco</span><span>Muchísimo</span></div>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    // BLOQUE 2: El taller
+    + '<div class="enc-bloque">'
+    + '<div class="enc-bloque-header">'
+    + '<p class="enc-bloque-titulo">El taller</p>'
+    + '<div class="enc-bloque-line"></div>'
+    + '</div>'
+    + '<div class="enc-pregunta">'
+    + '<p class="enc-q-sm">¿Qué parte te aportó más? <span class="enc-hint-inline">(puedes elegir varias)</span></p>'
+    + '<p class="enc-hint">De todos los temas que vimos juntas hoy, ¿cuál o cuáles fueron los que más te aportaron, te sorprendieron o resonaron contigo? Puedes elegir varios.</p>'
+    + '<div class="enc-chips" id="chips-contenido">'
+    + '<button class="enc-chip" data-v="Análisis de cuerpo / silueta">Análisis de cuerpo / silueta</button>'
+    + '<button class="enc-chip" data-v="Análisis de visagismo (rostro)">Análisis de visagismo (rostro)</button>'
+    + '<button class="enc-chip" data-v="Los 7 estilos y sus esenciales">Los 7 estilos y sus esenciales</button>'
+    + '<button class="enc-chip" data-v="Compras inteligentes">Compras inteligentes</button>'
+    + '<button class="enc-chip" data-v="Imagen personal y propósito">Imagen personal y propósito</button>'
+    + '<button class="enc-chip" data-v="Otro">Otro</button>'
+    + '</div>'
+    + '</div>'
+    + '<div class="enc-pregunta">'
+    + '<p class="enc-q-sm">¿Cómo calificarías a Mary como instructora?</p>'
+    + '<p class="enc-hint">Evalúa cómo Mary explicó los temas, si resolvió tus dudas, si se sintió cercana y accesible, y qué tan bien condujo el taller.</p>'
+    + '<div id="estrellas-mary" style="display:flex;gap:.4rem;margin-bottom:1rem;">'
+    + '<span class="est-mary" data-v="1" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
+    + '<span class="est-mary" data-v="2" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
+    + '<span class="est-mary" data-v="3" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
+    + '<span class="est-mary" data-v="4" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
+    + '<span class="est-mary" data-v="5" style="font-size:1.6rem;cursor:pointer;color:rgba(198,165,106,.25);">★</span>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    // BLOQUE 3: La experiencia Reinventa
+    + '<div class="enc-bloque">'
+    + '<div class="enc-bloque-header">'
+    + '<p class="enc-bloque-titulo">La experiencia Reinventa</p>'
+    + '<div class="enc-bloque-line"></div>'
+    + '</div>'
+    + '<div class="enc-pregunta">'
+    + '<p class="enc-q-sm">¿Cómo calificarías estos aspectos? <span class="enc-hint-inline">(1 al 5)</span></p>'
+    + '<p class="enc-hint">Califica del 1 al 5 cada aspecto de la organización. Si algo no aplicó en tu caso o no lo recuerdas, puedes dejarlo sin respuesta.</p>'
+    + '<div class="enc-matriz" id="matriz-org">'
+    + '<div class="enc-matriz-row"><span class="enc-matriz-label">Organización general del evento<br><span style="font-size:.68rem;color:var(--ink-muted);font-weight:400;">Tiempos, logística, experiencia general</span></span><div class="enc-matriz-btns">'
+    + '<button class="enc-matriz-btn" data-fila="previa" data-v="1">1</button>'
+    + '<button class="enc-matriz-btn" data-fila="previa" data-v="2">2</button>'
+    + '<button class="enc-matriz-btn" data-fila="previa" data-v="3">3</button>'
+    + '<button class="enc-matriz-btn" data-fila="previa" data-v="4">4</button>'
+    + '<button class="enc-matriz-btn" data-fila="previa" data-v="5">5</button>'
+    + '</div></div>'
+    + '<div class="enc-matriz-row"><span class="enc-matriz-label">Comunicación previa (correos y WhatsApp)<br><span style="font-size:.68rem;color:var(--ink-muted);font-weight:400;">Confirmación, recordatorios, indicaciones que recibiste antes</span></span><div class="enc-matriz-btns">'
+    + '<button class="enc-matriz-btn" data-fila="comunicacion" data-v="1">1</button>'
+    + '<button class="enc-matriz-btn" data-fila="comunicacion" data-v="2">2</button>'
+    + '<button class="enc-matriz-btn" data-fila="comunicacion" data-v="3">3</button>'
+    + '<button class="enc-matriz-btn" data-fila="comunicacion" data-v="4">4</button>'
+    + '<button class="enc-matriz-btn" data-fila="comunicacion" data-v="5">5</button>'
+    + '</div></div>'
+    + '<div class="enc-matriz-row"><span class="enc-matriz-label">Proceso de registro y pago<br><span style="font-size:.68rem;color:var(--ink-muted);font-weight:400;">Qué tan fácil fue inscribirte y completar tu pago</span></span><div class="enc-matriz-btns">'
+    + '<button class="enc-matriz-btn" data-fila="registro" data-v="1">1</button>'
+    + '<button class="enc-matriz-btn" data-fila="registro" data-v="2">2</button>'
+    + '<button class="enc-matriz-btn" data-fila="registro" data-v="3">3</button>'
+    + '<button class="enc-matriz-btn" data-fila="registro" data-v="4">4</button>'
+    + '<button class="enc-matriz-btn" data-fila="registro" data-v="5">5</button>'
+    + '</div></div>'
+    + '<div class="enc-matriz-row"><span class="enc-matriz-label">Check-in al llegar al evento<br><span style="font-size:.68rem;color:var(--ink-muted);font-weight:400;">El momento en que llegaste y te registraron en la entrada</span></span><div class="enc-matriz-btns">'
+    + '<button class="enc-matriz-btn" data-fila="checkin" data-v="1">1</button>'
+    + '<button class="enc-matriz-btn" data-fila="checkin" data-v="2">2</button>'
+    + '<button class="enc-matriz-btn" data-fila="checkin" data-v="3">3</button>'
+    + '<button class="enc-matriz-btn" data-fila="checkin" data-v="4">4</button>'
+    + '<button class="enc-matriz-btn" data-fila="checkin" data-v="5">5</button>'
+    + '</div></div>'
+    + '<div class="enc-matriz-row"><span class="enc-matriz-label">Materiales y recursos del taller<br><span style="font-size:.68rem;color:var(--ink-muted);font-weight:400;">Guías, recursos digitales y todo lo que recibes como parte del taller</span></span><div class="enc-matriz-btns">'
+    + '<button class="enc-matriz-btn" data-fila="materiales" data-v="1">1</button>'
+    + '<button class="enc-matriz-btn" data-fila="materiales" data-v="2">2</button>'
+    + '<button class="enc-matriz-btn" data-fila="materiales" data-v="3">3</button>'
+    + '<button class="enc-matriz-btn" data-fila="materiales" data-v="4">4</button>'
+    + '<button class="enc-matriz-btn" data-fila="materiales" data-v="5">5</button>'
+    + '</div></div>'
+    + '<div class="enc-matriz-row"><span class="enc-matriz-label">Lugar e instalaciones<br><span style="font-size:.68rem;color:var(--ink-muted);font-weight:400;">El espacio físico: comodidad, ambiente, temperatura, iluminación</span></span><div class="enc-matriz-btns">'
+    + '<button class="enc-matriz-btn" data-fila="lugar" data-v="1">1</button>'
+    + '<button class="enc-matriz-btn" data-fila="lugar" data-v="2">2</button>'
+    + '<button class="enc-matriz-btn" data-fila="lugar" data-v="3">3</button>'
+    + '<button class="enc-matriz-btn" data-fila="lugar" data-v="4">4</button>'
+    + '<button class="enc-matriz-btn" data-fila="lugar" data-v="5">5</button>'
+    + '</div></div>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    // BLOQUE 4: Lo que te llevas
+    + '<div class="enc-bloque">'
+    + '<div class="enc-bloque-header">'
+    + '<p class="enc-bloque-titulo">Lo que te llevas</p>'
+    + '<div class="enc-bloque-line"></div>'
+    + '</div>'
+    + '<div class="enc-pregunta">'
+    + '<p class="enc-q-sm">¿Cambió la forma en que ves tu imagen personal?</p>'
+    + '<p class="enc-hint">Reflexiona honestamente: después de lo que viviste y aprendiste hoy, ¿sientes que algo cambió en cómo percibes o entiendes tu imagen, tu estilo o tu relación con la ropa?</p>'
+    + '<div class="enc-radio-col" id="radio-impacto">'
+    + '<button class="enc-radio-opt" data-v="Nada">Nada</button>'
+    + '<button class="enc-radio-opt" data-v="Un poco">Un poco</button>'
+    + '<button class="enc-radio-opt" data-v="Bastante">Bastante</button>'
+    + '<button class="enc-radio-opt" data-v="Muchísimo">Muchísimo</button>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    // BLOQUE 5: Ayúdanos a mejorar
+    + '<div class="enc-bloque">'
+    + '<div class="enc-bloque-header">'
+    + '<p class="enc-bloque-titulo">Ayúdanos a mejorar</p>'
+    + '<div class="enc-bloque-line"></div>'
+    + '</div>'
+    + '<div class="enc-pregunta">'
+    + '<p class="enc-q-sm">¿Qué tan probable es que recomiendes Reinventa?</p>'
+    + '<p class="enc-hint">Piensa en alguien cercana a ti — una amiga, familiar o conocida — que podría vivir algo valioso en una experiencia como esta. El 0 significa que no la recomendarías, el 10 que definitivamente sí.</p>'
+    + '<div class="enc-nps" id="nps-container">'
+    + '<div class="enc-nps-btns">'
+    + '<button class="enc-nps-btn" data-v="0">0</button>'
+    + '<button class="enc-nps-btn" data-v="1">1</button>'
+    + '<button class="enc-nps-btn" data-v="2">2</button>'
+    + '<button class="enc-nps-btn" data-v="3">3</button>'
+    + '<button class="enc-nps-btn" data-v="4">4</button>'
+    + '<button class="enc-nps-btn" data-v="5">5</button>'
+    + '<button class="enc-nps-btn" data-v="6">6</button>'
+    + '<button class="enc-nps-btn" data-v="7">7</button>'
+    + '<button class="enc-nps-btn" data-v="8">8</button>'
+    + '<button class="enc-nps-btn" data-v="9">9</button>'
+    + '<button class="enc-nps-btn" data-v="10">10</button>'
+    + '</div>'
+    + '<div class="enc-nps-labels"><span>0 — Nada probable</span><span>10 — Definitivamente</span></div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="enc-pregunta">'
+    + '<p class="enc-q-sm">¿Hay algo que quieras contarnos? <span class="enc-hint-inline">(opcional)</span></p>'
+    + '<p class="enc-hint">Este es tu espacio libre. Puedes escribir lo que quieras: algo que te encantó, algo que cambiarías, cómo te sentiste, lo que te llevas... Todo nos ayuda a mejorar.</p>'
+    + '<textarea class="textarea-field" id="enc-post-ta" rows="3" placeholder="Cuéntanos lo que quieras…"></textarea>'
+    + '</div>'
+    + '</div>'
     + '<button class="btn-gold" id="btn-post" onclick="enviarPost()" style="margin-top:.7rem;">Enviar y desbloquear recursos</button>'
     + '<p class="msg-error" id="msg-post"></p></div>';
 }
 
+// Estado de la encuesta ampliada
+var encPost = {
+  expectativas: 0,
+  aplicabilidad: 0,
+  contenido_valioso: [],
+  mary: 0,
+  org_previa: 0,
+  org_comunicacion: 0,
+  org_registro: 0,
+  org_checkin: 0,
+  org_materiales: 0,
+  org_lugar: 0,
+  impacto: '',
+  nps: -1,
+  comentario: ''
+};
+
+function bindEscalaNum(containerId, key) {
+  var btns = document.querySelectorAll('#' + containerId + ' .enc-escala-num-btn');
+  btns.forEach(function(b) {
+    b.addEventListener('click', function() {
+      encPost[key] = parseInt(this.getAttribute('data-v'));
+      btns.forEach(function(x) { x.classList.remove('sel'); });
+      this.classList.add('sel');
+    });
+  });
+}
+
+function bindEscala(containerId, key) {
+  var opts = document.querySelectorAll('#' + containerId + ' .enc-escala-opt');
+  opts.forEach(function(o) {
+    o.addEventListener('click', function() {
+      encPost[key] = parseInt(this.getAttribute('data-v'));
+      opts.forEach(function(x) { x.classList.remove('sel'); });
+      this.classList.add('sel');
+    });
+  });
+}
+
+function bindRadio(containerId, key) {
+  var opts = document.querySelectorAll('#' + containerId + ' .enc-radio-opt');
+  opts.forEach(function(o) {
+    o.addEventListener('click', function() {
+      encPost[key] = this.getAttribute('data-v');
+      opts.forEach(function(x) { x.classList.remove('sel'); });
+      this.classList.add('sel');
+    });
+  });
+}
+
+function bindChips(containerId, key) {
+  var chips = document.querySelectorAll('#' + containerId + ' .enc-chip');
+  chips.forEach(function(c) {
+    c.addEventListener('click', function() {
+      var v = this.getAttribute('data-v');
+      var idx = encPost[key].indexOf(v);
+      if (idx >= 0) {
+        encPost[key].splice(idx, 1);
+        this.classList.remove('sel');
+      } else {
+        encPost[key].push(v);
+        this.classList.add('sel');
+      }
+    });
+  });
+}
+
+function bindMatriz(matrizId, filas) {
+  filas.forEach(function(fila) {
+    var btns = document.querySelectorAll('#' + matrizId + ' [data-fila="' + fila.key + '"]');
+    btns.forEach(function(b) {
+      b.addEventListener('click', function() {
+        encPost[fila.encKey] = parseInt(this.getAttribute('data-v'));
+        btns.forEach(function(x) { x.classList.remove('sel'); });
+        this.classList.add('sel');
+      });
+    });
+  });
+}
+
+function bindNPS() {
+  var btns = document.querySelectorAll('#nps-container .enc-nps-btn');
+  btns.forEach(function(b) {
+    b.addEventListener('click', function() {
+      encPost.nps = parseInt(this.getAttribute('data-v'));
+      btns.forEach(function(x) { x.classList.remove('sel'); });
+      this.classList.add('sel');
+    });
+  });
+}
+
+function bindEstrellasMary() {
+  var stars = document.querySelectorAll('.est-mary');
+  stars.forEach(function(s) {
+    s.addEventListener('click', function() {
+      calMary = parseInt(this.getAttribute('data-v'));
+      encPost.mary = calMary;
+      stars.forEach(function(e) {
+        e.style.color = parseInt(e.getAttribute('data-v')) <= calMary ? '#C6A56A' : 'rgba(198,165,106,.25)';
+      });
+    });
+  });
+}
+
+function bindEncuestaAmpliada() {
+  bindEscala('esc-expectativas', 'expectativas');
+  bindEscalaNum('esc-aplicabilidad', 'aplicabilidad');
+  bindChips('chips-contenido', 'contenido_valioso');
+  bindEstrellasMary();
+  bindMatriz('matriz-org', [
+    { key: 'previa',       encKey: 'org_previa' },
+    { key: 'comunicacion', encKey: 'org_comunicacion' },
+    { key: 'registro',     encKey: 'org_registro' },
+    { key: 'checkin',      encKey: 'org_checkin' },
+    { key: 'materiales',   encKey: 'org_materiales' },
+    { key: 'lugar',        encKey: 'org_lugar' }
+  ]);
+  bindRadio('radio-impacto', 'impacto');
+  bindNPS();
+}
+
 function bindEstrellas() {
+  // Reset encPost for fresh render
+  encPost = {
+    expectativas: 0, aplicabilidad: 0,
+    contenido_valioso: [], mary: 0,
+    org_previa: 0, org_comunicacion: 0, org_registro: 0,
+    org_checkin: 0, org_materiales: 0, org_lugar: 0,
+    impacto: '', nps: -1, comentario: ''
+  };
+  calPost = 0; calMary = 0;
   var stars = document.querySelectorAll('.est');
   stars.forEach(function(s) {
     s.addEventListener('click', function() {
@@ -1706,19 +2394,62 @@ function bindEstrellas() {
       });
     });
   });
+  bindEncuestaAmpliada();
 }
 
 function enviarPost() {
-  if (!calPost) {
-    document.getElementById('msg-post').textContent = 'Selecciona una calificación.';
-    document.getElementById('msg-post').style.display = 'block'; return;
+  encPost.comentario = document.getElementById('enc-post-ta') ? document.getElementById('enc-post-ta').value : '';
+
+  // Validar todos los campos obligatorios
+  var errores = [];
+  if (!calPost)                        errores.push({ msg: 'Calificación general (estrellas)', id: 'estrellas-post' });
+  if (!encPost.expectativas)           errores.push({ msg: 'Expectativas del taller (escala 1-5)', id: 'esc-expectativas' });
+  if (!encPost.aplicabilidad)          errores.push({ msg: 'Aplicabilidad del contenido (escala 1-10)', id: 'esc-aplicabilidad' });
+  if (!encPost.contenido_valioso.length) errores.push({ msg: 'Contenido más valioso (elige al menos uno)', id: 'chips-contenido' });
+  if (!encPost.mary)                   errores.push({ msg: 'Calificación de Mary (estrellas)', id: 'estrellas-mary' });
+  if (!encPost.org_previa)             errores.push({ msg: 'Organización: Información previa (matriz)', id: null });
+  if (!encPost.org_comunicacion)       errores.push({ msg: 'Organización: Comunicación (matriz)', id: null });
+  if (!encPost.org_registro)           errores.push({ msg: 'Organización: Registro / check-in (matriz)', id: null });
+  if (!encPost.org_checkin)            errores.push({ msg: 'Organización: Check-in el día del taller (matriz)', id: null });
+  if (!encPost.org_materiales)         errores.push({ msg: 'Organización: Materiales (matriz)', id: null });
+  if (!encPost.org_lugar)              errores.push({ msg: 'Organización: Lugar (matriz)', id: null });
+  if (!encPost.impacto)                errores.push({ msg: 'Percepción de ti misma (elige una opción)', id: 'radio-impacto' });
+  if (encPost.nps < 0)                 errores.push({ msg: 'Probabilidad de recomendar (NPS 0-10)', id: 'nps-container' });
+
+  var msgEl = document.getElementById('msg-post');
+  if (errores.length > 0) {
+    msgEl.innerHTML = '<strong>Por favor completa todos los campos antes de enviar:</strong><ul style="margin:.4rem 0 0 1.2rem;font-size:.82rem;">'
+      + errores.map(function(e){ return '<li>'+e.msg+'</li>'; }).join('')
+      + '</ul>';
+    msgEl.style.display = 'block';
+    // Scroll al primer campo faltante
+    var primerEl = errores[0].id ? document.getElementById(errores[0].id) : null;
+    if (primerEl) primerEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
   }
+  msgEl.style.display = 'none';
+
   var btn = document.getElementById('btn-post');
   btn.textContent = 'Enviando…'; btn.disabled = true;
   fetch('/api/encuesta', {
     method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ id: perfil.id, calificacion: calPost,
-      comentario: document.getElementById('enc-post-ta').value })
+    body: JSON.stringify({
+      id: perfil.id,
+      calificacion:      calPost,
+      expectativas:      encPost.expectativas,
+      aplicabilidad:     encPost.aplicabilidad,
+      contenido_valioso: encPost.contenido_valioso.join(', '),
+      mary:              encPost.mary,
+      org_previa:        encPost.org_previa,
+      org_comunicacion:  encPost.org_comunicacion,
+      org_registro:      encPost.org_registro,
+      org_checkin:       encPost.org_checkin,
+      org_materiales:    encPost.org_materiales,
+      org_lugar:         encPost.org_lugar,
+      impacto:           encPost.impacto,
+      nps:               encPost.nps,
+      comentario:        encPost.comentario
+    })
   }).then(function(r){return r.json();}).then(function(d){
     if (d.result === 'success' || d.result === 'ya_enviada') {
       perfil.encuesta = true; actualizarDrawerStatus(); renderRecursos();
@@ -1936,7 +2667,25 @@ function accederConCodigo() {
     });
 }
 
+/* ── Versión del hub — para forzar recarga cuando hay deploy nuevo ── */
+var HUB_VERSION = '3'; // incrementar cada vez que haya cambios importantes al formulario
+
+function verificarVersionHub() {
+  try {
+    var stored = localStorage.getItem('hub_version');
+    if (stored && stored !== HUB_VERSION) {
+      // Versión nueva detectada — limpiar cache y recargar
+      localStorage.setItem('hub_version', HUB_VERSION);
+      location.reload(true);
+      return false; // pausa el init mientras recarga
+    }
+    localStorage.setItem('hub_version', HUB_VERSION);
+  } catch(e) { /* localStorage no disponible, continuar normal */ }
+  return true;
+}
+
 /* ── Init ───────────────────────────────── */
+if (!verificarVersionHub()) { /* recargando… */ }
 var params = new URLSearchParams(window.location.search);
 var id = params.get('id');
 

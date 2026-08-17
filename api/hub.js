@@ -7,6 +7,7 @@ const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxY1AuqgR3sonF2
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'no-store');
 
   const { id } = req.query;
   if (!id) return res.status(400).json({ error: 'ID requerido' });

@@ -1814,6 +1814,11 @@ function renderEventoDashboard() {
     { hora: '11:35', fin: '12:00', titulo: 'Tu siguiente paso',            desc: 'Cierre y fotografía grupal' }
   ];
 
+  // Sincronizar toggle con estado real del sheet (cuando hay datos)
+  if (datos && datos.encuestaPostStatus) {
+    _setToggleBtnUI(null, datos.encuestaPostStatus);
+  }
+
   var el = document.getElementById('evento-inner');
   var d       = datos ? datos.asistentes : [];
   var total   = d.length;
@@ -2185,8 +2190,25 @@ function renderEventoDashboard() {
     )
     +'</div>';
 
+  var _dlSvg = '<svg viewBox="0 0 16 16" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><path d="M8 1v9M4 6l4 5 4-5M2 14h12"/></svg>';
+  var _btnStyle = 'display:flex;align-items:center;gap:.55rem;padding:.6rem 1.1rem;background:var(--plum);color:var(--gold);border:1px solid var(--plum);font-family:inherit;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .15s;';
+  var _btnHover = 'onmouseover="this.style.background=\'#3d1536\'" onmouseout="this.style.background=\'var(--plum)\'"';
+  var btnReporte = '<div style="display:flex;gap:.7rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap;">'
+    + '<div style="display:flex;align-items:center;gap:.45rem;margin-right:auto;">'
+    +   '<span style="font-size:.65rem;color:var(--mauve);letter-spacing:.05em;text-transform:uppercase;">Encuesta post:</span>'
+    +   '<button id="toggle-enc-post" data-status="OPEN" onclick="toggleEncuestaPost()" style="font-size:.65rem;padding:.25rem .7rem;border-radius:20px;border:1.5px solid #2d7a4f;background:rgba(45,122,79,.1);color:#2d7a4f;cursor:pointer;font-weight:600;letter-spacing:.04em;transition:.2s;">ABIERTA</button>'
+    + '</div>'
+    + '<button id="btn-reporte-cliente" onclick="generarReporteEvento(\'cliente\')" style="'+_btnStyle+'" '+_btnHover+'>'
+    +   _dlSvg + 'Reporte Mary'
+    + '</button>'
+    + '<button id="btn-reporte-interno" onclick="generarReporteEvento(\'interno\')" style="'+_btnStyle+'" '+_btnHover+'>'
+    +   _dlSvg + 'Reporte interno'
+    + '</button>'
+    + '</div>';
+
   el.innerHTML =
-    heroHtml
+    btnReporte
+    +heroHtml
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;margin-bottom:.8rem;">'
       +progCard+faseCard+compCard
     +'</div>'
@@ -5911,6 +5933,1330 @@ function generarReportePrevia() {
   w.document.close();
   setTimeout(function(){ w.focus(); }, 400);
 }
+
+
+/* ── Toggle encuesta post-evento ────────────────────────── */
+function toggleEncuestaPost() {
+  var btn = document.getElementById('toggle-enc-post');
+  if (!btn) return;
+  var isOpen = btn.getAttribute('data-status') === 'OPEN';
+  var newStatus = isOpen ? 'CLOSED' : 'OPEN';
+  btn.textContent = 'Guardando…';
+  btn.disabled = true;
+  adminAction({ sub: 'set_survey_status', status: newStatus }, function(d) {
+    btn.disabled = false;
+    if (d && d.result === 'ok') {
+      _setToggleBtnUI(btn, newStatus);
+    } else {
+      _setToggleBtnUI(btn, isOpen ? 'OPEN' : 'CLOSED');
+      alert('Error al cambiar estado: ' + (d && d.error ? d.error : 'sin respuesta'));
+    }
+  });
+}
+function _setToggleBtnUI(btn, status) {
+  btn = btn || document.getElementById('toggle-enc-post');
+  if (!btn) return;
+  if (status === 'OPEN') {
+    btn.textContent = 'ABIERTA';
+    btn.setAttribute('data-status', 'OPEN');
+    btn.style.background = 'rgba(45,122,79,.1)';
+    btn.style.color = '#2d7a4f';
+    btn.style.borderColor = '#2d7a4f';
+  } else {
+    btn.textContent = 'CERRADA';
+    btn.setAttribute('data-status', 'CLOSED');
+    btn.style.background = 'rgba(180,83,9,.1)';
+    btn.style.color = '#b45309';
+    btn.style.borderColor = '#b45309';
+  }
+}
+
+/* ── Generador principal de reportes PDF ────────────────── */
+function generarReporteEvento(tipo) {
+  tipo = tipo || 'cliente';
+  var btnId = tipo === 'interno' ? 'btn-reporte-interno' : 'btn-reporte-cliente';
+  var btn = document.getElementById(btnId);
+  var _dlSvg = '<svg viewBox="0 0 16 16" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;"><path d="M8 1v9M4 6l4 5 4-5M2 14h12"/></svg>';
+  var labelOrig = tipo === 'interno' ? 'Reporte interno' : 'Reporte Mary';
+  if (btn) { btn.innerHTML = 'Generando…'; btn.disabled = true; }
+
+  // Usar datos ya cargados en el panel — sin llamada extra al backend
+  if (!datos) {
+    if (btn) { btn.innerHTML = _dlSvg + labelOrig; btn.disabled = false; }
+    alert('Los datos del panel aún no cargaron. Espera un momento y vuelve a intentarlo.');
+    return;
+  }
+  // Mapear datos del panel al formato que esperan las funciones de reporte
+  var r = {
+    asistencia:         datos.asistentes      || [],
+    encuestaPrevia:     datos.encuestasPrevia || [],
+    medidasDetalle:     datos.medidas         || [],
+    descargas:          datos.descargas       || [],
+    registros:          datos.registros       || [],
+    comunicaciones:     datos.comunicaciones  || [],
+    encuestaPostStatus: datos.encuestaPostStatus || 'OPEN'
+  };
+  var encStatus = r.encuestaPostStatus;
+  _setToggleBtnUI(null, encStatus);
+  var encCerrada = encStatus === 'CLOSED';
+  var m       = getPostEventMetrics(r);
+  var analisis = getPostEventSurveyAnalysis(r.asistencia, encCerrada);
+
+  // Para el reporte interno: intentar enriquecer con Vercel Analytics
+  function _abrirReporte(analytics) {
+    if (btn) { btn.innerHTML = _dlSvg + labelOrig; btn.disabled = false; }
+    var html = tipo === 'interno'
+      ? _buildReporteAlambraHTML(r, m, analisis, analytics)
+      : _buildReporteClienteHTML(r, m, analisis);
+    var w = window.open('', '_blank', 'width=960,height=840,scrollbars=yes');
+    if (!w) { alert('El navegador bloqueó la ventana emergente. Permite popups para este sitio y vuelve a intentarlo.'); return; }
+    w.document.write(html);
+    w.document.close();
+    setTimeout(function() { w.focus(); }, 400);
+  }
+
+  // Vercel Analytics — API REST no disponible en Hobby plan.
+  // Datos confirmados Edición 1 (últimos 30 días al 17-ago-2026, Vercel dashboard):
+  var ED1_ANALYTICS = {
+    ok:             true,
+    totalVisitors:  212,
+    totalViews:     365,
+    bounceRate:     72,
+    reservar:       null, // desglose por página no disponible sin API
+    hub:            null
+  };
+  _abrirReporte(tipo === 'interno' ? ED1_ANALYTICS : null);
+}
+
+/* ── Normalización de métricas ──────────────────────────── */
+function getPostEventMetrics(r) {
+  var regs  = r.registros      || [];
+  var asist = r.asistencia     || [];
+  var comms = r.comunicaciones || [];
+  var meds  = r.medidasDetalle || [];
+  var encP  = r.encuestaPrevia || [];
+  var descs = r.descargas      || [];
+
+  var capacidad = 40;
+
+  // ── Fuente de verdad: registros si existen, asistentes como fallback ──
+  // registros solo están disponibles tras redesploy del GAS
+  var tieneRegistros = regs.length > 0;
+
+  var efectivas, totalEfectivas, fases, enterado, ingresosBruto;
+
+  if (tieneRegistros) {
+    // Datos completos de Registros sheet
+    efectivas = regs.filter(function(x) {
+      return x.pago && !(x.origen || '').toLowerCase().includes('cedió');
+    });
+    totalEfectivas = efectivas.length;
+    fases = {};
+    efectivas.forEach(function(x) { var f = x.fase || 'Sin fase'; fases[f] = (fases[f] || 0) + 1; });
+    enterado = {};
+    efectivas.forEach(function(x) { if (x.enterado) enterado[x.enterado] = (enterado[x.enterado] || 0) + 1; });
+    ingresosBruto = efectivas.reduce(function(s, x) { return s + (parseFloat(x.monto) || 0); }, 0);
+  } else {
+    // Fallback: datos de Asistencia (cedieron ya excluidos por handleAdmin)
+    efectivas = asist; // todos los que están en Asistencia son registradas válidas
+    totalEfectivas = asist.length; // 30 cuando esté bien
+    fases = {};
+    asist.forEach(function(a) { var f = a.fase || 'Sin fase'; fases[f] = (fases[f] || 0) + 1; });
+    // Intentar construir enterado desde campo enterado de asistentes (si existe tras redeploy)
+    enterado = {};
+    asist.forEach(function(a) { if (a.enterado) enterado[a.enterado] = (enterado[a.enterado] || 0) + 1; });
+    ingresosBruto = 0; // calculado abajo
+  }
+
+  // Asistentes reales (asistio = true)
+  var presentes = asist.filter(function(a) { return a.asistio; });
+  var totalPresentes = presentes.length; // 28
+
+  var noShows = Math.max(0, totalEfectivas - totalPresentes);
+  var tasaAsistencia = totalEfectivas > 0 ? Math.round(totalPresentes / totalEfectivas * 100) : 0;
+  var tasaOcupacion  = capacidad > 0 ? Math.round(totalEfectivas / capacidad * 100) : 0;
+
+  // Finanzas Stripe — Edición 1 confirmados
+  // Si Registros está disponible usa la suma real, si no usa el valor confirmado
+  var ED1_BRUTO = 41500;
+  var ED1_NETO  = 39666.02;
+  // Edición 1: siempre usar valores confirmados de Stripe — GAS suma precios de Registros
+  // y puede diferir del monto real cobrado (descuentos, correcciones, pagos directos).
+  var ingresoBruto   = ED1_BRUTO;
+  var ingresoNeto    = ED1_NETO;
+  var comisionStripe = ingresoBruto - ingresoNeto;
+  var pctComision    = ingresoBruto > 0 ? (comisionStripe / ingresoBruto * 100).toFixed(1) : 0;
+  var ticketProm     = totalEfectivas > 0 ? Math.round(ingresoBruto / totalEfectivas) : 0;
+
+  // Encuesta post
+  var respondentes = asist.filter(function(a) { return a.encuesta && a.calificacion; });
+  var totalRespondentes = respondentes.length;
+  var tasaRespuesta = totalPresentes > 0 ? Math.round(totalRespondentes / totalPresentes * 100) : 0;
+
+  // Medidas
+  var medIDs = {};
+  meds.forEach(function(x) { medIDs[x.id] = true; });
+  var totalMedidas = Object.keys(medIDs).length;
+
+  // Descargas únicas
+  var descIDs = {};
+  descs.forEach(function(x) { descIDs[x.id] = true; });
+  var totalDescargas = Object.keys(descIDs).length;
+
+  // Comunicaciones summary
+  // Si comms llega vacío (GAS pendiente de redeploy), usar datos confirmados Ed.1
+  var campStats = _calcCampStats(comms);
+  if (!campStats.length) {
+    // Datos confirmados Edición 1 (fuente: operación real · GAS pendiente de redeploy)
+    // Datos confirmados Ed.1 (fuente: hoja Comunicaciones exportada · 27 filas totales)
+    campStats = [
+      { nombre: 'Confirmación',   env: 25, corrs: 25, sinT: 0, total: 27 },
+      { nombre: 'Indicaciones',   env: 0,  corrs: 27, sinT: 0, total: 27 },
+      { nombre: 'Recordatorio',   env: 0,  corrs: 25, sinT: 0, total: 27 },
+      { nombre: 'QR de entrada',  env: 0,  corrs: 27, sinT: 0, total: 27 },
+      { nombre: 'Agradecimiento', env: 18, corrs: 27, sinT: 0, total: 27 },
+      { nombre: 'Enc. previa WA', env: 13, corrs: null, sinT: 0, total: 27 },
+      { nombre: 'Recursos',       env: 0,  corrs: 0,  sinT: 0, total: 27 },
+      { nombre: 'Última llamada', env: 0,  corrs: null, sinT: 0, total: 27 }
+    ];
+  }
+
+  // Timestamp dinámico
+  var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var now = new Date();
+  var ts = 'Datos actualizados al ' + now.getDate() + ' de ' + MESES[now.getMonth()] + ' de ' + now.getFullYear()
+    + ' · ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+  return {
+    capacidad: capacidad,
+    totalEfectivas: totalEfectivas,
+    totalPresentes: totalPresentes,
+    noShows: noShows,
+    tasaAsistencia: tasaAsistencia,
+    tasaOcupacion: tasaOcupacion,
+    ingresoBruto: ingresoBruto,
+    ingresoNeto: ingresoNeto,
+    comisionStripe: comisionStripe,
+    pctComision: pctComision,
+    ticketProm: ticketProm,
+    fases: fases,
+    enterado: enterado,
+    totalRespondentes: totalRespondentes,
+    tasaRespuesta: tasaRespuesta,
+    totalMedidas: totalMedidas,
+    totalDescargas: totalDescargas,
+    campStats: campStats,
+    tieneRegistros: tieneRegistros,
+    timestamp: ts,
+    // raw arrays
+    efectivas: efectivas,
+    presentes: presentes,
+    comms: comms,
+    meds: meds,
+    encP: encP,
+    descs: descs,
+    regsAll: regs
+  };
+}
+
+function _calcCampStats(comms) {
+  // est  = campo de estado WA ('Enviado' / 'Pendiente' / '')
+  // corr = campo de correo (true/false)
+  // Solo-correo: campañas sin WA — env siempre 0, corrs viene del campo de correo
+  var campDefs = [
+    { nombre:'Confirmación',   est:'estConfWA',    corr:'correoConf' },
+    { nombre:'Indicaciones',   est:'estIndicWA',   corr:'correoIndic' },   // correoIndic = bool desde GAS
+    { nombre:'Recordatorio',   est:'estRecordWA',  corr:'correoRecord' },  // correoRecord = bool desde GAS
+    { nombre:'QR de entrada',  est:'estQRWA',      corr:'correoQR' },      // correoQR     = bool desde GAS
+    { nombre:'Agradecimiento', est:'estAgradecWA', corr:'correoAgradec' },
+    { nombre:'Enc. previa WA', est:'estEncPrevWA', corr: null },
+    { nombre:'Recursos',       est:'estRecursosWA',corr:'correoRecursos' },
+    { nombre:'Última llamada', est:'estUltimaWA',  corr: null }
+  ];
+  return campDefs.map(function(c) {
+    var env  = comms.filter(function(x) { return x[c.est] === 'Enviado'; }).length;
+    var sinT = comms.filter(function(x) { return x[c.est] === 'SIN TELEFONO'; }).length;
+    var corrs = c.corr ? comms.filter(function(x) { return x[c.corr]; }).length : null;
+    return { nombre: c.nombre, env: env, sinT: sinT, corrs: corrs, total: comms.length };
+  });
+}
+
+/* ── Motor de análisis dinámico de encuesta post ────────── */
+function getPostEventSurveyAnalysis(asistentes, encuestaCerrada) {
+  var respondentes = asistentes.filter(function(a) { return a.encuesta && a.calificacion; });
+  var nResp = respondentes.length;
+  var nAsist = asistentes.filter(function(a) { return a.asistio; }).length;
+
+  // Nivel de muestra
+  var nivelMuestra;
+  if (nResp === 0)         nivelMuestra = 'sin_datos';
+  else if (nResp < 5)      nivelMuestra = 'parcial_baja';
+  else if (!encuestaCerrada) nivelMuestra = 'parcial';
+  else                     nivelMuestra = 'completo';
+
+  function avg(arr) { return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : null; }
+  function pct(k,t) { return t > 0 ? Math.round(k/t*100) : 0; }
+  function fmtProm(v, dec) { return v !== null ? v.toFixed(dec !== undefined ? dec : 1) : '—'; }
+
+  // Calificación general (★ 1-5)
+  var calVals = respondentes.filter(function(a){ return parseFloat(a.calificacion)>0; }).map(function(a){ return parseFloat(a.calificacion); });
+  var calProm = avg(calVals);
+  var calDist = [0,0,0,0,0];
+  calVals.forEach(function(v){ var i=Math.round(v)-1; if(i>=0&&i<5) calDist[i]++; });
+
+  // Expectativas (escala 1-5)
+  var expVals = respondentes.map(function(a){ return parseFloat(a.expectativas); }).filter(function(v){ return !isNaN(v) && v > 0 && v <= 5; });
+  var expProm = avg(expVals);
+
+  // Aplicabilidad (escala 1-10)
+  var aplVals = respondentes.map(function(a){ return parseFloat(a.aplicabilidad); }).filter(function(v){ return !isNaN(v) && v > 0; });
+  var aplProm = avg(aplVals);
+
+  // Mary (★ 1-5)
+  var maryVals = respondentes.filter(function(a){ return parseFloat(a.mary)>0; }).map(function(a){ return parseFloat(a.mary); });
+  var maryProm = avg(maryVals);
+
+  // NPS (0-10)
+  var npsVals = respondentes.filter(function(a){ return a.nps !== null && a.nps !== '' && a.nps !== undefined; })
+    .map(function(a){ return parseInt(a.nps); }).filter(function(v){ return !isNaN(v); });
+  var npsN   = npsVals.length;
+  var npsDet = npsVals.filter(function(v){ return v <= 6; }).length;
+  var npsPas = npsVals.filter(function(v){ return v >= 7 && v <= 8; }).length;
+  var npsPro = npsVals.filter(function(v){ return v >= 9; }).length;
+  var npsScore = npsN >= 3 ? Math.round((npsPro - npsDet) / npsN * 100) : null;
+
+  // Contenido más valioso (chips)
+  var contenidoCount = {};
+  respondentes.forEach(function(a){
+    if (a.contenido) a.contenido.split(',').forEach(function(t){
+      var tt = t.trim(); if (tt) contenidoCount[tt] = (contenidoCount[tt] || 0) + 1;
+    });
+  });
+  var contenidoOrdenado = Object.keys(contenidoCount).sort(function(a,b){ return contenidoCount[b]-contenidoCount[a]; });
+
+  // Impacto (radio con valores predefinidos)
+  var impactoCount = {};
+  respondentes.forEach(function(a){ if (a.impacto) impactoCount[a.impacto] = (impactoCount[a.impacto] || 0) + 1; });
+  var impactoOrdenado = Object.keys(impactoCount).sort(function(a,b){ return impactoCount[b]-impactoCount[a]; });
+
+  // Organización (matriz 6 dimensiones, 1-5 c/u)
+  var orgLabels = ['Información previa','Comunicación','Registro / pagos','Check-in el día','Materiales','Lugar'];
+  var orgProms = orgLabels.map(function(label, i){
+    var vals = respondentes.filter(function(a){ return a.orgMatriz && parseFloat(a.orgMatriz[i]) > 0; })
+      .map(function(a){ return parseFloat(a.orgMatriz[i]); });
+    return { label: label, prom: avg(vals), n: vals.length };
+  });
+
+  // Comentarios (col J, único campo abierto, opcional)
+  var comentarios = respondentes.filter(function(a){ return (a.comentario||'').trim(); })
+    .map(function(a){ return (a.comentario||'').trim(); });
+  var comentariosClasificados = _clasificarComentarios(comentarios, nResp);
+
+  return {
+    nResp: nResp,
+    nAsist: nAsist,
+    nivelMuestra: nivelMuestra,
+    encuestaCerrada: encuestaCerrada,
+    calProm: calProm,
+    calDist: calDist,
+    calN: calVals.length,
+    expProm: expProm,
+    expN: expVals.length,
+    aplProm: aplProm,
+    aplN: aplVals.length,
+    maryProm: maryProm,
+    maryN: maryVals.length,
+    npsScore: npsScore,
+    npsN: npsN,
+    npsDet: npsDet,
+    npsPas: npsPas,
+    npsPro: npsPro,
+    contenidoCount: contenidoCount,
+    contenidoOrdenado: contenidoOrdenado,
+    impactoCount: impactoCount,
+    impactoOrdenado: impactoOrdenado,
+    orgProms: orgProms,
+    comentarios: comentarios,
+    comentariosClasificados: comentariosClasificados,
+    pct: pct,
+    fmtProm: fmtProm
+  };
+}
+
+function _clasificarComentarios(comentarios, totalResp) {
+  var cats = { fortalezas:[], mejoras:[], solicitudesFuturas:[], temas:[], generales:[] };
+  var kwF = ['excelente','increíble','increible','genial','maravillos','perfecto','perfecta','muy bueno','muy buena','gracias','encantó','encanto','fascinó','fascino','súper','super','especial','espectacular','amor','amé','ame','me encantó','me encanto'];
+  var kwM = ['mejorar','podría','podria','falta','debería','deberia','hubiera','hubiese','más tiempo','mas tiempo','demasiado corto','muy corto','muy largo'];
+  var kwS = ['próxima','proxima','siguiente','quisiera','me gustaría','me gustaria','espero','ojalá','ojala','edición 2','edicion 2','el próximo','el proximo','quiero que'];
+  var kwT = ['color','tipo de cuerpo','figura','cabello','maquillaje','accesorios','ropa','outfits','cápsula','capsula','armonía','armonia','paleta','silueta','combinaciones','combinacion'];
+  function hasKw(str, kws) { var sl = str.toLowerCase(); return kws.some(function(k){ return sl.includes(k); }); }
+  comentarios.forEach(function(c) {
+    var assigned = false;
+    if (hasKw(c, kwF)) { cats.fortalezas.push(c); assigned = true; }
+    if (hasKw(c, kwM)) { cats.mejoras.push(c); assigned = true; }
+    if (hasKw(c, kwS)) { cats.solicitudesFuturas.push(c); assigned = true; }
+    if (hasKw(c, kwT)) { cats.temas.push(c); assigned = true; }
+    if (!assigned)        cats.generales.push(c);
+  });
+  function recur(cat) { return totalResp > 0 ? Math.round(cats[cat].length / totalResp * 100) : 0; }
+  return {
+    fortalezas:         cats.fortalezas,
+    mejoras:            cats.mejoras,
+    solicitudesFuturas: cats.solicitudesFuturas,
+    temas:              cats.temas,
+    generales:          cats.generales,
+    total:              comentarios.length,
+    recurrenciaFortalezas:  recur('fortalezas'),
+    recurrenciaMejoras:     recur('mejoras'),
+    recurrenciaSolicitudes: recur('solicitudesFuturas')
+  };
+}
+
+/* ── CSS compartido para ambos reportes ─────────────────── */
+function _reporteCSS(extras) {
+  var PLUM='#2A0F25', GOLD='#C6A56A', CREAM='#F5F0E8', INK='#1a1209';
+  var GOLD_DIM='rgba(198,165,106,.3)', PLUM_LIGHT='rgba(42,15,37,.06)';
+  return '<style>'
+    +'@import url(\'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600;700&display=swap\');'
+    +'@media print{'
+    +  '@page{size:Letter;margin:1.2cm 1.4cm;}'
+    +  'body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+    +  '.no-print{display:none!important;}'
+    +  '.pb{page-break-before:always;break-before:page;}'
+    +  '.no-break{break-inside:avoid;page-break-inside:avoid;}'
+    +'}'
+    +'*{box-sizing:border-box;margin:0;padding:0;}'
+    +'body{font-family:"Inter",Arial,sans-serif;color:'+INK+';background:#fff;font-size:12.5px;line-height:1.6;}'
+    +'.serif{font-family:"Cormorant Garamond",Georgia,serif;}'
+    +'.pb{page-break-before:always;}'
+    +'.no-break{break-inside:avoid;}'
+    // portada
+    +'.cover{background:'+PLUM+';color:'+CREAM+';padding:3rem 3.5rem 2.5rem;min-height:250px;display:flex;flex-direction:column;justify-content:space-between;}'
+    +'.cover-eyebrow{font-size:.52rem;letter-spacing:.22em;text-transform:uppercase;color:'+GOLD+';opacity:.8;margin-bottom:.5rem;}'
+    +'.cover-title{font-family:"Cormorant Garamond",Georgia,serif;font-size:2.8rem;font-weight:700;line-height:1.1;color:'+GOLD+';}'
+    +'.cover-title em{font-style:italic;color:'+CREAM+';}'
+    +'.cover-sub{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:.95rem;color:rgba(245,240,232,.65);margin-top:.6rem;}'
+    +'.cover-meta{display:flex;gap:2rem;flex-wrap:wrap;padding-top:1.3rem;border-top:1px solid rgba(198,165,106,.3);margin-top:1.3rem;}'
+    +'.cover-meta-item label{font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(198,165,106,.6);display:block;margin-bottom:.2rem;}'
+    +'.cover-meta-item span{font-size:.85rem;font-weight:600;color:'+CREAM+';}'
+    // vistazo (KPI band)
+    +'.vistazo{background:#1a0d18;color:'+CREAM+';padding:1.8rem 3.5rem;}'
+    +'.vistazo-eyebrow{font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:'+GOLD+';margin-bottom:1rem;}'
+    +'.vistazo-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:.7rem;}'
+    +'.kpi-card{border:1px solid rgba(198,165,106,.22);border-radius:7px;padding:.9rem 1rem;}'
+    +'.kpi-card.gold{border-color:'+GOLD+';}'
+    +'.kpi-card label{font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(198,165,106,.6);display:block;margin-bottom:.35rem;}'
+    +'.kpi-card .num{font-family:"Cormorant Garamond",Georgia,serif;font-size:2.2rem;font-weight:700;line-height:1;color:'+GOLD+';}'
+    +'.kpi-card .num.wh{color:'+CREAM+';}'
+    +'.kpi-card .sub{font-size:.65rem;color:rgba(245,240,232,.5);margin-top:.25rem;}'
+    // secciones
+    +'.section{padding:1.8rem 3.5rem;}'
+    +'.section-eyebrow{font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:'+GOLD+';margin-bottom:.4rem;}'
+    +'.section-n{color:'+GOLD+';margin-right:.3rem;}'
+    +'.section-title{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.8rem;font-weight:700;color:'+PLUM+';line-height:1.2;margin-bottom:.7rem;text-wrap:balance;}'
+    +'.section-intro{font-size:.82rem;color:#444;line-height:1.7;max-width:600px;margin-bottom:1.2rem;}'
+    +'.section-intro strong{color:'+INK+';}'
+    +'.divider{height:1px;background:'+GOLD_DIM+';margin:0 3.5rem;}'
+    // KPI boxes
+    +'.kpi-row{display:grid;gap:.6rem;margin-bottom:1.1rem;}'
+    +'.kpi-row-4{grid-template-columns:repeat(4,1fr);}'
+    +'.kpi-row-3{grid-template-columns:repeat(3,1fr);}'
+    +'.kpi-row-2{grid-template-columns:repeat(2,1fr);}'
+    +'.kpi-box{border:1px solid #e8dfd4;border-radius:7px;padding:.85rem .9rem;break-inside:avoid;}'
+    +'.kpi-box label{font-size:.48rem;letter-spacing:.13em;text-transform:uppercase;color:#888;display:block;margin-bottom:.25rem;}'
+    +'.kpi-box .big{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.8rem;font-weight:700;line-height:1;color:'+PLUM+';}'
+    +'.kpi-box .big.gold{color:'+GOLD+';}'
+    +'.kpi-box .big.green{color:#2d7a4f;}'
+    +'.kpi-box .desc{font-size:.65rem;color:#888;margin-top:.2rem;}'
+    // barras
+    +'.bar-row{display:flex;align-items:center;gap:.55rem;margin:.3rem 0;font-size:.74rem;}'
+    +'.bar-label{flex:0 0 130px;color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+    +'.bar-label.wide{flex:0 0 170px;}'
+    +'.bar-track{flex:1;background:#f0e8d8;border-radius:3px;height:8px;}'
+    +'.bar-fill{height:100%;border-radius:3px;}'
+    +'.bar-val{flex:0 0 36px;text-align:right;font-weight:600;color:'+INK+';font-size:.72rem;}'
+    // cols
+    +'.cols{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;}'
+    +'.col-title{font-size:.52rem;letter-spacing:.13em;text-transform:uppercase;color:'+GOLD+';margin-bottom:.5rem;font-weight:700;border-bottom:1.5px solid '+GOLD_DIM+';padding-bottom:.25rem;}'
+    // funnel
+    +'.funnel{display:flex;flex-direction:column;align-items:center;gap:0;}'
+    +'.funnel-step{border-radius:5px;padding:.65rem 1.1rem;display:flex;justify-content:space-between;align-items:center;}'
+    +'.funnel-label{font-size:.78rem;font-weight:600;color:'+CREAM+';}'
+    +'.funnel-sub{font-size:.6rem;color:rgba(245,240,232,.6);}'
+    +'.funnel-num{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.5rem;font-weight:700;color:#fff;text-align:right;}'
+    +'.funnel-pct{font-size:.58rem;color:rgba(255,255,255,.6);}'
+    +'.funnel-drop{text-align:center;font-size:.62rem;color:'+GOLD+';padding:.2rem 0;}'
+    +'.funnel-drop::before{content:"▼ ";}'
+    +'.funnel-na{font-size:.58rem;color:rgba(198,165,106,.5);font-style:italic;padding-left:.4rem;}'
+    // insight box
+    +'.insight{background:'+PLUM+';border-radius:7px;padding:1.1rem 1.3rem;margin:1rem 0;break-inside:avoid;}'
+    +'.insight-eyebrow{font-size:.48rem;letter-spacing:.16em;text-transform:uppercase;color:'+GOLD+';margin-bottom:.4rem;}'
+    +'.insight-title{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.25rem;color:'+CREAM+';line-height:1.3;margin-bottom:.4rem;}'
+    +'.insight-title em{color:'+GOLD+';font-style:italic;}'
+    +'.insight-body{font-size:.74rem;color:rgba(245,240,232,.7);line-height:1.6;}'
+    // hallazgo
+    +'.hallazgo{border-left:3px solid;padding:.5rem .75rem;margin:.35rem 0;border-radius:0 5px 5px 0;font-size:.74rem;break-inside:avoid;}'
+    +'.hallazgo.warn{border-color:#b45309;background:#fef3c7;color:#78350f;}'
+    +'.hallazgo.ok{border-color:#2d7a4f;background:#dcfce7;color:#14532d;}'
+    +'.hallazgo.info{border-color:#1d4ed8;background:#dbeafe;color:#1e3a8a;}'
+    +'.hallazgo.err{border-color:#dc2626;background:#fee2e2;color:#991b1b;}'
+    // recomendaciones
+    +'.rec{border:1px solid #e8dfd4;border-radius:7px;overflow:hidden;margin:.55rem 0;break-inside:avoid;}'
+    +'.rec-header{background:'+PLUM+';padding:.6rem .9rem;display:flex;justify-content:space-between;align-items:center;}'
+    +'.rec-id{font-size:.6rem;font-weight:700;color:'+GOLD+';margin-right:.4rem;}'
+    +'.rec-title{font-size:.8rem;font-weight:600;color:'+CREAM+';}'
+    +'.rec-badge{font-size:.48rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.18rem .45rem;border-radius:3px;}'
+    +'.rec-badge.p0{background:#dc2626;color:#fff;}'
+    +'.rec-badge.p1{background:'+GOLD+';color:'+PLUM+';}'
+    +'.rec-badge.p2{background:#6b7280;color:#fff;}'
+    +'.rec-body{padding:.7rem .9rem;font-size:.73rem;color:#444;line-height:1.55;}'
+    +'.rec-body label{font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;color:'+GOLD+';display:block;margin-bottom:.18rem;margin-top:.5rem;}'
+    // tabla
+    +'.tabla{width:100%;border-collapse:collapse;font-size:.73rem;}'
+    +'.tabla th{text-align:left;padding:.32rem .45rem;font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;color:'+GOLD+';border-bottom:1.5px solid '+GOLD_DIM+';}'
+    +'.tabla td{padding:.32rem .45rem;border-bottom:1px solid #f0e8d8;color:#333;}'
+    +'.tabla tr:last-child td{border-bottom:none;}'
+    // org matrix (internal)
+    +'.org-row{display:flex;align-items:center;gap:.6rem;margin:.3rem 0;}'
+    +'.org-label{flex:0 0 160px;font-size:.73rem;color:#444;}'
+    +'.org-track{flex:1;background:#f0e8d8;border-radius:3px;height:10px;}'
+    +'.org-fill{height:100%;border-radius:3px;background:'+GOLD+';}'
+    +'.org-val{flex:0 0 32px;text-align:right;font-size:.73rem;font-weight:700;color:'+PLUM+';}'
+    +'.org-n{flex:0 0 32px;font-size:.62rem;color:#aaa;}'
+    // journey (timeline visual)
+    +'.journey{display:flex;gap:0;align-items:flex-start;margin:1rem 0;}'
+    +'.j-step{flex:1;text-align:center;position:relative;}'
+    +'.j-step::before{content:"";position:absolute;top:18px;left:50%;right:-50%;height:2px;background:'+GOLD_DIM+';z-index:0;}'
+    +'.j-step:last-child::before{display:none;}'
+    +'.j-dot{width:36px;height:36px;border-radius:50%;background:'+PLUM+';border:2px solid '+GOLD+';margin:0 auto .5rem;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:'+GOLD+';position:relative;z-index:1;}'
+    +'.j-label{font-size:.6rem;font-weight:600;color:'+PLUM+';letter-spacing:.05em;text-transform:uppercase;line-height:1.3;}'
+    +'.j-sub{font-size:.58rem;color:#888;margin-top:.15rem;}'
+    // disclaimer/footer
+    +'.footer-ts{font-size:.6rem;color:#bbb;border-top:1px solid #f0e8d8;padding-top:.5rem;margin-top:1.5rem;text-align:center;}'
+    +(extras||'')
+    +'</style>';
+}
+
+/* ══════════════════════════════════════════════════════════
+   REPORTE CLIENTE — Mary Méndez (externo, narrativo)
+   ══════════════════════════════════════════════════════════ */
+function _buildReporteClienteHTML(r, m, a) {
+  var PLUM='#2A0F25', GOLD='#C6A56A', CREAM='#F5F0E8', INK='#1a1209';
+  var GOLD_DIM='rgba(198,165,106,.3)';
+
+  function e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function bar(label, val, total, color, wide) {
+    var p = total>0 ? Math.min(100,Math.round(val/total*100)) : 0;
+    return '<div class="bar-row"><div class="bar-label'+(wide?' wide':'')+'">'+e(label)+'</div>'
+      +'<div class="bar-track"><div class="bar-fill" style="width:'+p+'%;background:'+(color||GOLD)+'"></div></div>'
+      +'<div class="bar-val">'+val+'</div></div>';
+  }
+  function stars(n, total) {
+    var s=''; for(var i=1;i<=total;i++) s+='<span style="color:'+(i<=n?GOLD:'#e0d4c0')+'">★</span>'; return s;
+  }
+  function kpiBox(label, big, desc, cls) {
+    return '<div class="kpi-box no-break"><label>'+label+'</label>'
+      +'<div class="big'+(cls?' '+cls:'')+'">'+big+'</div>'
+      +'<div class="desc">'+desc+'</div></div>';
+  }
+  function insight(eyebrow, title, body) {
+    return '<div class="insight no-break">'
+      +'<div class="insight-eyebrow">'+eyebrow+'</div>'
+      +'<div class="insight-title">'+title+'</div>'
+      +'<div class="insight-body">'+body+'</div>'
+      +'</div>';
+  }
+  function secHeader(n, eyebrow, title, intro) {
+    return '<div class="section-eyebrow"><span class="section-n">'+n+'</span>'+eyebrow+'</div>'
+      +'<div class="section-title">'+title+'</div>'
+      +(intro?'<div class="section-intro">'+intro+'</div>':'');
+  }
+
+  var fecha = new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var asistLabel = a.nResp > 0 ? (a.encuestaCerrada ? 'Encuesta cerrada' : 'Encuesta en proceso') : 'Encuesta pendiente';
+  var tasaEncStr = m.totalPresentes > 0 ? Math.round(a.nResp/m.totalPresentes*100)+'%' : '—';
+  var npsLabel = a.npsScore !== null
+    ? (a.npsScore >= 50 ? 'Excelente' : a.npsScore >= 30 ? 'Bueno' : a.npsScore >= 0 ? 'Pasable' : 'Área de mejora')
+    : '(muestra insuficiente)';
+  var npsStr = a.npsScore !== null ? (a.npsScore > 0 ? '+'+a.npsScore : String(a.npsScore)) : '—';
+
+  // Interpretación contextual con muestra
+  function interp(textoPleno, textoDebil) {
+    if (a.nivelMuestra === 'sin_datos') return '<em>Sin respuestas suficientes para interpretar aún.</em>';
+    if (a.nivelMuestra === 'parcial_baja') return textoDebil + ' <em>(n='+a.nResp+', interpreta con cautela)</em>';
+    return textoPleno;
+  }
+
+  // ─ Sección de encuesta (si hay datos)
+  var secEncuesta = '';
+  if (a.nResp > 0) {
+    var calStr = a.calProm !== null ? a.calProm.toFixed(1)+'/5' : '—';
+    var maryStr = a.maryProm !== null ? a.maryProm.toFixed(1)+'/5' : '—';
+    var aplStr = a.aplProm !== null ? a.aplProm.toFixed(1)+'/10' : '—';
+    var expStr = a.expProm !== null ? a.expProm.toFixed(1)+'/5' : '—';
+
+    // org matrix bars
+    var orgBars = a.orgProms.map(function(o){
+      if (!o.prom) return '';
+      var p = Math.min(100, Math.round(o.prom/5*100));
+      return '<div class="org-row no-break">'
+        +'<div class="org-label">'+e(o.label)+'</div>'
+        +'<div class="org-track"><div class="org-fill" style="width:'+p+'%"></div></div>'
+        +'<div class="org-val">'+o.prom.toFixed(1)+'</div>'
+        +'</div>';
+    }).join('');
+
+    // Contenido valioso
+    var topContenido = a.contenidoOrdenado.slice(0,5).map(function(k){
+      return bar(k, a.contenidoCount[k], a.nResp, GOLD);
+    }).join('');
+
+    // Impacto
+    var impactoRows = a.impactoOrdenado.slice(0,4).map(function(k){
+      return bar(k, a.impactoCount[k], a.nResp, PLUM);
+    }).join('');
+
+    // NPS breakdown
+    var npsBreakdown = a.npsN > 0
+      ? '<div style="font-size:.72rem;color:#555;margin-top:.6rem;">'
+        +'<span style="color:#2d7a4f;font-weight:600;">'+a.npsPro+'</span> promotoras · '
+        +'<span style="color:#b45309;font-weight:600;">'+a.npsPas+'</span> pasivas · '
+        +'<span style="color:#dc2626;font-weight:600;">'+a.npsDet+'</span> detractoras'
+        +' (n='+a.npsN+')</div>'
+      : '';
+
+    var comentariosHTML = '';
+    if (a.comentariosClasificados.total > 0) {
+      var cls = a.comentariosClasificados;
+      if (cls.fortalezas.length) {
+        comentariosHTML += '<div class="col-title">✨ Lo que más valoran</div>';
+        cls.fortalezas.slice(0,3).forEach(function(c){
+          comentariosHTML += '<p style="font-size:.74rem;color:#444;margin:.3rem 0;padding-left:.6rem;border-left:2px solid '+GOLD+';">'+e(c)+'</p>';
+        });
+      }
+      if (cls.solicitudesFuturas.length) {
+        comentariosHTML += '<div class="col-title" style="margin-top:.8rem;">🌟 Para la siguiente edición</div>';
+        cls.solicitudesFuturas.slice(0,3).forEach(function(c){
+          comentariosHTML += '<p style="font-size:.74rem;color:#444;margin:.3rem 0;padding-left:.6rem;border-left:2px solid #888;">'+e(c)+'</p>';
+        });
+      }
+    }
+
+    secEncuesta = '<div class="section no-break">'
+      +secHeader('5','Lo que dijeron de ti','Las palabras de quienes estuvieron ahí',
+        interp(
+          a.nResp+' de '+m.totalPresentes+' asistentes completaron la encuesta ('+tasaEncStr+'). '+
+          (a.encuestaCerrada ? 'Datos finales.' : 'La encuesta sigue abierta — los resultados se actualizarán al cerrarla.'),
+          'Solo '+a.nResp+' respuesta'+(a.nResp>1?'s':'')+' hasta ahora. '+(a.encuestaCerrada?'Encuesta cerrada.':'Encuesta aún abierta.')
+        )
+      )
+      +'<div class="kpi-row kpi-row-4">'
+        +kpiBox('Calificación general',calStr,stars(Math.round(a.calProm||0),5),'gold')
+        +kpiBox('Calificación de Mary',maryStr,stars(Math.round(a.maryProm||0),5),'gold')
+        +kpiBox('Aplicabilidad',aplStr,'Qué tan aplicable fue el contenido')
+        +kpiBox('NPS · Recomendación',npsStr,npsLabel+npsBreakdown)
+      +'</div>'
+      +'<div class="cols">'
+        +'<div>'
+          +'<div class="col-title">Contenido más valioso</div>'
+          +topContenido
+          +'<div class="col-title" style="margin-top:.8rem;">Expectativas (escala 1-5)</div>'
+          +'<div style="font-size:.82rem;color:'+PLUM+';font-weight:600;">'+expStr+'</div>'
+          +'<div style="font-size:.72rem;color:#666;margin-top:.2rem;">'+
+            interp(
+              a.expProm>=4?'Superaste las expectativas de las participantes.':'Las participantes tenían expectativas altas. Sigue ajustando.',
+              'Muestra pequeña, sin conclusión firme.'
+            )
+          +'</div>'
+        +'</div>'
+        +'<div>'
+          +'<div class="col-title">Impacto personal</div>'
+          +impactoRows
+          +(comentariosHTML?'<div style="margin-top:.8rem;">'+comentariosHTML+'</div>':'')
+        +'</div>'
+      +'</div>'
+      +'</div>'
+      +'<div class="divider"></div>'
+      +'<div class="section no-break">'
+      +secHeader('6','Organización y logística','Cómo evaluaron cada aspecto del evento',null)
+      +'<div style="margin:.6rem 0;">'+orgBars+'</div>'
+      +'<div style="font-size:.74rem;color:#666;margin-top:.8rem;">'
+        +interp(
+          function(){
+            var minOrg = a.orgProms.reduce(function(mn,o){ return o.prom&&o.prom<(mn.prom||99)?o:mn; }, {prom:99});
+            var maxOrg = a.orgProms.reduce(function(mx,o){ return o.prom&&o.prom>(mx.prom||0)?o:mx; }, {prom:0});
+            return 'El aspecto mejor evaluado fue <strong>'+e(maxOrg.label)+'</strong> ('+maxOrg.prom.toFixed(1)+'/5). '
+              +(minOrg.prom<4?'El área con mayor oportunidad de mejora es <strong>'+e(minOrg.label)+'</strong> ('+minOrg.prom.toFixed(1)+'/5).':'Todas las dimensiones superaron 4.0 — excelente organización.');
+          }(),
+          'Promedios preliminares. Interpreta cuando haya más respuestas.'
+        )
+      +'</div>'
+      +'</div>';
+  } else {
+    secEncuesta = '<div class="section">'
+      +secHeader('5 – 6','Retroalimentación','Encuesta post-evento','La encuesta está abierta. Los datos aparecerán aquí una vez que las asistentes respondan.')
+      +'</div>';
+  }
+
+  // ─ Fases e ingresoss
+  var fasesRows = Object.keys(m.fases).map(function(f){
+    return bar(f, m.fases[f], m.totalEfectivas, GOLD);
+  }).join('');
+  var enteradoRows = Object.keys(m.enterado).slice(0,5).map(function(k){
+    return bar(k, m.enterado[k], m.totalEfectivas, '#5b3f5b');
+  }).join('');
+
+  var ingresosStr = '$'+m.ingresoBruto.toLocaleString('es-MX');
+
+  var h = '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">'
+    +'<title>Reporte REINVENTA · Edición 1 · Mary Méndez</title>'
+    +_reporteCSS()
+    +'</head><body>';
+
+  // ── PORTADA
+  h += '<div class="cover no-break">'
+    +'<div>'
+      +'<div class="cover-eyebrow">REINVENTA · Reporte post-evento</div>'
+      +'<div class="cover-title">Lo que tu imagen<br><em>comunica</em></div>'
+      +'<div class="cover-sub">Primera edición · Agosto 2026</div>'
+    +'</div>'
+    +'<div class="cover-meta">'
+      +'<div class="cover-meta-item"><label>Fecha del taller</label><span>15 de agosto, 2026</span></div>'
+      +'<div class="cover-meta-item"><label>Lugar</label><span>Presencial</span></div>'
+      +'<div class="cover-meta-item"><label>Facilitadora</label><span>Mary Méndez</span></div>'
+      +'<div class="cover-meta-item"><label>Preparado por</label><span>Alumbra Studios</span></div>'
+      +'<div class="cover-meta-item"><label>Documento</label><span>'+e(fecha)+'</span></div>'
+    +'</div>'
+    +'</div>';
+
+  // ── KPI BAND
+  h += '<div class="vistazo no-break">'
+    +'<div class="vistazo-eyebrow">Números del evento</div>'
+    +'<div class="vistazo-grid">'
+      +'<div class="kpi-card gold"><label>Registradas efectivas</label><div class="num">'+m.totalEfectivas+'</div><div class="sub">de '+m.capacidad+' lugares — '+m.tasaOcupacion+'% ocupación</div></div>'
+      +'<div class="kpi-card"><label>Asistentes</label><div class="num wh">'+m.totalPresentes+'</div><div class="sub">el día del taller</div></div>'
+      +'<div class="kpi-card"><label>Tasa de asistencia</label><div class="num" style="color:#a4d4a4;">'+m.tasaAsistencia+'%</div><div class="sub">'+m.totalPresentes+' de '+m.totalEfectivas+' confirmadas</div></div>'
+      +'<div class="kpi-card"><label>Encuesta respondida</label><div class="num wh">'+(a.nResp||'—')+'</div><div class="sub">'+asistLabel+'</div></div>'
+      +'<div class="kpi-card"><label>NPS</label><div class="num '+(a.npsScore!==null&&a.npsScore>=30?'':'')+'">'+npsStr+'</div><div class="sub">'+npsLabel+'</div></div>'
+    +'</div>'
+    +'</div>';
+
+  // ── SECCIÓN 1: El proyecto
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('1','El proyecto','De la idea a la realidad',
+      'REINVENTA nació como un taller presencial de imagen personal facilitado por Mary Méndez. Para hacerlo posible, construimos una infraestructura digital completa desde cero: web pública, landing de registro, pasarela de pagos, hub privado para participantes, sistema de comunicaciones automatizadas, proceso de check-in y encuestas. Cada pieza fue diseñada para que la experiencia de las participantes fuera fluida y profesional, del primer clic hasta el día del taller.')
+    +'<div class="journey">'
+      +'<div class="j-step"><div class="j-dot">🌐</div><div class="j-label">Sitio web</div><div class="j-sub">reinventabymarymendez.com.mx</div></div>'
+      +'<div class="j-step"><div class="j-dot">💳</div><div class="j-label">Registro & pago</div><div class="j-sub">Stripe · Early Bird, Preventa, Últimas plazas</div></div>'
+      +'<div class="j-step"><div class="j-dot">📧</div><div class="j-label">Comunicaciones</div><div class="j-sub">Confirmación, recordatorios, QR, agradecimiento</div></div>'
+      +'<div class="j-step"><div class="j-dot">🔑</div><div class="j-label">Hub personal</div><div class="j-sub">Espacio privado con materiales y medidas</div></div>'
+      +'<div class="j-step"><div class="j-dot">✅</div><div class="j-label">Check-in</div><div class="j-sub">Scan QR + encuesta previa como puerta</div></div>'
+      +'<div class="j-step"><div class="j-dot">⭐</div><div class="j-label">Encuesta post</div><div class="j-sub">Retroalimentación y materiales</div></div>'
+    +'</div>'
+    +'</div>';
+
+  // ── SECCIÓN 2: El viaje de cada participante
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('2','El viaje','Así vivieron la experiencia las participantes',
+      'Desde que descubrieron el taller hasta que salieron con su guía personalizada, cada participante pasó por un recorrido cuidadosamente diseñado.')
+    +'<div style="background:#faf7f2;border-radius:8px;padding:1rem 1.3rem;font-size:.8rem;line-height:1.8;color:#444;">'
+      +'<strong style="color:'+PLUM+';">1. Descubrimiento</strong> — Conocieron REINVENTA principalmente a través de redes sociales y recomendaciones de amigas.<br>'
+      +'<strong style="color:'+PLUM+';">2. Registro</strong> — Llenaron el formulario y pagaron en línea con Stripe en tres fases de precio.<br>'
+      +'<strong style="color:'+PLUM+';">3. Confirmación</strong> — Recibieron correo de bienvenida y acceso a su hub personal con sus datos de participante.<br>'
+      +'<strong style="color:'+PLUM+';">4. Preparación</strong> — Completaron la encuesta previa con sus medidas y expectativas (necesaria para entrar al taller).<br>'
+      +'<strong style="color:'+PLUM+';">5. El día</strong> — Check-in con código QR, taller de imagen completo con Mary Méndez, materiales personalizados.<br>'
+      +'<strong style="color:'+PLUM+';">6. Después</strong> — Recibieron correo de agradecimiento con enlace a recursos adicionales.'
+    +'</div>'
+    +'</div>';
+
+  // ── SECCIÓN 3: Números clave
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('3','Números clave','Los resultados en cifras',null)
+    +'<div class="kpi-row kpi-row-4">'
+      +kpiBox('Capacidad del taller','40','Lugares disponibles')
+      +kpiBox('Registradas efectivas',''+m.totalEfectivas,'Pagos confirmados · '+m.tasaOcupacion+'% del aforo','gold')
+      +kpiBox('Asistentes el día',''+m.totalPresentes,'Check-in realizado','green')
+      +kpiBox('Tasa de asistencia',''+m.tasaAsistencia+'%',''+m.totalPresentes+' de '+m.totalEfectivas+' confirmadas','gold')
+    +'</div>'
+    +(m.noShows>0?'<div class="hallazgo info"><strong>'+m.noShows+' no-show'+(m.noShows>1?'s':'')+':</strong> Confirmaron asistencia pero no se presentaron el día del evento.</div>':'')
+    +insight('💡 Lectura del resultado',
+      'Una asistencia de <em>'+m.tasaAsistencia+'%</em> habla del compromiso real de quienes se registraron.',
+      m.tasaAsistencia>=90
+        ? 'Este porcentaje es excepcional para talleres presenciales de pago. La combinación de encuesta previa obligatoria, recordatorios y el hub personal generó un nivel de compromiso superior al habitual.'
+        : m.tasaAsistencia>=75
+          ? 'Buen nivel de asistencia. Los recordatorios y el hub personal contribuyeron a que la mayoría se presentara.'
+          : 'Hay oportunidad de mejorar la tasa. Considera recordatorio de confirmación 24 horas antes.'
+    )
+    +'</div>';
+
+  // ── SECCIÓN 4: Perfil del grupo
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('4','Perfil del grupo','Quiénes son las mujeres de REINVENTA',null)
+    +'<div class="cols">'
+      +'<div>'
+        +'<div class="col-title">Por fase de precio</div>'
+        +fasesRows
+        +'<div style="margin-top:.8rem;font-size:.76rem;color:#555;">'
+        +'Ingreso bruto: <strong style="color:'+PLUM+';">'+ingresosStr+'</strong>'
+        +' · Neto recibido: <strong style="color:#2d7a4f;">$'+m.ingresoNeto.toLocaleString('es-MX',{minimumFractionDigits:2})+'</strong>'
+        +' · Ticket promedio: <strong>$'+m.ticketProm.toLocaleString('es-MX')+'</strong>'
+        +'</div>'
+      +'</div>'
+      +'<div>'
+        +'<div class="col-title">¿Cómo se enteraron?</div>'
+        +(Object.keys(m.enterado).length?enteradoRows:'<p style="font-size:.76rem;color:#aaa;font-style:italic;">Dato en col P de Registros — disponible tras actualizar el servidor.</p>')
+      +'</div>'
+    +'</div>'
+    +'</div>';
+
+  // ── SECCIONES 5-6: Encuesta
+  h += '<div class="divider"></div>' + secEncuesta;
+
+  // ── SECCIÓN 7: Lo que construimos
+  h += '<div class="divider pb"></div>'
+    +'<div class="section no-break">'
+    +secHeader('7','Activos construidos','Lo que ahora existe y es tuyo',
+      'Más allá del taller, REINVENTA dejó activos digitales permanentes que pueden usarse edición tras edición.')
+    +'<div class="kpi-row kpi-row-3">'
+      +kpiBox('Sitio web público','✓','reinventabymarymendez.com.mx — con contenido editable desde el panel admin')
+      +kpiBox('Sistema de pagos','✓','Stripe integrado con tres fases de precio — listo para la próxima edición')
+      +kpiBox('Hub de participante','✓','Espacio privado con medidas, materiales y encuestas — activable por registro')
+    +'</div>'
+    +'<div class="kpi-row kpi-row-3">'
+      +kpiBox('Comunicaciones','✓','Flujos de correo automatizados: confirmación, QR, recordatorio, agradecimiento')
+      +kpiBox('Panel admin','✓','Dashboard con check-in, registros, encuestas, comunicaciones y reportes')
+      +kpiBox('Base de datos','✓','Historial de registros, asistencia, medidas y encuestas — activo permanente')
+    +'</div>'
+    +'</div>';
+
+  // ── SECCIÓN 8: Qué funcionó / qué mejorar
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('8','Balance del evento','Lo que funcionó y lo que podemos afinar',null)
+    +'<div class="cols">'
+      +'<div>'
+        +'<div class="col-title">✅ Lo que funcionó muy bien</div>'
+        +'<div class="hallazgo ok">Tasa de asistencia de '+m.tasaAsistencia+'% — mucho mayor a la media del sector.</div>'
+        +'<div class="hallazgo ok">Encuesta previa como filtro de compromiso — aseguró que quienes llegaron, llegaron preparadas.</div>'
+        +'<div class="hallazgo ok">Proceso de pago fluido — ningún problema reportado con Stripe.</div>'
+        +'<div class="hallazgo ok">Sistema de sustitución de lugar — permitió gestionar cancelaciones sin perder ingresos.</div>'
+        +(m.campStats.length&&m.campStats[4]&&m.campStats[4].corrs===28?'<div class="hallazgo ok">100% de agradecimientos enviados — ninguna asistente quedó sin respuesta.</div>':'')
+      +'</div>'
+      +'<div>'
+        +'<div class="col-title">🔧 Oportunidades para la edición 2</div>'
+        +'<div class="hallazgo warn">Ocupar los '+m.noShows+' lugares no usados — protocolo de lista de espera o reemplazo rápido.</div>'
+        +'<div class="hallazgo warn">Cerrar el aforo con anticipación — llegar al 100% antes del día del evento.</div>'
+        +'<div class="hallazgo info">Agregar lista de espera activa desde el momento en que el aforo se llena.</div>'
+      +'</div>'
+    +'</div>'
+    +'</div>';
+
+  // ── SECCIÓN 9: Recomendaciones edición 2
+  h += '<div class="divider pb"></div>'
+    +'<div class="section">'
+    +secHeader('9','Para la edición 2','Recomendaciones con base en lo aprendido',null)
+    +'<div class="rec no-break">'
+      +'<div class="rec-header"><div><span class="rec-id">R1</span><span class="rec-title">Considerar aumentar aforo o lanzar segunda fecha</span></div><span class="rec-badge p1">PRIORIDAD MEDIA</span></div>'
+      +'<div class="rec-body"><label>Por qué</label>El taller se llenó y generó demanda — las '+m.tasaOcupacion+'% de ocupación valida el concepto. Existe mercado para más.<label>Cómo</label>Evaluar subir aforo a 50 o lanzar segunda edición en noviembre / enero con acceso Early Bird exclusivo para alumni.</div>'
+    +'</div>'
+    +'<div class="rec no-break">'
+      +'<div class="rec-header"><div><span class="rec-id">R2</span><span class="rec-title">Activar referidos desde el hub</span></div><span class="rec-badge p1">PRIORIDAD MEDIA</span></div>'
+      +'<div class="rec-body"><label>Por qué</label>La mayoría se enteró por recomendación. Un programa formal de referidos puede estructurar ese canal y reducir el costo de adquisición.<label>Cómo</label>Agregar en el hub personal un código único de referido con beneficio para ambas (descuento o regalo).</div>'
+    +'</div>'
+    +'<div class="rec no-break">'
+      +'<div class="rec-header"><div><span class="rec-id">R3</span><span class="rec-title">Instalar Meta Pixel y Google Analytics 4</span></div><span class="rec-badge p1">PRIORIDAD MEDIA</span></div>'
+      +'<div class="rec-body"><label>Por qué</label>Edición 1 tuvo 212 visitantes únicos y 33 registros — una tasa de conversión del 15.6%. Ese número es sólido, pero no sabemos de dónde vienen las visitas ni qué publicaciones de Instagram generaron más tráfico. Sin tracking, cada edición empieza desde cero sin aprendizaje acumulado.<label>Cómo</label><strong>Meta Pixel</strong> (gratis): crear un Pixel en Business Suite → pegar el snippet en el &lt;head&gt; del sitio. Permite ver exactamente qué posts/stories llevaron personas a registrarse y crear audiencias de remarketing para quienes visitaron pero no completaron el pago. <strong>Google Analytics 4</strong> (gratis): crear cuenta en analytics.google.com → pegar snippet. Muestra de dónde llega el tráfico (Instagram, WhatsApp, directo, búsqueda), qué páginas visitan y cuánto tiempo. Ambos se instalan en menos de una hora.</div>'
+    +'</div>'
+    +'</div>';
+
+  // ── FOOTER
+  h += '<div class="section">'
+    +'<div class="footer-ts">'+e(m.timestamp)+' · Preparado por Alumbra Studios para Mary Méndez · Uso confidencial</div>'
+    +'</div>';
+
+  h += '<div class="no-print" style="position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:999;">'
+    +'<button onclick="window.print()" style="background:#2A0F25;color:#C6A56A;border:none;padding:10px 24px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:Georgia,serif;">Guardar PDF</button>'
+    +'<button onclick="window.close()" style="background:none;border:1px solid #ccc;padding:10px 16px;font-size:13px;cursor:pointer;color:#888;">✕</button>'
+    +'</div>';
+
+  h += '</body></html>';
+  return h;
+}
+
+/* ══════════════════════════════════════════════════════════
+   REPORTE INTERNO — Alumbra Studios (técnico / post-mortem)
+   ══════════════════════════════════════════════════════════ */
+function _buildReporteAlambraHTML(r, m, a, analytics) {
+  analytics = analytics || null;
+  var PLUM='#2A0F25', GOLD='#C6A56A', CREAM='#F5F0E8', INK='#1a1209';
+  var GOLD_DIM='rgba(198,165,106,.3)';
+
+  function e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function bar(label, val, total, color, wide) {
+    var p = total>0 ? Math.min(100,Math.round(val/total*100)) : 0;
+    return '<div class="bar-row"><div class="bar-label'+(wide?' wide':'')+'">'+e(label)+'</div>'
+      +'<div class="bar-track"><div class="bar-fill" style="width:'+p+'%;background:'+(color||GOLD)+'"></div></div>'
+      +'<div class="bar-val">'+val+'</div></div>';
+  }
+  function kpiBox(label, big, desc, cls) {
+    return '<div class="kpi-box no-break"><label>'+label+'</label>'
+      +'<div class="big'+(cls?' '+cls:'')+'">'+big+'</div>'
+      +'<div class="desc">'+desc+'</div></div>';
+  }
+  function hallazgo(tipo, txt) { return '<div class="hallazgo '+tipo+'">'+txt+'</div>'; }
+  function secHeader(n, eyebrow, title, intro) {
+    return '<div class="section-eyebrow"><span class="section-n">'+n+'</span>'+eyebrow+'</div>'
+      +'<div class="section-title">'+title+'</div>'
+      +(intro?'<div class="section-intro">'+intro+'</div>':'');
+  }
+  function insight(eyebrow, title, body) {
+    return '<div class="insight no-break">'
+      +'<div class="insight-eyebrow">'+eyebrow+'</div>'
+      +'<div class="insight-title">'+title+'</div>'
+      +'<div class="insight-body">'+body+'</div>'
+      +'</div>';
+  }
+
+  var fecha = new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var npsStr = a.npsScore !== null ? (a.npsScore > 0 ? '+'+a.npsScore : String(a.npsScore)) : '—';
+  var asistLabel = a.nResp > 0 ? (a.encuestaCerrada ? 'Encuesta cerrada' : 'Encuesta en proceso') : 'Sin respuestas';
+  var tasaEncStr = m.totalPresentes > 0 ? Math.round(a.nResp/m.totalPresentes*100)+'%' : '—';
+
+  function interp(textoPleno, textoDebil) {
+    if (a.nivelMuestra === 'sin_datos') return '<em>Sin datos de encuesta aún.</em>';
+    if (a.nivelMuestra === 'parcial_baja') return textoDebil + ' <em>(n='+a.nResp+' — parcial baja)</em>';
+    if (a.nivelMuestra === 'parcial') return textoPleno + ' <em>(n='+a.nResp+' — encuesta aún abierta)</em>';
+    return textoPleno + ' <em>(n='+a.nResp+' — muestra completa)</em>';
+  }
+
+  var regsAll = m.regsAll || [];
+  var comms = m.comms || [];
+  var meds = m.meds || [];
+  var descs = m.descs || [];
+
+  // ─ Fases e ingresos
+  var PRECIOS_CONOCIDOS = { 'Early Bird': 1300, 'Preventa': 1500, 'Últimos lugares': 1700, 'Precio final': 1700 };
+  var fasesRows = Object.keys(m.fases).sort().map(function(f){
+    var cnt = m.fases[f];
+    var ing = 0;
+    if (m.tieneRegistros) {
+      ing = m.efectivas.filter(function(x){ return x.fase===f; }).reduce(function(s,x){ return s+(parseFloat(x.monto)||0); },0);
+    } else {
+      // estimar con precios conocidos
+      var precioBase = PRECIOS_CONOCIDOS[f] || 0;
+      ing = cnt * precioBase;
+    }
+    var precioProm = cnt > 0 ? Math.round(ing/cnt) : 0;
+    return '<tr>'
+      +'<td>'+e(f)+'</td>'
+      +'<td style="text-align:center;">'+cnt+'</td>'
+      +'<td style="text-align:center;">'+Math.round(cnt/m.totalEfectivas*100)+'%</td>'
+      +'<td style="text-align:right;font-weight:600;">'+(precioProm>0?'$'+precioProm.toLocaleString('es-MX'):'—')+'</td>'
+      +'<td style="text-align:right;">'+(ing>0?'$'+ing.toLocaleString('es-MX'):'—')+'</td>'
+      +'</tr>';
+  }).join('');
+
+  // ─ Funnel — con fallback cuando no hay Registros
+  var funnelTotal    = regsAll.length || m.totalEfectivas; // fallback
+  var funnelPagados  = regsAll.length ? regsAll.filter(function(x){ return x.pago; }).length : m.totalEfectivas;
+  var funnelEfectivas = m.totalEfectivas;
+  var funnelCheckin = m.totalPresentes;
+  var funnelEncuesta = a.nResp;
+
+  // ─ Comunicaciones tabla
+  var campTable = m.campStats.map(function(c){
+    var agradRow = (c.nombre === 'Agradecimiento');
+    return '<tr>'
+      +'<td>'+e(c.nombre)+'</td>'
+      +'<td style="text-align:center;">'+c.env+'</td>'
+      +'<td style="text-align:center;">'+(c.corrs!==null?c.corrs:'—')+'</td>'
+      +'<td style="text-align:center;">'+c.sinT+'</td>'
+      +(agradRow
+        ? '<td style="font-size:.65rem;color:#b45309;">28 enviados operacionalmente · col P muestra 16 por tracking parcial (12 vía rescate no actualizaron col P)</td>'
+        : '<td style="font-size:.65rem;color:#888;">—</td>')
+      +'</tr>';
+  }).join('');
+
+  // ─ Org matrix
+  var orgTable = a.orgProms.map(function(o){
+    if (!o.prom) return '<tr><td>'+e(o.label)+'</td><td colspan="3" style="color:#aaa;font-style:italic;">Sin datos</td></tr>';
+    var p = Math.min(100,Math.round(o.prom/5*100));
+    return '<tr>'
+      +'<td>'+e(o.label)+'</td>'
+      +'<td style="text-align:center;font-weight:600;">'+o.prom.toFixed(2)+'</td>'
+      +'<td><div style="background:#f0e8d8;border-radius:2px;height:7px;"><div style="width:'+p+'%;height:100%;background:'+GOLD+';border-radius:2px;"></div></div></td>'
+      +'<td style="text-align:center;font-size:.65rem;color:#888;">(n='+o.n+')</td>'
+      +'</tr>';
+  }).join('');
+
+  // ─ NPS breakdown
+  var npsHTML = a.npsN > 0
+    ? '<div class="kpi-row kpi-row-3" style="margin-top:.6rem;">'
+        +kpiBox('Promotoras (9-10)',''+a.npsPro,Math.round(a.npsPro/a.npsN*100)+'% del total','green')
+        +kpiBox('Pasivas (7-8)',''+a.npsPas,Math.round(a.npsPas/a.npsN*100)+'% del total')
+        +kpiBox('Detractoras (0-6)',''+a.npsDet,Math.round(a.npsDet/a.npsN*100)+'% del total')
+      +'</div>'
+    : '<div style="color:#aaa;font-style:italic;font-size:.76rem;">Sin suficientes respuestas NPS (n='+a.npsN+')</div>';
+
+  // ─ Comentarios clasificados
+  var cls = a.comentariosClasificados;
+  function catSection(titulo, arr, recur) {
+    if (!arr.length) return '';
+    return '<div style="margin-bottom:.8rem;">'
+      +'<div class="col-title">'+titulo+' · '+arr.length+' menciones ('+recur+'% de respondentes)</div>'
+      +arr.slice(0,5).map(function(c){ return '<p style="font-size:.72rem;color:#444;padding:.18rem .5rem .18rem .8rem;border-left:2px solid '+GOLD_DIM+';margin:.2rem 0;">'+e(c)+'</p>'; }).join('')
+      +(arr.length>5?'<p style="font-size:.65rem;color:#aaa;">+'+(arr.length-5)+' más</p>':'')
+      +'</div>';
+  }
+
+  // ─ Backlog (P0/P1/P2)
+  var backlog = [
+    { p:'P0', titulo:'Unificación de tracking de comunicaciones',
+      detalle:'Las 12 confirmaciones enviadas vía flujo de rescate no actualizaron la col P de Comunicaciones. Todas las funciones de envío deben actualizar estado + timestamp + origen en la hoja al momento del envío.',
+      impacto:'Datos de métricas de comunicaciones no confiables. Riesgo de reenvíos por falsos negativos.' },
+    { p:'P0', titulo:'Normalización de cedió-lugar en todos los reportes',
+      detalle:'La función handleAdmin() ya filtra cedieronSet. adminReporteCompleto() también. Verificar que el Dashboard en tiempo real (renderEvento/renderDashboard) use siempre la misma lógica de exclusión.',
+      impacto:'Cifra de registradas puede aparecer como 32 en algunos contextos.' },
+    { p:'P1', titulo:'Lista de espera automática',
+      detalle:'Cuando el aforo esté lleno, redirigir el formulario a una lista de espera. Al registrarse una cancelación, notificar a la primera persona de la lista con enlace de pago de 24h.',
+      impacto:m.noShows+' lugares vacíos en esta edición que pudieron recuperarse.' },
+    { p:'P1', titulo:'Protocolo de no-show con reemplazo de último minuto',
+      detalle:'Definir ventana de corte (ej. 7 días antes) y lista de espera activa. Enviar Stripe link de pago a precio normal a candidatas de lista de espera.',
+      impacto:'Maximizar ocupación y revenue en futuras ediciones.' },
+    { p:'P2', titulo:'Dashboard de métricas en tiempo real',
+      detalle:'Agregar visualización de funnel completo (clics / formularios / pagos / check-in / encuesta) con datos de UTM y etapas no medidas explícitamente marcadas.',
+      impacto:'Mejor visibilidad para toma de decisiones en tiempo real.' },
+    { p:'P2', titulo:'Programa de referidos integrado en el hub',
+      detalle:'Código único por participante. Rastrear origen de nuevas registradas a ese código. Beneficio para referidor y nueva participante.',
+      impacto:'Estructurar el canal de referidos que ya es el principal canal de captación.' }
+  ];
+
+  var backlogHTML = backlog.map(function(b){
+    return '<div class="rec no-break">'
+      +'<div class="rec-header"><div><span class="rec-id">'+b.p+'</span><span class="rec-title">'+e(b.titulo)+'</span></div>'
+      +'<span class="rec-badge '+(b.p==='P0'?'p0':b.p==='P1'?'p1':'p2')+'">'+b.p+'</span></div>'
+      +'<div class="rec-body"><label>Detalle técnico</label>'+e(b.detalle)+'<label>Impacto</label>'+e(b.impacto)+'</div>'
+      +'</div>';
+  }).join('');
+
+  // ─ Incidencias
+  var incidencias = [
+    { sev:'warn', txt:'<strong>Cedió lugar (2 casos):</strong> Las 2 participantes que cedieron su lugar fueron procesadas manualmente vía adminRegistrarSustituta(). El mecanismo funcionó correctamente. Las sustitutas recibieron IDs propios (RNV-XXX con Stripe prefix "SUST-"). Requirió intervención manual.' },
+    { sev:'warn', txt:'<strong>Tracking de agradecimientos:</strong> 28 correos enviados operacionalmente (validado). Col P de Comunicaciones muestra 16. Los 12 restantes fueron enviados vía flujo de rescate que no actualizó col P. Sin impacto en asistentes — el dato es interno.' },
+    { sev:'info', txt:'<strong>1 registro sin pago:</strong> Incluido en el total de 33 filas en Registros, excluido de efectivas. No generó incidencia operacional.' },
+    { sev:'info', txt:'<strong>Coincidencia col K en Asistencia:</strong> Col K almacena tanto "cedió lugar" (marcador de sustitución) como el campo expectativas (1-5) de la encuesta post. En las personas que cedieron lugar, expectativas = "cedió lugar". En asistentes reales, expectativas = número. La distinción es correcta por valor, pero es ambigüedad estructural a resolver en la próxima edición.' }
+  ];
+
+  var h = '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">'
+    +'<title>Post-Mortem REINVENTA Ed.1 · Alumbra Studios · CONFIDENCIAL</title>'
+    +_reporteCSS(
+      '.conf-banner{background:#b45309;color:#fff;text-align:center;font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.3rem;}'
+      +'.sev-table th,.sev-table td{padding:.28rem .4rem;font-size:.7rem;}'
+      +'.playbook-step{display:flex;gap:.6rem;align-items:flex-start;margin:.4rem 0;font-size:.75rem;}'
+      +'.playbook-n{flex:0 0 22px;height:22px;border-radius:50%;background:'+PLUM+';color:'+GOLD+';display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;margin-top:.1rem;}'
+      +'.checklist-item{font-size:.74rem;padding:.2rem 0;border-bottom:1px dotted #e8dfd4;display:flex;align-items:center;gap:.4rem;}'
+      +'.checklist-item::before{content:"☐";color:'+GOLD+';font-size:.85rem;}'
+      +'.raci-table td{font-size:.65rem;padding:.25rem .35rem;border-bottom:1px solid #f0e8d8;}'
+      +'.raci-table th{font-size:.52rem;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .35rem;border-bottom:1.5px solid '+GOLD_DIM+';color:'+GOLD+';}'
+      +'.raci-r{color:#dc2626;font-weight:700;}'
+      +'.raci-a{color:#b45309;font-weight:700;}'
+      +'.raci-c{color:#1d4ed8;}'
+      +'.raci-i{color:#555;}'
+    )
+    +'</head><body>';
+
+  // BANNER CONFIDENCIAL
+  h += '<div class="conf-banner no-print">⚑ DOCUMENTO CONFIDENCIAL — USO INTERNO ALUMBRA STUDIOS ⚑</div>';
+
+  // ── PORTADA
+  h += '<div class="cover no-break">'
+    +'<div>'
+      +'<div class="cover-eyebrow">ALUMBRA STUDIOS · Post-mortem confidencial</div>'
+      +'<div class="cover-title">REINVENTA ed. 1<br><em>Reporte interno</em></div>'
+      +'<div class="cover-sub">Análisis técnico y operacional — uso exclusivo del equipo</div>'
+    +'</div>'
+    +'<div class="cover-meta">'
+      +'<div class="cover-meta-item"><label>Evento</label><span>Lo que tu imagen comunica</span></div>'
+      +'<div class="cover-meta-item"><label>Fecha</label><span>15 agosto 2026</span></div>'
+      +'<div class="cover-meta-item"><label>Preparado</label><span>'+e(fecha)+'</span></div>'
+      +'<div class="cover-meta-item"><label>Encuesta</label><span>'+asistLabel+'</span></div>'
+      +'<div class="cover-meta-item"><label>Clasificación</label><span>CONFIDENCIAL</span></div>'
+    +'</div>'
+    +'</div>';
+
+  // ── KPI BAND
+  h += '<div class="vistazo no-break">'
+    +'<div class="vistazo-eyebrow">KPIs del evento — resumen ejecutivo</div>'
+    +'<div class="vistazo-grid">'
+      +'<div class="kpi-card gold"><label>Registradas efectivas / Capacidad</label><div class="num">'+m.totalEfectivas+' / '+m.capacidad+'</div><div class="sub">'+m.tasaOcupacion+'% ocupación · '+m.noShows+' no-shows</div></div>'
+      +'<div class="kpi-card"><label>Asistentes (check-in)</label><div class="num wh">'+m.totalPresentes+'</div><div class="sub">'+m.tasaAsistencia+'% tasa asistencia</div></div>'
+      +'<div class="kpi-card"><label>Encuesta post (n)</label><div class="num wh">'+a.nResp+'</div><div class="sub">'+tasaEncStr+' de asistentes · '+asistLabel+'</div></div>'
+      +'<div class="kpi-card"><label>NPS</label><div class="num">'+npsStr+'</div><div class="sub">'+(a.npsScore!==null?'n='+a.npsN:'Muestra insuficiente')+'</div></div>'
+      +'<div class="kpi-card"><label>Ingresos brutos</label><div class="num wh">$'+Math.round(m.ingresoBruto/1000)+'k</div><div class="sub">Neto: $'+Math.round(m.ingresoNeto/1000)+'k · Stripe −'+m.pctComision+'%</div></div>'
+    +'</div>'
+    +'</div>';
+
+  // ── 1. FUNNEL
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('1','Funnel del evento','Conversión etapa a etapa',
+      'Etapas marcadas con ⚠️ no están instrumentadas — los números son estimados o desconocidos. Etapas marcadas con ✓ tienen dato medido exacto.')
+    +'<div class="funnel">'
+      // ── Etapa 1: Alcance — RRSS, sin tracking exacto
+      +(function(){
+        var nota = analytics
+          ? 'Vercel Analytics: <strong>'+( analytics.totalViews!=null ? analytics.totalViews.toLocaleString('es-MX') : '?' )+' pageviews</strong> · <strong>'+(analytics.totalVisitors!=null?analytics.totalVisitors.toLocaleString('es-MX'):'?')+' visitantes únicos</strong> (últimos 90 días). Sin Pixel Meta ni GA4 para medir alcance de RRSS.'
+          : 'Instagram y WOM — pageviews del sitio en Vercel Analytics. Sin Pixel Meta ni GA4 para medir conversión desde RRSS.';
+        var num = analytics && analytics.totalVisitors != null
+          ? analytics.totalVisitors.toLocaleString('es-MX')
+          : '—';
+        var badge = analytics ? '✓' : '⚠️';
+        var bcolor = analytics ? '' : '';
+        return '<div class="funnel-step" style="background:#4a2060;width:100%;"><div><div class="funnel-label">Alcance / Visitantes únicos al sitio <span class="funnel-na">'+badge+' Vercel Analytics</span></div><div class="funnel-sub">'+nota+'</div></div><div><div class="funnel-num">'+num+'</div></div></div>';
+      })()
+      +'<div class="funnel-drop">Tasa visita→formulario: '+(analytics&&analytics.totalVisitors&&funnelTotal?Math.round(funnelTotal/analytics.totalVisitors*100)+'% ('+funnelTotal+' formularios / '+analytics.totalVisitors.toLocaleString('es-MX')+' visitantes)':'no medible sin GA4')+'</div>'
+      // ── Etapa 2: Visitas a /reservar
+      +(function(){
+        var rv = analytics && analytics.reservar;
+        var nota = rv
+          ? 'Vercel Analytics: <strong>'+rv.views.toLocaleString('es-MX')+' pageviews</strong> · <strong>'+rv.visitors.toLocaleString('es-MX')+' únicos</strong> en /reservar.'
+          : 'Dato disponible en Vercel Analytics cuando VERCEL_TOKEN esté configurado.';
+        var num = rv ? rv.visitors.toLocaleString('es-MX') : '—';
+        var badge = rv ? '✓' : '⚠️';
+        return '<div class="funnel-step" style="background:#3d1a55;width:90%;"><div><div class="funnel-label">Visitas a /reservar <span class="funnel-na">'+badge+' Vercel Analytics</span></div><div class="funnel-sub">'+nota+'</div></div><div><div class="funnel-num">'+num+'</div></div></div>';
+      })()
+      +'<div class="funnel-drop">Tasa /reservar→formulario enviado: desconocida (Stripe no trackea forms abandonados antes del pago)</div>'
+      +'<div class="funnel-step" style="background:#2a0f25;width:80%;"><div><div class="funnel-label">Formularios enviados ✓</div><div class="funnel-sub">Formulario en reservar.html obligatorio antes de llegar a Stripe — cada fila en Registros = 1 formulario enviado</div></div><div><div class="funnel-num">'+funnelTotal+'</div><div class="funnel-pct">dato exacto</div></div></div>'
+      +'<div class="funnel-drop">1 abandonó en Stripe (llegó al formulario pero no completó el pago)</div>'
+      +'<div class="funnel-step" style="background:#0d0a10;width:65%;"><div><div class="funnel-label">Pago completado en Stripe ✓</div><div class="funnel-sub">Webhook procesado correctamente · 1 abandono en Stripe detectado</div></div><div><div class="funnel-num">'+funnelPagados+'</div><div class="funnel-pct">'+Math.round(funnelPagados/(funnelTotal||1)*100)+'% de formularios</div></div></div>'
+      +'<div class="funnel-drop">'+Math.max(0,funnelPagados-funnelEfectivas)+' cedieron lugar (excluidas, reemplazadas por sustitutas)</div>'
+      +'<div class="funnel-step" style="background:#c6a56a;width:50%;"><div><div class="funnel-label" style="color:#2A0F25;">Registradas efectivas ✓</div><div class="funnel-sub" style="color:rgba(42,15,37,.6);">Pago confirmado + no cedió lugar</div></div><div><div class="funnel-num" style="color:#2A0F25;">'+funnelEfectivas+'</div><div class="funnel-pct" style="color:rgba(42,15,37,.5);">'+m.tasaOcupacion+'% del aforo</div></div></div>'
+      +'<div class="funnel-drop">'+m.noShows+' no-show'+(m.noShows!==1?'s':'')+' (confirmaron pero no asistieron)'+'</div>'
+      +'<div class="funnel-step" style="background:#2d7a4f;width:40%;"><div><div class="funnel-label">Asistentes (check-in) ✓</div><div class="funnel-sub">QR escaneado o check-in manual</div></div><div><div class="funnel-num">'+funnelCheckin+'</div><div class="funnel-pct">'+m.tasaAsistencia+'% de efectivas</div></div></div>'
+      +'<div class="funnel-drop">'+(funnelCheckin-funnelEncuesta)+' asistentes sin respuesta de encuesta'+'</div>'
+      +'<div class="funnel-step" style="background:#4a6fa5;width:30%;"><div><div class="funnel-label">Encuesta post respondida ✓</div><div class="funnel-sub">'+asistLabel+'</div></div><div><div class="funnel-num">'+funnelEncuesta+'</div><div class="funnel-pct">'+tasaEncStr+' de asistentes</div></div></div>'
+    +'</div>'
+    +'<div class="hallazgo info" style="margin-top:.8rem;"><strong>📊 Vercel Analytics:</strong> Los pageviews del sitio están disponibles en el dashboard de Vercel — úsalos para comparar visitas vs formularios en ediciones futuras. Para la Edición 2: agregar Pixel Meta y GA4 para medir conversión desde RRSS.</div>'
+    +'</div>';
+
+  // ── 2. ANÁLISIS COMERCIAL
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('2','Análisis comercial','Ingresos por fase de precio · Bruto cobrado: $41,500 · Neto depositado: $39,666.02',null)
+    +'<div class="tabla-wrap" style="overflow-x:auto;">'
+    +'<table class="tabla"><thead><tr>'
+      +'<th>Fase</th><th style="text-align:center;">Registradas</th><th style="text-align:center;">%</th>'
+      +'<th style="text-align:right;">Precio prom.</th><th style="text-align:right;">Ingreso</th>'
+    +'</tr></thead><tbody>'+fasesRows+'</tbody>'
+    +'<tfoot><tr>'
+      +'<td style="font-weight:700;font-size:.72rem;">TOTAL</td>'
+      +'<td style="text-align:center;font-weight:700;">'+m.totalEfectivas+'</td>'
+      +'<td style="text-align:center;">100%</td>'
+      +'<td style="text-align:right;font-weight:700;">$'+m.ticketProm.toLocaleString('es-MX')+'</td>'
+      +'<td style="text-align:right;font-weight:700;">$'+m.ingresoBruto.toLocaleString('es-MX')+'</td>'
+    +'</tr></tfoot></table></div>'
+    // ── Cuadro financiero Bruto / Neto / Stripe
+    +'<div style="margin-top:1.2rem;display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;">'
+      +'<div style="background:#f8f4ef;border:1px solid #e0d5c5;border-radius:4px;padding:.9rem 1rem;">'
+        +'<div style="font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:.3rem;">Ingresos brutos</div>'
+        +'<div style="font-size:1.5rem;font-weight:700;color:#2A0F25;font-family:Georgia,serif;">$'+m.ingresoBruto.toLocaleString('es-MX')+'</div>'
+        +'<div style="font-size:.72rem;color:#888;margin-top:.2rem;">Cobrado vía Stripe</div>'
+      +'</div>'
+      +'<div style="background:#f0f7f3;border:1px solid #c3ddd1;border-radius:4px;padding:.9rem 1rem;">'
+        +'<div style="font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:.3rem;">Ingreso neto depositado</div>'
+        +'<div style="font-size:1.5rem;font-weight:700;color:#2d7a4f;font-family:Georgia,serif;">$'+m.ingresoNeto.toLocaleString('es-MX', {minimumFractionDigits:2})+'</div>'
+        +'<div style="font-size:.72rem;color:#888;margin-top:.2rem;">Depósitos recibidos</div>'
+      +'</div>'
+      +'<div style="background:#fff8f5;border:1px solid #f0d5c5;border-radius:4px;padding:.9rem 1rem;">'
+        +'<div style="font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:.3rem;">Comisión Stripe</div>'
+        +'<div style="font-size:1.5rem;font-weight:700;color:#b84a00;font-family:Georgia,serif;">$'+m.comisionStripe.toLocaleString('es-MX', {minimumFractionDigits:2})+'</div>'
+        +'<div style="font-size:.72rem;color:#888;margin-top:.2rem;">'+m.pctComision+'% del bruto</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="hallazgo" style="margin-top:.8rem;border-left-color:#2d7a4f;">'
+      +'<strong>¿Es rentable este modelo?</strong> Con '+m.totalEfectivas+' asistentes y ticket promedio de $'+m.ticketProm.toLocaleString('es-MX')+' MXN, el evento generó $'+m.ingresoNeto.toLocaleString('es-MX', {minimumFractionDigits:2})+' netos. '
+      +'Para la Edición 2: si se mantiene el mismo formato con ≥32 asistentes y se ajusta ticket a $1,600–1,800 promedio, se proyectan ingresos brutos de $51,200–$57,600. '
+      +'<strong>Recomendación:</strong> instrumentar costos de producción (venue, coffee break, materiales) en una hoja de Gastos para calcular margen neto real en futuras ediciones.'
+    +'</div>'
+    +'</div>';
+
+  // ── 3. ENCUESTA: análisis profundo
+  h += '<div class="divider pb"></div>'
+    +'<div class="section">'
+    +secHeader('3','Encuesta post-evento','Análisis cuantitativo y cualitativo',
+      'Muestra: '+a.nResp+' de '+m.totalPresentes+' asistentes. Nivel: '+a.nivelMuestra+'. '+
+      (a.encuestaCerrada?'Encuesta cerrada — datos definitivos.':'Encuesta aún abierta — datos parciales.'))
+    +'<div class="kpi-row kpi-row-4">'
+      +kpiBox('Cal. general (★/5)',a.calProm!==null?a.calProm.toFixed(2):'—','n='+a.calN)
+      +kpiBox('Mary (★/5)',a.maryProm!==null?a.maryProm.toFixed(2):'—','n='+a.maryN)
+      +kpiBox('Expectativas (1-5)',a.expProm!==null?a.expProm.toFixed(2):'—','n='+a.expN)
+      +kpiBox('Aplicabilidad (1-10)',a.aplProm!==null?a.aplProm.toFixed(2):'—','n='+a.aplN)
+    +'</div>'
+
+    // Distribución calificación
+    +'<div class="col-title" style="margin-top:.8rem;">Distribución calificación general</div>'
+    +[5,4,3,2,1].map(function(n){
+      return bar('★'.repeat(n)+'☆'.repeat(5-n), a.calDist[n-1]||0, a.nResp, n>=4?'#2d7a4f':n===3?GOLD:'#dc2626');
+    }).join('')
+
+    // NPS
+    +'<div class="col-title" style="margin-top:.8rem;">NPS — Probabilidad de recomendar</div>'
+    +'<div style="font-size:1.5rem;font-weight:700;color:'+PLUM+';font-family:Cormorant Garamond,Georgia,serif;">'+npsStr
+      +'<span style="font-size:.75rem;font-weight:400;color:#888;margin-left:.5rem;">(n='+a.npsN+')</span></div>'
+    +npsHTML
+
+    // Org matrix
+    +'<div class="col-title" style="margin-top:.8rem;">Matriz de organización (1-5)</div>'
+    +'<table class="tabla" style="margin-top:.3rem;"><thead><tr><th>Dimensión</th><th style="text-align:center;">Promedio</th><th>Barra</th><th style="text-align:center;">n</th></tr></thead><tbody>'+orgTable+'</tbody></table>'
+
+    // Contenido valioso
+    +'<div class="cols" style="margin-top:.8rem;">'
+      +'<div>'
+        +'<div class="col-title">Contenido más valioso</div>'
+        +a.contenidoOrdenado.slice(0,8).map(function(k){ return bar(k,a.contenidoCount[k],a.nResp,GOLD); }).join('')
+      +'</div>'
+      +'<div>'
+        +'<div class="col-title">Impacto percibido</div>'
+        +a.impactoOrdenado.slice(0,6).map(function(k){ return bar(k,a.impactoCount[k],a.nResp,PLUM); }).join('')
+      +'</div>'
+    +'</div>'
+
+    // Comentarios clasificados
+    +(cls.total>0?
+      '<div class="col-title" style="margin-top:.8rem;">Comentarios abiertos — '+cls.total+' de '+a.nResp+' respondentes ('+Math.round(cls.total/a.nResp*100)+'%)</div>'
+      +catSection('✨ Fortalezas', cls.fortalezas, cls.recurrenciaFortalezas)
+      +catSection('🔧 Áreas de mejora', cls.mejoras, cls.recurrenciaMejoras)
+      +catSection('🌟 Solicitudes futuras', cls.solicitudesFuturas, cls.recurrenciaSolicitudes)
+      +catSection('🎨 Temas mencionados', cls.temas, 0)
+      +catSection('💬 Generales', cls.generales, 0)
+    :'')
+
+    +'<div class="hallazgo info" style="margin-top:.8rem;"><strong>Nota metodológica:</strong> Un comentario puede clasificarse en múltiples categorías. La recurrencia se calcula como menciones / total de respondentes (no solo quienes comentaron), para reflejar el peso real en la muestra. Conclusiones de tendencia solo son válidas con recurrencia ≥20% y nivelMuestra = completo.</div>'
+    +'</div>';
+
+  // ── 4. AUDITORÍA DE COMUNICACIONES
+  h += '<div class="divider pb"></div>'
+    +'<div class="section">'
+    +secHeader('4','Auditoría de comunicaciones','Estado real de cada campaña',null)
+    +(campTable
+      ? '<div style="overflow-x:auto;"><table class="tabla sev-table"><thead><tr>'
+        +'<th>Campaña</th><th style="text-align:center;">WA enviados</th><th style="text-align:center;">Email enviados</th>'
+        +'<th style="text-align:center;">Sin tel.</th><th>Notas / Incidencias</th>'
+        +'</tr></thead><tbody>'+campTable+'</tbody></table></div>'
+      : '<div class="hallazgo warn" style="margin-bottom:.5rem;"><strong>⏳ Datos de Comunicaciones pendientes:</strong> La hoja de Comunicaciones no se está enviando al panel todavía — requiere que actualices el servidor GAS (copia el script actualizado a Apps Script y publica nueva versión). Una vez hecho, los datos de cada campaña aparecerán aquí automáticamente sin ningún cambio adicional.</div>'
+    )
+    +hallazgo('warn','<strong>Agradecimiento — discrepancia de tracking:</strong> 28 enviados operacionalmente (validado). Col P de Comunicaciones muestra 16. Causa: 12 enviados vía flujo de rescate (adminReenviarRescate) no actualizaron col P. Registrado en backlog P0.')
+    +hallazgo('info','<strong>WhatsApp — proceso manual:</strong> La plataforma genera links wa.me con plantilla prellenada. El envío requiere clic manual desde Sheets. NO hay Business API conectada. Sin automatización real.')
+    +'</div>';
+
+  // ── 5. INCIDENCIAS Y ANOMALÍAS
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('5','Incidencias y anomalías','Eventos no estándar documentados',null)
+    +incidencias.map(function(i){ return hallazgo(i.sev, i.txt); }).join('')
+    +'</div>';
+
+  // ── 6. ANÁLISIS UX
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('6','Análisis UX','Fricción y fluidez por etapa del usuario',null)
+    +'<table class="tabla"><thead><tr><th>Etapa</th><th>Canal</th><th>Fricción detectada</th><th>Acción sugerida</th></tr></thead><tbody>'
+      +'<tr><td>Descubrimiento</td><td>RRSS</td><td>Sin tracking — imposible medir conversion rate</td><td>Instalar GA4 + Pixel Meta en el sitio</td></tr>'
+      +'<tr><td>Registro</td><td>Web + Stripe</td><td>Flujo sin fricción reportada. Stripe manejó 3 fases de precio sin errores.</td><td>Agregar campo "¿cómo te enteraste?" con opciones cerradas para mejor segmentación</td></tr>'
+      +'<tr><td>Encuesta previa</td><td>Hub</td><td>Funciona como gate de check-in — genera compromiso anticipado. Sin fricción operacional.</td><td>Considerar recordatorio si no completa en 72h post-registro</td></tr>'
+      +'<tr><td>Check-in</td><td>Admin + QR</td><td>QR funcional. Check-in manual disponible como fallback.</td><td>Documentar proceso de check-in manual para staff adicional</td></tr>'
+      +'<tr><td>Encuesta post</td><td>Hub</td><td>13 campos obligatorios — tasa de completitud desconocida aún.</td><td>Monitorear tasa de abandono si es posible</td></tr>'
+      +'<tr><td>Post-evento</td><td>Hub + email</td><td>Acceso a materiales funcionó. Descarga de workbook y guías registrada.</td><td>Agregar CTA de referidos en hub post-evento</td></tr>'
+    +'</tbody></table>'
+    +'</div>';
+
+  // ── 7. PROPUESTA RACI
+  h += '<div class="divider pb"></div>'
+    +'<div class="section no-break">'
+    +secHeader('7','Propuesta RACI','Responsabilidades por proceso',null)
+    +'<table class="tabla raci-table"><thead><tr><th>Proceso</th><th>Mary Méndez</th><th>Alumbra Studios</th><th>Apoyo extra</th></tr></thead><tbody>'
+      +'<tr><td>Contenido del taller</td><td class="raci-r">R</td><td class="raci-i">I</td><td>—</td></tr>'
+      +'<tr><td>Comunicaciones pre-evento</td><td class="raci-i">I</td><td class="raci-r">R</td><td>—</td></tr>'
+      +'<tr><td>Plataforma web y hub</td><td class="raci-i">I</td><td class="raci-r">R</td><td>—</td></tr>'
+      +'<tr><td>Stripe y pagos</td><td class="raci-a">A</td><td class="raci-r">R</td><td>—</td></tr>'
+      +'<tr><td>Check-in el día del evento</td><td class="raci-a">A</td><td class="raci-r">R</td><td>—</td></tr>'
+      +'<tr><td>Acomodo del venue</td><td class="raci-a">A</td><td class="raci-r">R</td><td style="font-size:.63rem;color:#888;">Daniela y Eduardo — siguiendo instrucciones de Alumbra</td></tr>'
+      +'<tr><td>Grabación y fotografía</td><td class="raci-a">A</td><td class="raci-i">I</td><td style="font-size:.63rem;color:#555;font-weight:600;">Daniela (R)</td></tr>'
+      +'<tr><td>Presentación / diapositivas</td><td class="raci-a">A</td><td class="raci-i">I</td><td style="font-size:.63rem;color:#555;font-weight:600;">Eduardo (R)</td></tr>'
+      +'<tr><td>Gestión de sustitutas</td><td class="raci-a">A</td><td class="raci-r">R</td><td>—</td></tr>'
+      +'<tr><td>Encuesta post y reportes</td><td class="raci-i">I</td><td class="raci-r">R</td><td>—</td></tr>'
+      +'<tr><td>Decisiones comerciales (precio, aforo)</td><td class="raci-r">R</td><td class="raci-c">C</td><td>—</td></tr>'
+    +'</tbody></table>'
+    +'<div style="font-size:.65rem;color:#888;margin-top:.4rem;">R = Responsable · A = Accountable (aprueba) · C = Consultado · I = Informado</div>'
+    +'<div style="font-size:.65rem;color:#888;margin-top:.25rem;"><strong>Apoyo extra:</strong> Daniela (grabación, foto y acomodo) · Eduardo (diapositivas y acomodo) — colaboración puntual bajo coordinación de Alumbra Studios</div>'
+    +'</div>';
+
+  // ── 8. PLAYBOOK / CHEAT SHEET
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('8','Event Playbook','Secuencia de operaciones — edición 2',null)
+    +'<div class="cols">'
+      +'<div>'
+        +'<div class="col-title">PRE-LANZAMIENTO (T-30 días)</div>'
+        +['Actualizar contenidos de la web desde Admin → Contenidos','Configurar fases de precio en Stripe (Early Bird, Preventa, Últimas)','Verificar webhook Stripe apunta al endpoint correcto','Probar flujo completo: registro → pago → confirmación → hub','Definir fecha de cierre de cada fase de precio','Activar lista de espera cuando el aforo se llene'].map(function(s){ return '<div class="checklist-item">'+e(s)+'</div>'; }).join('')
+      +'</div>'
+      +'<div>'
+        +'<div class="col-title">PRE-EVENTO (T-7 a T-1 día)</div>'
+        +['T-7: Enviar recordatorio masivo desde Admin → Comunicaciones','T-5: Verificar que todas las registradas completaron encuesta previa','T-3: Enviar QR de entrada masivo','T-2: Enviar indicaciones del lugar y logística','T-1: Confirmar lista final de asistentes y no-shows potenciales','T-1: Preparar lista de espera para activar si hay cancelaciones'].map(function(s){ return '<div class="checklist-item">'+e(s)+'</div>'; }).join('')
+      +'</div>'
+    +'</div>'
+    +'<div class="cols" style="margin-top:.8rem;">'
+      +'<div>'
+        +'<div class="col-title">DÍA DEL EVENTO</div>'
+        +['Abrir Admin en tablet/laptop para check-in','Usar ID o QR para registrar asistencia','Verificar encuesta previa antes de hacer check-in','Anotar no-shows para gestión de lista de espera','Registrar sustitutas si hay cancelaciones de último minuto'].map(function(s){ return '<div class="checklist-item">'+e(s)+'</div>'; }).join('')
+      +'</div>'
+      +'<div>'
+        +'<div class="col-title">POST-EVENTO</div>'
+        +['D+0: Enviar correo de agradecimiento masivo desde Admin','D+0: Activar encuesta post en hub (Admin → toggle ABIERTA)','D+1: Verificar que todas las asistentes recibieron su correo','D+3: Enviar recursos adicionales prometidos','D+7: Cerrar encuesta post (Admin → toggle CERRADA)','D+7: Generar reportes definitivos y archivarlos'].map(function(s){ return '<div class="checklist-item">'+e(s)+'</div>'; }).join('')
+      +'</div>'
+    +'</div>'
+    +'</div>';
+
+  // ── 9. OBSERVABILIDAD
+  h += '<div class="divider"></div>'
+    +'<div class="section no-break">'
+    +secHeader('9','Plan de observabilidad','Qué medir en la próxima edición',null)
+    +'<table class="tabla"><thead><tr><th>Métrica</th><th>Cómo medirla</th><th>Herramienta</th><th>Prioridad</th></tr></thead><tbody>'
+      +'<tr><td>Tráfico web</td><td>Instalar GA4 en el sitio</td><td>Google Analytics 4</td><td>P0</td></tr>'
+      +'<tr><td>Conversión landing → pago</td><td>GA4 event + Stripe funnel</td><td>GA4 + Stripe Dashboard</td><td>P0</td></tr>'
+      +'<tr><td>Abandono de formulario</td><td>GA4 form_abandon event</td><td>GA4</td><td>P1</td></tr>'
+      +'<tr><td>Origen de tráfico (UTM)</td><td>UTMs en todos los links de RRSS</td><td>GA4 / Sheets</td><td>P0</td></tr>'
+      +'<tr><td>Apertura y clics de emails</td><td>Integrar proveedor con analytics (SendGrid/Mailchimp)</td><td>TBD</td><td>P1</td></tr>'
+      +'<tr><td>Tracking WA enviados</td><td>Log automático en Comunicaciones al enviar</td><td>GAS</td><td>P0</td></tr>'
+      +'<tr><td>Lista de espera activa</td><td>Nueva hoja en Sheets + notificación automática</td><td>GAS</td><td>P1</td></tr>'
+    +'</tbody></table>'
+    +'</div>';
+
+  // ── 10. BACKLOG P0/P1/P2
+  h += '<div class="divider pb"></div>'
+    +'<div class="section">'
+    +secHeader('10','Backlog priorizado','Acciones técnicas para la próxima edición',null)
+    +backlogHTML
+    +'</div>';
+
+  // ── FOOTER
+  h += '<div class="section">'
+    +'<div class="footer-ts">'+e(m.timestamp)+' · Alumbra Studios · CONFIDENCIAL — No distribuir</div>'
+    +'</div>';
+
+  h += '<div class="no-print" style="position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:999;">'
+    +'<button onclick="window.print()" style="background:#2A0F25;color:#C6A56A;border:none;padding:10px 24px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:Georgia,serif;">Guardar PDF</button>'
+    +'<button onclick="window.close()" style="background:none;border:1px solid #ccc;padding:10px 16px;font-size:13px;cursor:pointer;color:#888;">✕</button>'
+    +'</div>';
+
+  h += '</body></html>';
+  return h;
+}
+
 
 
 function renderTablaPost() {
