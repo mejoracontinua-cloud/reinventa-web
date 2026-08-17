@@ -6874,7 +6874,6 @@ function _buildReporteAlambraHTML(r, m, a, analytics) {
       +'<td>'+e(c.nombre)+'</td>'
       +'<td style="text-align:center;">'+c.env+'</td>'
       +'<td style="text-align:center;">'+(c.corrs!==null?c.corrs:'—')+'</td>'
-      +'<td style="text-align:center;">'+c.sinT+'</td>'
       +'<td style="font-size:.65rem;color:#888;">—</td>'
       +'</tr>';
   }).join('');
@@ -6944,8 +6943,7 @@ function _buildReporteAlambraHTML(r, m, a, analytics) {
   // ─ Incidencias
   var incidencias = [
     { sev:'warn', txt:'<strong>Cedió lugar (2 casos):</strong> Las 2 participantes que cedieron su lugar fueron procesadas manualmente vía adminRegistrarSustituta(). El mecanismo funcionó correctamente. Las sustitutas recibieron IDs propios (RNV-XXX con Stripe prefix "SUST-"). Requirió intervención manual.' },
-    { sev:'warn', txt:'<strong>Tracking de agradecimientos:</strong> 28 correos enviados operacionalmente (validado). Col P de Comunicaciones muestra 16. Los 12 restantes fueron enviados vía flujo de rescate que no actualizó col P. Sin impacto en asistentes — el dato es interno.' },
-    { sev:'info', txt:'<strong>1 registro sin pago:</strong> Incluido en el total de 33 filas en Registros, excluido de efectivas. No generó incidencia operacional.' },
+{ sev:'info', txt:'<strong>1 registro sin pago:</strong> Incluido en el total de 33 filas en Registros, excluido de efectivas. No generó incidencia operacional.' },
     { sev:'info', txt:'<strong>Coincidencia col K en Asistencia:</strong> Col K almacena tanto "cedió lugar" (marcador de sustitución) como el campo expectativas (1-5) de la encuesta post. En las personas que cedieron lugar, expectativas = "cedió lugar". En asistentes reales, expectativas = número. La distinción es correcta por valor, pero es ambigüedad estructural a resolver en la próxima edición.' }
   ];
 
@@ -7143,7 +7141,7 @@ function _buildReporteAlambraHTML(r, m, a, analytics) {
     +(campTable
       ? '<div style="overflow-x:auto;"><table class="tabla sev-table"><thead><tr>'
         +'<th>Campaña</th><th style="text-align:center;">WA enviados</th><th style="text-align:center;">Email enviados</th>'
-        +'<th style="text-align:center;">Sin tel.</th><th>Notas / Incidencias</th>'
+        +'<th>Notas / Incidencias</th>'
         +'</tr></thead><tbody>'+campTable+'</tbody></table></div>'
       : '<div class="hallazgo warn" style="margin-bottom:.5rem;"><strong>⏳ Datos de Comunicaciones pendientes:</strong> La hoja de Comunicaciones no se está enviando al panel todavía — requiere que actualices el servidor GAS (copia el script actualizado a Apps Script y publica nueva versión). Una vez hecho, los datos de cada campaña aparecerán aquí automáticamente sin ningún cambio adicional.</div>'
     )
