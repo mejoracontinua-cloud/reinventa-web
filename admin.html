@@ -6912,9 +6912,6 @@ function _buildReporteAlambraHTML(r, m, a, analytics) {
 
   // ─ Backlog (P0/P1/P2)
   var backlog = [
-    { p:'P0', titulo:'Unificación de tracking de comunicaciones',
-      detalle:'Las 12 confirmaciones enviadas vía flujo de rescate no actualizaron la col P de Comunicaciones. Todas las funciones de envío deben actualizar estado + timestamp + origen en la hoja al momento del envío.',
-      impacto:'Datos de métricas de comunicaciones no confiables. Riesgo de reenvíos por falsos negativos.' },
     { p:'P0', titulo:'Normalización de cedió-lugar en todos los reportes',
       detalle:'La función handleAdmin() ya filtra cedieronSet. adminReporteCompleto() también. Verificar que el Dashboard en tiempo real (renderEvento/renderDashboard) use siempre la misma lógica de exclusión.',
       impacto:'Cifra de registradas puede aparecer como 32 en algunos contextos.' },
