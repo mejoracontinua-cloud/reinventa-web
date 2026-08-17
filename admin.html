@@ -7255,64 +7255,190 @@ function _buildReporteAlambraHTML(r, m, a, analytics) {
 function renderTablaPost() {
   var el = document.getElementById('post-inner');
   if (!el) return;
-  var respondieron = (datos.asistentes || []).filter(function(a) { return a.encuesta && a.calificacion; });
-  if (!respondieron.length) {
+
+  var asistentes  = datos.asistentes || [];
+  var toggleEl    = document.getElementById('toggle-enc-post');
+  var encCerrada  = toggleEl && toggleEl.dataset.status === 'CLOSED';
+  var an          = getPostEventSurveyAnalysis(asistentes, encCerrada);
+
+  if (an.nResp === 0) {
     el.innerHTML = '<p style="text-align:center;color:var(--mauve);padding:2rem;">Sin respuestas aún.</p>';
     return;
   }
 
-  // Estadísticas agregadas
-  var total = respondieron.length;
-  var suma = respondieron.reduce(function(acc, a) { return acc + Number(a.calificacion || 0); }, 0);
-  var promedio = (suma / total).toFixed(1);
-  var dist = [0,0,0,0,0];
-  respondieron.forEach(function(a) { var n = Number(a.calificacion); if (n >= 1 && n <= 5) dist[n-1]++; });
+  var GOLD = '#C6A56A', PLUM = '#2A0F25', MAUVE = 'rgba(42,15,37,.55)';
 
-  var barras = [5,4,3,2,1].map(function(n) {
-    var cnt = dist[n-1];
-    var pct = total > 0 ? Math.round(cnt / total * 100) : 0;
-    return '<div style="display:flex;align-items:center;gap:.6rem;margin:.18rem 0;">'
-      + '<span style="font-size:.68rem;color:var(--mauve);width:.6rem;text-align:right;">' + n + '</span>'
-      + '<span style="color:#C6A56A;font-size:.7rem;">★</span>'
-      + '<div style="flex:1;background:rgba(42,15,37,.1);border-radius:2px;height:6px;overflow:hidden;">'
-      +   '<div style="width:' + pct + '%;height:100%;background:#C6A56A;border-radius:2px;"></div>'
-      + '</div>'
-      + '<span style="font-size:.65rem;color:var(--mauve);width:2.4rem;">' + cnt + ' (' + pct + '%)</span>'
+  function secLabel(txt) {
+    return '<div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:'+GOLD+';margin-bottom:.5rem;font-weight:600;">'+txt+'</div>';
+  }
+  function card(content) {
+    return '<div style="background:rgba(42,15,37,.03);border:1px solid rgba(198,165,106,.18);border-radius:6px;padding:1rem 1.2rem;margin-bottom:.8rem;">'+content+'</div>';
+  }
+  function miniBar(pct, color) {
+    return '<div style="flex:1;background:rgba(42,15,37,.08);border-radius:2px;height:6px;overflow:hidden;">'
+      + '<div style="width:'+Math.min(pct||0,100)+'%;height:100%;background:'+(color||GOLD)+';border-radius:2px;"></div>'
       + '</div>';
-  }).join('');
+  }
+  function escalaBar(label, prom, max, n) {
+    var pct = prom !== null ? Math.round(prom / max * 100) : 0;
+    return '<div style="margin-bottom:.5rem;">'
+      + '<div style="display:flex;justify-content:space-between;margin-bottom:.2rem;">'
+      +   '<span style="font-size:.72rem;color:'+PLUM+';">'+label+'</span>'
+      +   '<span style="font-size:.72rem;font-weight:600;color:'+PLUM+';font-variant-numeric:tabular-nums;">'+(prom!==null?prom.toFixed(1):'—')+' <span style="font-weight:400;color:'+MAUVE+';">/ '+max+'</span></span>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:.5rem;">'+miniBar(pct)+'<span style="font-size:.58rem;color:'+MAUVE+';white-space:nowrap;">'+n+' resp.</span></div>'
+      + '</div>';
+  }
 
-  var stats = '<div style="display:flex;gap:1.2rem;align-items:flex-start;background:rgba(42,15,37,.03);border:1px solid rgba(42,15,37,.08);border-radius:6px;padding:1.1rem 1.3rem;margin-bottom:1.4rem;flex-wrap:wrap;">'
-    + '<div style="text-align:center;min-width:70px;">'
-    +   '<div style="font-size:2.2rem;font-weight:700;color:var(--plum);line-height:1;">' + promedio + '</div>'
-    +   '<div style="color:#C6A56A;font-size:.75rem;margin:.15rem 0;">★★★★★</div>'
-    +   '<div style="font-size:.62rem;color:var(--mauve);text-transform:uppercase;letter-spacing:.08em;">' + total + ' respuesta' + (total !== 1 ? 's' : '') + '</div>'
-    + '</div>'
-    + '<div style="flex:1;min-width:160px;">' + barras + '</div>'
+  // ── KPIs top ──
+  var npsColor = an.npsScore===null ? MAUVE : an.npsScore>=50 ? '#2d7a4f' : an.npsScore>=0 ? '#b45309' : '#c0392b';
+  var npsLabel = an.npsScore===null ? '—' : (an.npsScore>=0?'+':'')+an.npsScore;
+  function kpiCard(label, val, sub, color) {
+    return '<div style="background:rgba(42,15,37,.03);border:1px solid rgba(198,165,106,.18);border-radius:6px;padding:.8rem .9rem;">'
+      + '<div style="font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:'+MAUVE+';margin-bottom:.2rem;">'+label+'</div>'
+      + '<div style="font-size:1.4rem;font-weight:700;color:'+(color||PLUM)+';line-height:1;font-variant-numeric:tabular-nums;">'+val+'</div>'
+      + (sub?'<div style="font-size:.6rem;color:'+MAUVE+';margin-top:.15rem;">'+sub+'</div>':'')
+      + '</div>';
+  }
+  var kpiRow = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:.6rem;margin-bottom:.9rem;">'
+    + kpiCard('Respuestas', an.nResp+' / '+an.nAsist, Math.round(an.nResp/Math.max(an.nAsist,1)*100)+'% de asistentes', PLUM)
+    + kpiCard('Calificación', an.calProm!==null?an.calProm.toFixed(1)+' / 5':'—', an.calN+' resp.', GOLD)
+    + kpiCard('Aplicabilidad', an.aplProm!==null?an.aplProm.toFixed(1)+' / 10':'—', an.aplN+' resp.', '#5b8dd9')
+    + kpiCard('NPS', npsLabel, an.npsN+' resp.', npsColor)
     + '</div>';
 
-  // PDF export btn
-  var pdfBtn = '<button onclick="imprimirPost()" style="margin-bottom:1rem;background:var(--plum);color:var(--gold);border:none;padding:.45rem 1.1rem;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;border-radius:3px;cursor:pointer;">↓ Descargar reporte PDF</button>';
+  // ── Calificación distribución ──
+  var calBarras = [5,4,3,2,1].map(function(n) {
+    var cnt = an.calDist[n-1]; var pct = an.calN > 0 ? Math.round(cnt/an.calN*100) : 0;
+    return '<div style="display:flex;align-items:center;gap:.5rem;margin:.2rem 0;">'
+      + '<span style="font-size:.68rem;color:'+MAUVE+';width:.5rem;text-align:right;">'+n+'</span>'
+      + '<span style="color:'+GOLD+';font-size:.62rem;">★</span>'
+      + miniBar(pct)
+      + '<span style="font-size:.62rem;color:'+MAUVE+';width:3rem;">'+cnt+' ('+pct+'%)</span>'
+      + '</div>';
+  }).join('');
+  var secCal = card(secLabel('Calificación general') + calBarras);
 
-  // Cards individuales
-  var cards = respondieron.map(function(a) {
-    var comentario = (a.comentario || '').trim();
-    return '<div style="background:#fff;border:1px solid rgba(42,15,37,.08);border-radius:6px;padding:1rem 1.1rem;margin-bottom:.7rem;">'
-      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;">'
-      +   '<div style="font-weight:600;font-size:.85rem;color:var(--plum);">' + esc(a.nombre) + '</div>'
-      +   '<div style="display:flex;gap:.1rem;flex-shrink:0;">' + renderEstrellas(a.calificacion) + '</div>'
+  // ── NPS ──
+  var secNPS = '';
+  if (an.npsN >= 1) {
+    var npsBar = '<div style="display:flex;height:10px;border-radius:4px;overflow:hidden;gap:2px;margin:.5rem 0;">'
+      + '<div style="flex:'+an.npsDet+';background:#c0392b;min-width:'+(an.npsDet?'4px':'0')+';"></div>'
+      + '<div style="flex:'+an.npsPas+';background:#e67e22;min-width:'+(an.npsPas?'4px':'0')+';"></div>'
+      + '<div style="flex:'+an.npsPro+';background:#2d7a4f;min-width:'+(an.npsPro?'4px':'0')+';"></div>'
       + '</div>'
-      + (comentario ? '<p style="margin:.45rem 0 0;font-size:.75rem;color:var(--mauve);line-height:1.5;">' + esc(comentario) + '</p>' : '')
-      + '<div style="font-size:.62rem;color:rgba(42,15,37,.35);margin-top:.4rem;">'
-      + (a.fechaEncuesta ? fmtFecha(a.fechaEncuesta) : '') + '</div>'
+      + '<div style="display:flex;gap:1rem;font-size:.62rem;">'
+      + '<span style="color:#c0392b;">● Detractores '+an.npsDet+'</span>'
+      + '<span style="color:#e67e22;">● Pasivos '+an.npsPas+'</span>'
+      + '<span style="color:#2d7a4f;">● Promotores '+an.npsPro+'</span>'
+      + '</div>';
+    secNPS = card(secLabel('NPS — ¿Lo recomendarías?')
+      + '<div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;">'
+      + '<div style="text-align:center;min-width:52px;">'
+      +   '<div style="font-size:2rem;font-weight:700;color:'+npsColor+';line-height:1;">'+npsLabel+'</div>'
+      +   '<div style="font-size:.56rem;color:'+MAUVE+';margin-top:.1rem;">NPS Score</div>'
+      + '</div>'
+      + '<div style="flex:1;min-width:140px;">'+npsBar+'</div>'
+      + '</div>');
+  }
+
+  // ── Experiencia ──
+  var secExp = card(
+    secLabel('Experiencia del contenido') +
+    escalaBar('Expectativas cumplidas', an.expProm, 5, an.expN) +
+    escalaBar('Aplicabilidad práctica', an.aplProm, 10, an.aplN) +
+    escalaBar('Valoración de Mary', an.maryProm, 5, an.maryN)
+  );
+
+  // ── Organización ──
+  var orgBars = an.orgProms.map(function(o){ return escalaBar(o.label, o.prom, 5, o.n); }).join('');
+  var secOrg = card(secLabel('Organización del evento') + orgBars);
+
+  // ── Contenido más valioso ──
+  var secContenido = '';
+  if (an.contenidoOrdenado.length) {
+    var chips = an.contenidoOrdenado.map(function(k) {
+      var n = an.contenidoCount[k]; var pct = Math.round(n/an.nResp*100);
+      return '<div style="margin-bottom:.4rem;">'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:.15rem;">'
+        +   '<span style="font-size:.7rem;color:'+PLUM+';">'+esc(k)+'</span>'
+        +   '<span style="font-size:.65rem;color:'+MAUVE+';">'+n+' ('+pct+'%)</span>'
+        + '</div>'+miniBar(pct)+'</div>';
+    }).join('');
+    secContenido = card(secLabel('Contenido más valioso') + chips);
+  }
+
+  // ── Impacto ──
+  var secImpacto = '';
+  if (an.impactoOrdenado.length) {
+    var impRows = an.impactoOrdenado.map(function(k) {
+      var n = an.impactoCount[k]; var pct = Math.round(n/an.nResp*100);
+      return '<div style="margin-bottom:.4rem;">'
+        + '<div style="display:flex;justify-content:space-between;margin-bottom:.15rem;">'
+        +   '<span style="font-size:.7rem;color:'+PLUM+';">'+esc(k)+'</span>'
+        +   '<span style="font-size:.65rem;color:'+MAUVE+';">'+n+' ('+pct+'%)</span>'
+        + '</div>'+miniBar(pct,'#5b8dd9')+'</div>';
+    }).join('');
+    secImpacto = card(secLabel('Impacto esperado') + impRows);
+  }
+
+  // ── Comentarios ──
+  var secComentarios = '';
+  if (an.comentarios.length) {
+    var comCards = an.comentarios.map(function(c) {
+      return '<div style="border-left:2px solid rgba(198,165,106,.35);padding:.4rem .7rem;margin-bottom:.45rem;font-size:.74rem;color:'+PLUM+';line-height:1.5;font-style:italic;">"'+esc(c)+'"</div>';
+    }).join('');
+    secComentarios = card(secLabel('Comentarios abiertos ('+an.comentarios.length+')') + comCards);
+  }
+
+  // ── Respuestas individuales ──
+  var respondieron = asistentes.filter(function(p){ return p.encuesta && p.calificacion; });
+  var orgLabels2 = ['Inf. previa','Comunicación','Registro','Check-in','Materiales','Lugar'];
+  var indCards = respondieron.map(function(p) {
+    var orgMatriz = p.orgMatriz || [];
+    var orgCols = orgLabels2.map(function(lbl, i) {
+      var v = parseFloat(orgMatriz[i]);
+      return '<div style="text-align:center;min-width:52px;">'
+        + '<div style="font-size:.56rem;color:'+MAUVE+';margin-bottom:.1rem;">'+lbl+'</div>'
+        + '<div style="font-size:.75rem;font-weight:600;color:'+(isNaN(v)||v===0?MAUVE:PLUM)+';">'+(isNaN(v)||v===0?'—':v+'/5')+'</div>'
+        + '</div>';
+    }).join('');
+    var hasCols = orgMatriz.some(function(v){ return parseFloat(v)>0; });
+
+    var badges = [
+      p.expectativas ? 'Expectativas: '+p.expectativas+'/5' : null,
+      p.aplicabilidad ? 'Aplicabilidad: '+p.aplicabilidad+'/10' : null,
+      p.mary ? 'Mary: '+p.mary+'/5' : null,
+      (p.nps!==null&&p.nps!==''&&p.nps!==undefined) ? 'NPS: '+p.nps+'/10' : null,
+    ].filter(Boolean).map(function(b) {
+      return '<span style="display:inline-block;background:rgba(42,15,37,.06);border-radius:20px;padding:.12rem .5rem;font-size:.63rem;color:'+PLUM+';margin:.1rem .15rem 0 0;">'+b+'</span>';
+    }).join('');
+
+    var contenido = (p.contenido||'').trim();
+    var impacto = (p.impacto||'').trim();
+    var comentario = (p.comentario||'').trim();
+
+    return '<div style="border:1px solid rgba(198,165,106,.15);border-radius:6px;padding:.85rem 1rem;margin-bottom:.6rem;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;flex-wrap:wrap;gap:.25rem;">'
+      +   '<span style="font-weight:600;font-size:.82rem;color:'+PLUM+';">'+esc(p.nombre)+'</span>'
+      +   '<div style="display:flex;align-items:center;gap:.35rem;">'+renderEstrellas(p.calificacion)+'<span style="font-size:.63rem;color:'+MAUVE+';">'+p.calificacion+'/5</span></div>'
+      + '</div>'
+      + (badges ? '<div style="margin-bottom:.4rem;">'+badges+'</div>' : '')
+      + (contenido ? '<div style="font-size:.63rem;color:'+MAUVE+';margin-bottom:.25rem;"><strong style="color:'+PLUM+';">Contenido:</strong> '+esc(contenido)+'</div>' : '')
+      + (impacto ? '<div style="font-size:.63rem;color:'+MAUVE+';margin-bottom:.25rem;"><strong style="color:'+PLUM+';">Impacto:</strong> '+esc(impacto)+'</div>' : '')
+      + (hasCols ? '<div style="display:flex;gap:.25rem;flex-wrap:wrap;border-top:1px solid rgba(42,15,37,.06);padding-top:.4rem;margin-top:.35rem;">'+orgCols+'</div>' : '')
+      + (comentario ? '<div style="margin-top:.45rem;border-top:1px solid rgba(42,15,37,.06);padding-top:.4rem;font-size:.71rem;color:'+PLUM+';line-height:1.5;font-style:italic;">"'+esc(comentario)+'"</div>' : '')
       + '</div>';
   }).join('');
 
-  el.innerHTML = stats + pdfBtn + cards;
+  var secInd = '<div style="margin-top:.2rem;">'
+    + '<div style="font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:'+GOLD+';margin-bottom:.6rem;font-weight:600;">Respuestas individuales ('+respondieron.length+')</div>'
+    + indCards
+    + '</div>';
+
+  el.innerHTML = kpiRow + secCal + secNPS + secExp + secOrg + secContenido + secImpacto + secComentarios + secInd;
 }
 
-function imprimirPost() {
-  window.print();
-}
 
 function renderDescargas() {
   var el = document.getElementById('descargas-inner');
