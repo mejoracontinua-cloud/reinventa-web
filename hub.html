@@ -2633,6 +2633,7 @@ function renderConstancia() {
 
 function imprimirConstancia() {
   document.getElementById('certNombreP').textContent = perfil.nombre || '—';
+  logDescarga('constancia');
   window.print();
 }
 

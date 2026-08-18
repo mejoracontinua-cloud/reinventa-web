@@ -7446,6 +7446,7 @@ function renderDescargas() {
   var descargas = datos.descargas || [];
 
   var tipos = {
+    constancia:    { label: 'Constancia de participación', icon: '🎓' },
     workbook:      { label: 'Workbook', icon: '📒' },
     guia_compras:  { label: 'Guía Compras Inteligentes', icon: '🛍️' },
     guia_estilos:  { label: 'Guía 7 Estilos', icon: '✨' }
@@ -7473,7 +7474,7 @@ function renderDescargas() {
       + '</table></div></div>';
   }
 
-  el.innerHTML = tablaDescarga('workbook') + tablaDescarga('guia_compras') + tablaDescarga('guia_estilos');
+  el.innerHTML = tablaDescarga('constancia') + tablaDescarga('workbook') + tablaDescarga('guia_compras') + tablaDescarga('guia_estilos');
 }
 
 function renderEstrellas(n) {
